@@ -2,6 +2,7 @@ import { Modal } from './Modal';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
+import { apiUrl } from '@/constants/api';
 
 interface Props {
   isOpen: boolean;
@@ -22,7 +23,7 @@ export const EmployeeLeaveHistoryModal = ({ isOpen, onClose }: Props) => {
       try {
         setLoading(true);
         const params = employee?.id ? `?employee_id=${employee.id}` : '';
-        const res = await fetch(`http://127.0.0.1:8000/api/leave-requests/${params}`, {
+        const res = await fetch(apiUrl(`leave-requests${params}`), {
           headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
         });
         if (!res.ok) throw new Error('Failed to fetch leave history');

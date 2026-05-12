@@ -1,15 +1,64 @@
 const devFallback = 'http://localhost:8000/api';
 
-/** In production builds, same-origin `/api` is rewritten by `vercel.json` to the Render backend. Set `VITE_API_URL` to override (e.g. point a preview at a staging API). */
-function resolveApiBaseUrl(): string {
-  const fromEnv = import.meta.env.VITE_API_URL?.trim();
-  if (fromEnv) {
-    return fromEnv.replace(/\/$/, '');
+function looksLikeLocalBackend(url: string): boolean {
+  const t = url.trim();
+  try {
+    const proto = /^https?:\/\//i.test(t) ? '' : 'http://';
+    const u = new URL(proto + t.replace(/^\/\//, ''));
+    const h = u.hostname.toLowerCase();
+    return h === 'localhost' || h === '127.0.0.1';
+  } catch {
+    return /localhost|127\.0\.0\.1/i.test(t);
   }
-  return import.meta.env.PROD ? '/api' : devFallback;
+}
+
+/** If VITE_API_URL is only scheme+host (e.g. Render root), normalize to `/api`. */
+function normalizeEnvApiBase(raw: string): string {
+  const trimmed = raw.replace(/\/$/, '');
+  try {
+    const u = new URL(trimmed);
+    const path = u.pathname.replace(/\/$/, '') || '/';
+    if (path === '/') {
+      u.pathname = '/api';
+      return `${u.origin}/api`;
+    }
+    return trimmed;
+  } catch {
+    return trimmed;
+  }
+}
+
+/**
+ * Production: prefers same-origin `/api` (proxied via `vercel.json`). Ignores localhost in
+ * `VITE_API_URL` when that variable is mistakenly set on the host (e.g. Vercel previews).
+ */
+function resolveApiBaseUrl(): string {
+  const raw = import.meta.env.VITE_API_URL?.trim();
+  const prod = !!import.meta.env.PROD;
+
+  if (prod) {
+    if (!raw || looksLikeLocalBackend(raw)) {
+      return '/api';
+    }
+    return normalizeEnvApiBase(raw);
+  }
+
+  if (raw) {
+    return normalizeEnvApiBase(raw);
+  }
+
+  return devFallback;
 }
 
 export const API_BASE_URL = resolveApiBaseUrl();
+
+/** Build an absolute `/api/...` or full URL without duplicating slashes. */
+export function apiUrl(pathRelativeToApiRoot: string): string {
+  const base = API_BASE_URL.replace(/\/$/, '');
+  const rest =
+    pathRelativeToApiRoot.startsWith('/') ? pathRelativeToApiRoot.slice(1) : pathRelativeToApiRoot;
+  return `${base}/${rest}`;
+}
 
 export const API_ENDPOINTS = {
   // Auth

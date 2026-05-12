@@ -1,14 +1,6 @@
-const devFallback = 'http://localhost:8000/api';
+import { apiUrl } from '@/constants/api';
 
-function resolveApiBaseUrl(): string {
-  const fromEnv = import.meta.env.VITE_API_URL?.trim();
-  if (fromEnv) {
-    return fromEnv.replace(/\/$/, '');
-  }
-  return import.meta.env.PROD ? '/api' : devFallback;
-}
-
-export const API_BASE_URL = resolveApiBaseUrl();
+export { API_BASE_URL, apiUrl } from '@/constants/api';
 
 // API endpoints
 export const API_ROUTES = {
@@ -24,9 +16,7 @@ export const API_ROUTES = {
   SECURITY_ALERTS: 'security-alerts/',
 } as const;
 
-export const buildUrl = (endpoint: string): string => {
-  return `${API_BASE_URL}/${endpoint}`;
-};
+export const buildUrl = (endpoint: string): string => apiUrl(endpoint);
 
 // Query keys for React Query
 export const QUERY_KEYS_FACTORY = {

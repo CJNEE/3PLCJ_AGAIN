@@ -3,6 +3,8 @@ import { Card, Button, Badge, LoadingSpinner } from '@/components/common';
 import { useToast } from '@/hooks/useToast';
 import { CheckCircle, XCircle, Clock } from 'lucide-react';
 import { Sidebar } from '@/components/Sidebar';
+import { apiUrl } from '@/constants/api';
+
 type LeaveRequestStatus = 'pending' | 'approved' | 'rejected';
 
 type LeaveRequest = {
@@ -39,7 +41,7 @@ export const LeaveRequestsPanel = ({ initialFilter = 'pending' }: { initialFilte
     try {
       setLoading(true);
       const params = filterStatus !== 'all' ? `?status=${filterStatus}` : '';
-      const response = await fetch(`http://127.0.0.1:8000/api/leave-requests/${params}` , {
+      const response = await fetch(apiUrl(`leave-requests${params}`), {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('access_token')}`,
         },
@@ -66,7 +68,7 @@ export const LeaveRequestsPanel = ({ initialFilter = 'pending' }: { initialFilte
 
   const handleApprove = async (requestId: number) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/leave-requests/${requestId}/approve/`, {
+      const response = await fetch(apiUrl(`leave-requests/${requestId}/approve/`), {
         method: 'PATCH',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('access_token')}`,
@@ -96,7 +98,7 @@ export const LeaveRequestsPanel = ({ initialFilter = 'pending' }: { initialFilte
 
   const handleReject = async (requestId: number) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/leave-requests/${requestId}/reject/`, {
+      const response = await fetch(apiUrl(`leave-requests/${requestId}/reject/`), {
         method: 'PATCH',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('access_token')}`,

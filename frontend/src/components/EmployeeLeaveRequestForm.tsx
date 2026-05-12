@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, Button, ErrorMessage } from '@/components/common';
 import { useToast } from '@/hooks/useToast';
 import { useAuth } from '@/hooks/useAuth';
+import { apiUrl } from '@/constants/api';
 
 type LeaveRequestPayload = {
   leave_type: string;
@@ -110,7 +111,7 @@ export const EmployeeLeaveRequestForm = ({ showHeader = true }: Props) => {
 
       files.forEach((f) => formData.append('attachments', f));
 
-      const res = await fetch('http://127.0.0.1:8000/api/leave-requests/', {
+      const res = await fetch(apiUrl('leave-requests/'), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

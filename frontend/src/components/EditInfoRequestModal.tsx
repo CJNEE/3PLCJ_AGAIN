@@ -3,6 +3,7 @@ import { Button } from '@/components/common';
 import { Modal } from '@/components/Modal';
 import { useToast } from '@/hooks/useToast';
 import { Send } from 'lucide-react';
+import { apiUrl } from '@/constants/api';
 
 interface EditInfoRequestModalProps {
   employeeId: number;
@@ -61,7 +62,7 @@ export const EditInfoRequestModal = ({ employeeId, isOpen, onClose, onSuccess }:
         formData.append('uploaded_files', attachedFile);
       }
 
-      const response = await fetch('http://127.0.0.1:8000/api/edit-requests/', {
+      const response = await fetch(apiUrl('edit-requests/'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`

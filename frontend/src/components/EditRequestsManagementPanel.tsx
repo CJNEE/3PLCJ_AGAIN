@@ -3,6 +3,7 @@ import { Card, Button, Badge } from '@/components/common';
 import { useToast } from '@/hooks/useToast';
 import { Check, X, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 import { Sidebar } from '@/components/Sidebar';
+import { apiUrl } from '@/constants/api';
 
 interface EditRequest {
   id: number;
@@ -35,7 +36,7 @@ export const EditRequestsPanel = () => {
     try {
       setLoading(true);
       const params = filterStatus !== 'all' ? `?status=${filterStatus}` : '';
-      const response = await fetch(`http://127.0.0.1:8000/api/edit-requests/${params}`, {
+      const response = await fetch(apiUrl(`edit-requests${params}`), {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         }
@@ -52,7 +53,7 @@ export const EditRequestsPanel = () => {
 
   const handleApprove = async (requestId: number) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/edit-requests/${requestId}/approve/`, {
+      const response = await fetch(apiUrl(`edit-requests/${requestId}/approve/`), {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
@@ -70,7 +71,7 @@ export const EditRequestsPanel = () => {
 
   const handleReject = async (requestId: number) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/edit-requests/${requestId}/reject/`, {
+      const response = await fetch(apiUrl(`edit-requests/${requestId}/reject/`), {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
