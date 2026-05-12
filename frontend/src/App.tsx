@@ -35,6 +35,7 @@ import { EmployeeLeaveRequestForm } from '@/components/EmployeeLeaveRequestForm'
 
 // Components
 import { Layout } from '@/components/common';
+import { ThemeProvider } from '@/context/ThemeContext';
 
 // Styles
 import '@/styles/globals.css';
@@ -168,11 +169,13 @@ function AppRoutes() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AppRoutes />
-        {/* Toast Notifications */}
-        <Toaster position="bottom-right" />
-      </BrowserRouter>
+      <ThemeProvider>
+        <BrowserRouter>
+          <AppRoutes />
+          {/* Toast Notifications */}
+          <Toaster position="bottom-right" />
+        </BrowserRouter>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

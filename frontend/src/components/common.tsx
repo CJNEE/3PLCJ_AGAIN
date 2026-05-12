@@ -1,7 +1,5 @@
-import { ReactNode, useEffect, useState } from 'react';
-import { Moon, Sun } from 'lucide-react';
+import { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import HRSidebar from './HRSidebar';
 
 interface LayoutProps {
@@ -10,87 +8,9 @@ interface LayoutProps {
 
 export const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
-  
-
-  /* =========================
-     DARK MODE (FIXED + FAST)
-  ========================= */
-
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-    const saved = localStorage.getItem('theme');
-
-    if (saved) return saved === 'dark';
-
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
-
-  const applyTheme = (dark: boolean) => {
-    const root = document.documentElement;
-
-    if (dark) {
-      root.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      root.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  };
-
-  useEffect(() => {
-    applyTheme(isDarkMode);
-  }, [isDarkMode]);
-
-  const toggleDarkMode = () => {
-    setIsDarkMode((prev) => !prev);
-  };
-
-  /* =========================
-     ROUTE FIX
-  ========================= */
-
-  const hideThemeToggle = location.pathname.startsWith('/employee');
-
-  // logout handled by dedicated Sidebar component where needed
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-[#070B14] text-gray-900 dark:text-gray-100">
-
-      {/* NAV */}
-      <nav className="fixed top-0 right-0 z-40 m-4 flex items-center gap-4">
-
-        {/* DARK MODE SWITCH */}
-        {!hideThemeToggle && (
-          <button
-            onClick={toggleDarkMode}
-            className={`relative w-14 h-7 flex items-center rounded-full p-1
-              ${isDarkMode ? 'bg-blue-600' : 'bg-gray-300'}
-            `}
-          >
-            {/* Glow */}
-            <div
-              className={`absolute inset-0 rounded-full blur-md opacity-40
-                ${isDarkMode ? 'bg-blue-500' : 'bg-yellow-300'}
-              `}
-            />
-
-            {/* Knob (ONLY animated part) */}
-            <motion.div
-              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-              className="relative z-10 w-5 h-5 bg-white rounded-full shadow-md flex items-center justify-center"
-              animate={{ x: isDarkMode ? 28 : 0 }}
-            >
-              {isDarkMode ? (
-                <Moon size={12} className="text-blue-500" />
-              ) : (
-                <Sun size={12} className="text-yellow-500" />
-              )}
-            </motion.div>
-          </button>
-        )}
-
-      </nav>
-
-      {/* CONTENT */}
       {location.pathname.startsWith('/hr') ? (
         <div className="flex">
           <HRSidebar />

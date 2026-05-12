@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth, useIsDarkMode } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth';
+import { ThemeToggle } from '@/context/ThemeContext';
 import {
   LogOut,
   Menu,
@@ -27,7 +28,6 @@ interface SidebarProps {
 export const Sidebar = ({ open, onToggle }: SidebarProps) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { isDarkMode } = useIsDarkMode();
 
   const [employeeRequestOpen, setEmployeeRequestOpen] = useState(
     window.location.pathname === '/admin/edit-requests' ||
@@ -285,19 +285,18 @@ onClick={() => {
             })}
           </nav>
 
-          {/* User Section */}
+          {/* User Section — theme toggle beside avatar */}
           <div className="p-4 border-t border-gray-100 dark:border-gray-700">
-            <div className="flex items-center gap-3 mb-4 px-4">
-              <div className="w-10 h-10 rounded-full bg-[#8B0000] text-white flex items-center justify-center font-bold">
+            <div className="flex items-center gap-3 mb-4 px-2">
+              <div className="w-10 h-10 shrink-0 rounded-full bg-[#8B0000] text-white flex items-center justify-center font-bold">
                 {user?.username?.charAt(0).toUpperCase()}
               </div>
-
+              <ThemeToggle />
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-gray-800 dark:text-gray-100 truncate">
                   {user?.username}
                 </p>
-
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                   {user?.role}
                 </p>
               </div>

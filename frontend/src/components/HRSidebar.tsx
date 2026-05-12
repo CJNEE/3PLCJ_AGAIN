@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import hrNav from './hr/hrNav.tsx';
+import { ThemeToggle } from '@/context/ThemeContext';
 
 const HRSidebar: React.FC = () => {
   const { pathname } = useLocation();
@@ -8,12 +9,12 @@ const HRSidebar: React.FC = () => {
   const isActive = (to: string) => pathname === to || pathname.startsWith(to + '/') || (to === '/hr' && pathname === '/hr');
 
   return (
-    <aside className="w-64 bg-[#0B1220] text-white h-full border-r border-black/10">
-      <div className="p-5 border-b border-black/10">
+    <aside className="w-64 bg-[#0B1220] text-white h-full border-r border-black/10 flex flex-col">
+      <div className="p-5 border-b border-black/10 shrink-0">
         <Link to="/hr" className="text-xl font-extrabold">HR Panel</Link>
       </div>
 
-      <nav className="p-4 space-y-4">
+      <nav className="p-4 space-y-4 flex-1 overflow-y-auto">
         {hrNav.map((section, idx) => (
           <div key={idx}>
             {section.title && <div className="text-xs text-gray-400 font-semibold mb-2">{section.title}</div>}
@@ -41,6 +42,10 @@ const HRSidebar: React.FC = () => {
           </div>
         ))}
       </nav>
+
+      <div className="p-4 border-t border-black/10 shrink-0 flex items-center justify-center">
+        <ThemeToggle />
+      </div>
     </aside>
   );
 };
