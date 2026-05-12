@@ -23,9 +23,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-_4-^c(%mqhby%80&o1)s=#lw97439c$d25rjp6wk0m--j7^svl'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ["threeplcjfinal-final-final-na-talaga.onrender.com"]
 
 
 # Application definition
@@ -39,12 +39,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
-    'corsheaders',
+    'headers',
     'employees',
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
+    'headers.middleware.Middleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -145,7 +145,7 @@ REST_FRAMEWORK = {
     ],
 }
 
-# CORS settings - allow frontend to communicate
+#  settings - allow frontend to communicate
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:5174",
@@ -154,6 +154,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
     "http://127.0.0.1:5174",
     "http://127.0.0.1:5175",
+    "https://3-plcjfinal-79xnpq3is-cj-g-a-js-projects.vercel.app",  # ✅ Vercel frontend
 ]
 CORS_ALLOW_CREDENTIALS = True
 
