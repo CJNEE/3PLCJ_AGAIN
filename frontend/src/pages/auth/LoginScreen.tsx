@@ -6,15 +6,12 @@ import { ErrorMessage } from '@/components/common';
 import { useToast } from '@/hooks/useToast';
 import { Eye, EyeOff } from 'lucide-react';
 import logo3pl from '@/images/3pl1.png';
-import { login } from "@/api";
 
 export const LoginScreen = () => {
   const navigate = useNavigate();
   const { setUser, setToken, setIsAuthenticated, setEmployee } = useAuth();
   const loginMutation = useLogin();
   const { success, error } = useToast();
-  
-  const response = await login(username, password);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
