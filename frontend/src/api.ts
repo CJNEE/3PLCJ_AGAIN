@@ -19,13 +19,13 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   return res.json();
 }
 
-// Auth
 export async function login(username: string, password: string) {
-  return request<{ token: string; user: any; employee: any }>("/api/auth/login/", {
+  return request<{ token: string; user: any; employee: any }>("/api/login/", {
     method: "POST",
     body: JSON.stringify({ username, password }),
   });
 }
+
 
 
 // Employees
