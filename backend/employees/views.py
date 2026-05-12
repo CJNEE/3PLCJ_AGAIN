@@ -1,0 +1,1938 @@
+from rest_framework import viewsets, status
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.authtoken.models import Token
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth import authenticate
+from django.contrib.auth.models import User
+from django.utils import timezone
+from django.conf import settings
+from django.db import models
+import json
+from .models import Hub, Employee, EditRequest, LeaveRequest, Attendance, LiveLocation, Payroll, EmployeeDocument, ActivityLog, SecurityAlert, HRPermission
+from .serializers import (
+    HubSerializer, EmployeeSerializer, EmployeeCreateSerializer, EmployeeDocumentSerializer,
+    EditRequestSerializer, LeaveRequestSerializer, LoginSerializer, AttendanceSerializer, 
+    LiveLocationSerializer, PayrollSerializer, ActivityLogSerializer, SecurityAlertSerializer, HRPermissionSerializer
+)
+
+class HubViewSet(viewsets.ModelViewSet):
+    """ViewSet for viewing and editing hubs - J&T Quezon only"""
+    queryset = Hub.objects.filter(city__icontains="Quezon", company="J&T Express").order_by('name')
+    serializer_class = HubSerializer
+    permission_classes = [IsAuthenticated]
+
+class MetaView(APIView):
+    """Meta endpoint for frontend form option data."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, key=None):
+        meta_data = {
+            'roles': [choice[0] for choice in Employee.ROLE_CHOICES],
+            'statuses': [choice[0] for choice in Employee.STATUS_CHOICES],
+            'employmentTypes': [choice[0] for choice in Employee.EMPLOYMENT_TYPE_CHOICES],
+            'positions': list(Employee.objects.order_by('position').values_list('position', flat=True).distinct()),
+            'hubs': HubSerializer(
+                Hub.objects.order_by('name'),
+                many=True,
+                context={'request': request}
+            ).data,
+        }
+
+        if key:
+            if key not in meta_data:
+                return Response({'detail': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+            if key == 'positions' and not meta_data['positions']:
+                meta_data['positions'] = ['Driver', 'Admin', 'HR', 'Manager', 'Supervisor', 'Warehouse Staff']
+            return Response(meta_data[key])
+
+        if not meta_data['positions']:
+            meta_data['positions'] = ['Driver', 'Admin', 'HR', 'Manager', 'Supervisor', 'Warehouse Staff']
+        return Response(meta_data)
+
+class EmployeeViewSet(viewsets.ModelViewSet):
+    """ViewSet for viewing and editing employees"""
+    queryset = Employee.objects.all()
+    permission_classes = [IsAuthenticated]  # Require login for updates
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+    
+    def get_serializer_class(self):
+        if self.action == 'create':
+            print("POST data:", self.request.data)  # DEBUG
+            return EmployeeCreateSerializer
+        return EmployeeSerializer
+    
+    def update(self, request, *args, **kwargs):
+        """Handle full update with activity logging"""
+        employee = self.get_object()
+        old_data = EmployeeSerializer(employee).data
+        
+        response = super().update(request, *args, **kwargs)
+        
+        # Log the update
+        changes = self._get_field_changes(old_data, response.data)
+        if changes:
+            ActivityLog.objects.create(
+                user=request.user,
+                employee=employee,
+                role=getattr(request.user, 'employee', None).role if hasattr(request.user, 'employee') else 'Admin',
+                action='update_employee',
+                details=f'Updated {employee.full_name}: {changes}',
+                ip_address=self.get_client_ip(request)
+            )
+        
+        return response
+    
+    def partial_update(self, request, *args, **kwargs):
+        """Handle partial update with activity logging"""
+        employee = self.get_object()
+        old_data = EmployeeSerializer(employee).data
+        
+        response = super().partial_update(request, *args, **kwargs)
+        
+        # Log the update
+        changes = self._get_field_changes(old_data, response.data)
+        if changes:
+            ActivityLog.objects.create(
+                user=request.user,
+                employee=employee,
+                role=getattr(request.user, 'employee', None).role if hasattr(request.user, 'employee') else 'Admin',
+                action='update_employee',
+                details=f'Updated {employee.full_name}: {changes}',
+                ip_address=self.get_client_ip(request)
+            )
+        
+        return response
+    
+    def _get_field_changes(self, old_data: dict, new_data: dict) -> str:
+        """Compare old and new data and return formatted changes"""
+        changes = []
+        important_fields = ['status', 'role', 'can_login', 'can_edit_info', 'is_active', 
+                           'position', 'employment_type', 'email_address', 'hub']
+        
+        for field in important_fields:
+            if field in old_data and field in new_data:
+                if old_data[field] != new_data[field]:
+                    changes.append(f"{field}: {old_data[field]} → {new_data[field]}")
+        
+        return '; '.join(changes) if changes else 'No significant changes'
+
+
+# Helper: compute government deductions based on hub-specific rates or defaults
+def compute_gov_deductions(employee: Employee, basic_salary):
+    """
+    Return a tuple of (sss, philhealth, pagibig) deductions (Decimal) computed
+    as percentage of basic_salary. Lookup order:
+      1. settings.HUB_DEDUCTION_RATES[hub.name] or [hub.location]
+      2. settings.DEFAULT_GOV_RATES
+      3. fallback defaults in this function
+    """
+    from decimal import Decimal, ROUND_HALF_UP
+    # Fallback default rates (percents)
+    FALLBACK = {'sss': 4.5, 'philhealth': 2.75, 'pagibig': 1.0}
+
+    # read rates from settings if available
+    rates = None
+    try:
+        hub = getattr(employee, 'hub', None)
+        # Prefer explicit Hub model override fields when set (>0)
+        if hub:
+            try:
+                s = float(getattr(hub, 'sss_rate', 0) or 0)
+                ph = float(getattr(hub, 'philhealth_rate', 0) or 0)
+                pg = float(getattr(hub, 'pagibig_rate', 0) or 0)
+                if s > 0 or ph > 0 or pg > 0:
+                    rates = {'sss': s or FALLBACK['sss'], 'philhealth': ph or FALLBACK['philhealth'], 'pagibig': pg or FALLBACK['pagibig']}
+            except Exception:
+                pass
+
+        hub_key = None
+        if hub and not rates:
+            hub_key = getattr(hub, 'name', None) or getattr(hub, 'location', None)
+        cfg = getattr(settings, 'HUB_DEDUCTION_RATES', None)
+        default_cfg = getattr(settings, 'DEFAULT_GOV_RATES', None)
+        if not rates:
+            if cfg and hub_key and hub_key in cfg:
+                rates = cfg.get(hub_key)
+            elif default_cfg:
+                rates = default_cfg
+    except Exception:
+        rates = None
+
+    if not rates:
+        rates = FALLBACK
+
+    try:
+        bs = float(basic_salary or 0)
+    except Exception:
+        bs = 0.0
+
+    sss = Decimal(str(round(bs * (float(rates.get('sss', FALLBACK['sss'])) / 100.0), 2))).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    phil = Decimal(str(round(bs * (float(rates.get('philhealth', FALLBACK['philhealth'])) / 100.0), 2))).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    pagibig = Decimal(str(round(bs * (float(rates.get('pagibig', FALLBACK['pagibig'])) / 100.0), 2))).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+    return sss, phil, pagibig
+
+
+def compute_payroll_summary(employee: Employee, start_date, end_date, basic_salary=0, allowances=0, overtime_pay=0, incentives=0, deduction_details=None):
+    """Compute a payroll summary (not persisted) for an employee and period.
+
+    Returns a simple dict suitable for JSON response or for serialization.
+    """
+    from decimal import Decimal, ROUND_HALF_UP
+    from datetime import timedelta
+
+    # attendance aggregation
+    qs = Attendance.objects.filter(employee=employee, date__gte=start_date, date__lte=end_date)
+    total_seconds = 0.0
+    overtime_seconds = 0.0
+    late_count = 0
+    present_days = set()
+    STANDARD_DAY_HOURS = 8
+    LATE_HOUR = 10
+
+    for a in qs:
+        if a.clock_in_time and a.clock_out_time:
+            diff = (a.clock_out_time - a.clock_in_time).total_seconds()
+            if diff > 0:
+                total_seconds += diff
+                hours = diff / 3600.0
+                if hours > STANDARD_DAY_HOURS:
+                    overtime_seconds += (hours - STANDARD_DAY_HOURS) * 3600.0
+        elif a.clock_in_time and not a.clock_out_time:
+            # If employee clocked in but didn't clock out and the date is today, approximate until now
+            try:
+                from django.utils import timezone as djtz
+                today = djtz.now().date()
+                if a.date == today:
+                    diff = (djtz.now() - a.clock_in_time).total_seconds()
+                    if diff > 0:
+                        total_seconds += diff
+                        hours = diff / 3600.0
+                        if hours > STANDARD_DAY_HOURS:
+                            overtime_seconds += (hours - STANDARD_DAY_HOURS) * 3600.0
+            except Exception:
+                pass
+        if a.clock_in_time and getattr(a.clock_in_time, 'hour', None) is not None:
+            if a.clock_in_time.hour >= LATE_HOUR:
+                late_count += 1
+        if a.clock_in_time:
+            present_days.add(a.date)
+
+    total_hours = round(total_seconds / 3600.0, 2)
+    overtime_hours = round(overtime_seconds / 3600.0, 2)
+
+    # working weekdays count
+    def count_weekdays(s, e):
+        days = 0
+        cur = s
+        while cur <= e:
+            if cur.weekday() < 5:
+                days += 1
+            cur += timedelta(days=1)
+        return days
+
+    working_days = count_weekdays(start_date, end_date)
+
+    # approved leave days overlapping
+    leave_days = 0
+    approved_leaves = LeaveRequest.objects.filter(employee=employee, status='approved')
+    for lr in approved_leaves:
+        ls = lr.start_date
+        le = lr.end_date
+        overlap_start = max(ls, start_date)
+        overlap_end = min(le, end_date)
+        if overlap_start <= overlap_end:
+            leave_days += count_weekdays(overlap_start, overlap_end)
+
+    absences = max(0, working_days - len(present_days) - leave_days)
+
+    # earnings and deductions
+    from decimal import Decimal
+    total_earnings = Decimal(str(float(basic_salary or 0) + float(allowances or 0) + float(overtime_pay or 0) + float(incentives or 0)))
+
+    # deduction_details may be JSON/dict/number
+    total_deductions = 0.0
+    if deduction_details is None:
+        deduction_details = {}
+    try:
+        if isinstance(deduction_details, dict):
+            total_deductions = sum(float(v or 0) for v in deduction_details.values())
+        else:
+            total_deductions = float(deduction_details or 0)
+    except Exception:
+        total_deductions = 0.0
+
+    sss_amt, phil_amt, pagibig_amt = compute_gov_deductions(employee, float(total_earnings))
+    total_gov = float(sss_amt + phil_amt + pagibig_amt)
+
+    net_pay = float((total_earnings - Decimal(str(total_deductions)) - Decimal(str(total_gov))).quantize(Decimal('0.01')))
+
+    return {
+        'employee': employee.id,
+        'period_start': start_date,
+        'period_end': end_date,
+        'total_hours': total_hours,
+        'overtime_hours': overtime_hours,
+        'lates': late_count,
+        'absences': absences,
+        'basic_salary': float(basic_salary or 0),
+        'allowances': float(allowances or 0),
+        'overtime_pay': float(overtime_pay or 0),
+        'incentives': float(incentives or 0),
+        'total_earnings': float(total_earnings),
+        'deduction_details': deduction_details,
+        'total_deductions': float(total_deductions),
+        'sss_percent': float(getattr(settings, 'DEFAULT_GOV_RATES', {}).get('sss', 4.5)),
+        'philhealth_percent': float(getattr(settings, 'DEFAULT_GOV_RATES', {}).get('philhealth', 2.75)),
+        'pagibig_percent': float(getattr(settings, 'DEFAULT_GOV_RATES', {}).get('pagibig', 1.0)),
+        'sss_deduction': float(sss_amt),
+        'philhealth_deduction': float(phil_amt),
+        'pagibig_deduction': float(pagibig_amt),
+        'total_government_deductions': float(total_gov),
+        'net_pay': net_pay,
+    }
+
+    
+    def create(self, request, *args, **kwargs):
+        """Handle employee creation with activity logging"""
+        response = super().create(request, *args, **kwargs)
+        
+        try:
+            employee = Employee.objects.get(id=response.data['id'])
+            ActivityLog.objects.create(
+                user=request.user,
+                employee=employee,
+                role=getattr(request.user, 'employee', None).role if hasattr(request.user, 'employee') else 'Admin',
+                action='create_employee',
+                details=f'Created new employee: {employee.full_name}',
+                ip_address=self.get_client_ip(request)
+            )
+        except Employee.DoesNotExist:
+            pass
+        
+        return response
+    
+    def get_queryset(self):
+        queryset = Employee.objects.all()
+        hub_id = self.request.query_params.get('hub_id')
+        if hub_id:
+            try:
+                hub_id_int = int(hub_id)
+                queryset = queryset.filter(hub_id=hub_id_int)
+            except (ValueError, TypeError):
+                print(f"⚠️ Invalid hub_id: {hub_id}")
+        status_filter = self.request.query_params.get('status')
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+        employment_type = self.request.query_params.get('employment_type')
+        if employment_type:
+            queryset = queryset.filter(employment_type=employment_type)
+        # Role inclusion/exclusion filters
+        role = self.request.query_params.get('role')
+        exclude_role = self.request.query_params.get('exclude_role')
+        if role:
+            queryset = queryset.filter(role=role)
+        if exclude_role: 
+            # Exclude alerts belonging to certain employee roles (comma-separated)
+            roles = [r.strip() for r in exclude_role.split(',') if r.strip()]
+            if roles:
+                queryset = queryset.exclude(role__in=roles)
+        # Server-side: if requesting user is HR, automatically exclude Admin employees
+        try:
+            user_employee = getattr(self.request.user, 'employee', None)
+            if user_employee and getattr(user_employee, 'role', '').lower() == 'hr':
+                queryset = queryset.exclude(role__iexact='admin')
+        except Exception:
+            pass
+        return queryset
+
+    @action(detail=False, methods=['post'])
+    def bulk_toggle_login(self, request):
+        """Bulk toggle can_login for multiple employee IDs"""
+        employee_ids = request.data.get('employee_ids', [])
+        new_status = request.data.get('can_login', False)
+        
+        updated_count = 0
+        for emp_id in employee_ids:
+            try:
+                employee = Employee.objects.get(id=emp_id)
+                employee.can_login = new_status
+                employee.save()
+                updated_count += 1
+            except Employee.DoesNotExist:
+                continue
+        
+        return Response({
+            'message': f'Updated {updated_count} accounts',
+            'can_login': new_status
+        })
+    
+    @action(detail=True, methods=['post'])
+    def reset_password(self, request, pk=None):
+        """Reset employee password - returns temporary password"""
+        try:
+            employee = self.get_object()
+            if not employee.user:
+                return Response({'error': 'User account not found'}, status=status.HTTP_404_NOT_FOUND)
+            
+            # Generate temporary password
+            import string
+            import random
+            temp_password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
+            
+            employee.user.set_password(temp_password)
+            employee.user.save()
+            
+            ActivityLog.objects.create(
+                user=request.user,
+                employee=employee,
+                role='Admin',
+                action='reset_password',
+                details=f'Password reset for {employee.full_name}',
+                ip_address=self.get_client_ip(request)
+            )
+            
+            return Response({
+                'message': 'Password reset successfully',
+                'temporary_password': temp_password,
+                'employee_id': employee.id,
+                'employee_name': employee.full_name
+            })
+        except Employee.DoesNotExist:
+            return Response({'error': 'Employee not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    @action(detail=True, methods=['post'])
+    def blacklist_employee(self, request, pk=None):
+        """Blacklist an employee (change status to Blacklist)"""
+        try:
+            employee = self.get_object()
+            reason = request.data.get('reason', 'No reason provided')
+            
+            employee.status = 'Blacklist'
+            employee.can_login = False
+            employee.save()
+            
+            SecurityAlert.objects.create(
+                employee=employee,
+                alert_type='blacklist',
+                severity='high',
+                message=f'{employee.full_name} has been blacklisted',
+                details={'reason': reason}
+            )
+            
+            ActivityLog.objects.create(
+                user=request.user,
+                employee=employee,
+                role='Admin',
+                action='blacklist',
+                details=f'Blacklisted {employee.full_name}. Reason: {reason}',
+                ip_address=self.get_client_ip(request)
+            )
+            
+            serializer = self.get_serializer(employee)
+            return Response({
+                'message': 'Employee blacklisted successfully',
+                'employee': serializer.data
+            })
+        except Employee.DoesNotExist:
+            return Response({'error': 'Employee not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+
+    
+    @action(detail=True, methods=['post'])
+    def delete_employee(self, request, pk=None):
+        """Permanently delete employee and all associated data"""
+        try:
+            employee = self.get_object()
+            employee_name = employee.full_name
+            employee_id = employee.id
+            
+            # Log before deletion
+            ActivityLog.objects.create(
+                user=request.user,
+                employee=employee,
+                role='Admin',
+                action='employee_deleted',
+                details=f'Employee {employee_name} has been permanently deleted',
+                ip_address=self.get_client_ip(request)
+            )
+            
+            # Delete employee (cascades to all related records)
+            employee.delete()
+            
+            return Response({
+                'message': 'Employee and all associated data deleted successfully',
+                'deleted_employee': {
+                    'id': employee_id,
+                    'name': employee_name
+                }
+            })
+        except Employee.DoesNotExist:
+            return Response({'error': 'Employee not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    @action(detail=True, methods=['post'])
+    def toggle_edit_permission(self, request, pk=None):
+        """Toggle whether employee can edit their own information"""
+        try:
+            employee = self.get_object()
+            can_edit = request.data.get('can_edit', True)
+            
+            employee.can_edit_info = can_edit
+            employee.save()
+            
+            ActivityLog.objects.create(
+                user=request.user,
+                employee=employee,
+                role='Admin',
+                action='toggle_edit_permission',
+                details=f'Edit permission set to {can_edit} for {employee.full_name}',
+                ip_address=self.get_client_ip(request)
+            )
+            
+            return Response({
+                'message': f'Edit permission updated successfully',
+                'can_edit_info': employee.can_edit_info
+            })
+        except Employee.DoesNotExist:
+            return Response({'error': 'Employee not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    def get_client_ip(self, request):
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            return x_forwarded_for.split(',')[0]
+        return request.META.get('REMOTE_ADDR')
+
+class AttendanceViewSet(viewsets.ModelViewSet):
+    """ViewSet for attendance records - clock in/out with images"""
+    serializer_class = AttendanceSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        queryset = Attendance.objects.all().order_by('-date')
+        hub_id = self.request.query_params.get('hub_id')
+        employee_id = self.request.query_params.get('employee_id')
+        date = self.request.query_params.get('date')
+
+        if hub_id:
+            queryset = queryset.filter(employee__hub_id=hub_id)
+        if employee_id:
+            queryset = queryset.filter(employee_id=employee_id)
+        if date:
+            queryset = queryset.filter(date=date)
+        return queryset
+
+    @action(detail=False, methods=['post'])
+    def clock_in(self, request):
+        employee_id = request.data.get('employee')
+        image = request.FILES.get('clock_in_image')
+        
+        if not employee_id:
+            return Response({'error': 'Employee ID required'}, status=400)
+            
+        try:
+            today = timezone.now().date()
+            attendance, created = Attendance.objects.get_or_create(
+                employee_id=employee_id,
+                date=today,
+                defaults={'clock_in_time': timezone.now()}
+            )
+            if not created and attendance.clock_in_time:
+                return Response({'error': 'Already clocked in today'}, status=400)
+                
+            if image:
+                # Generate unique filename with employee_id and date
+                ext = image.name.split('.')[-1] if '.' in image.name else 'jpg'
+                filename = f'clock_in_{employee_id}_{today}.{ext}'
+                attendance.clock_in_image.save(filename, image, save=True)
+            
+            attendance.clock_in_time = timezone.now()
+            attendance.status = 'Present'
+            attendance.save()
+            
+            serializer = AttendanceSerializer(attendance, context={'request': request})
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+
+    @action(detail=False, methods=['post'])
+    def clock_out(self, request):
+        employee_id = request.data.get('employee')
+        image = request.FILES.get('clock_out_image')
+        
+        if not employee_id:
+            return Response({'error': 'Employee ID required'}, status=400)
+            
+        try:
+            today = timezone.now().date()
+            attendance = Attendance.objects.get(
+                employee_id=employee_id,
+                date=today
+            )
+            if not attendance.clock_in_time:
+                return Response({'error': 'No clock in record found'}, status=400)
+                
+            # Check if already clocked out today
+            if attendance.clock_out_time:
+                return Response({'error': 'Already clocked out today'}, status=400)
+                
+            if image:
+                # Generate unique filename with employee_id and date
+                ext = image.name.split('.')[-1] if '.' in image.name else 'jpg'
+                filename = f'clock_out_{employee_id}_{today}.{ext}'
+                attendance.clock_out_image.save(filename, image, save=True)
+            
+            attendance.clock_out_time = timezone.now()
+            attendance.save()
+            
+            serializer = AttendanceSerializer(attendance, context={'request': request})
+            return Response(serializer.data)
+        except Attendance.DoesNotExist:
+            return Response({'error': 'No attendance record for today'}, status=404)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+
+    @action(detail=False, methods=['get'])
+    def summary(self, request):
+        """Attendance summary stats"""
+        total = Attendance.objects.count()
+        present = Attendance.objects.filter(status='Present').count()
+        absent = Attendance.objects.filter(status='Absent').count()
+        late = Attendance.objects.filter(clock_in_time__hour__gte=10).count()
+         # After 10AM = late
+        
+        return Response({
+            'total': total,
+            'present': present,
+            'absent': absent,
+            'late': late,
+        })
+
+    @action(detail=False, methods=['get'])
+    def hub_summary(self, request):
+        """Attendance counts by hub for charting"""
+        date = request.query_params.get('date')
+        queryset = Attendance.objects.select_related('employee__hub').all()
+        if date:
+            queryset = queryset.filter(date=date)
+
+        hub_stats = {}
+        for attendance in queryset:
+            hub_name = attendance.employee.hub.name if attendance.employee and attendance.employee.hub else 'Unknown'
+            if hub_name not in hub_stats:
+                hub_stats[hub_name] = {'present': 0, 'absent': 0, 'late': 0}
+            status = (attendance.status or 'Absent').lower()
+            if status == 'present':
+                hub_stats[hub_name]['present'] += 1
+            elif status == 'absent':
+                hub_stats[hub_name]['absent'] += 1
+            elif status == 'late':
+                hub_stats[hub_name]['late'] += 1
+            else:
+                hub_stats[hub_name]['absent'] += 1
+            if timezone.now().hour >= 10:
+                attendance.status = 'Late'
+            else:
+                attendance.status = 'Present'
+                attendance.save()
+
+        result = [
+            {
+                'hub_name': hub_name,
+                'present': stats['present'],
+                'absent': stats['absent'],
+                'late': stats['late'],
+            }
+            for hub_name, stats in hub_stats.items()
+        ]
+        return Response(result)
+
+class LeaveRequestViewSet(viewsets.ModelViewSet):
+    queryset = LeaveRequest.objects.all()
+    serializer_class = LeaveRequestSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        qs = LeaveRequest.objects.all().select_related('employee', 'reviewed_by').order_by('-created_at')
+        status = self.request.query_params.get('status')
+        employee_id = self.request.query_params.get('employee_id')
+        hub_id = self.request.query_params.get('hub_id')
+
+        if status:
+            qs = qs.filter(status=status)
+        if employee_id:
+            qs = qs.filter(employee_id=employee_id)
+        if hub_id:
+            qs = qs.filter(employee__hub_id=hub_id)
+        return qs
+
+    def perform_create(self, serializer):
+        # Employee submits their own leave request; restrict via employee.user mapping
+        user = self.request.user
+        try:
+            emp = Employee.objects.get(user=user)
+        except Employee.DoesNotExist:
+            emp = None
+
+        # Save leave request, then persist any uploaded files as LeaveAttachment
+        if emp:
+            instance = serializer.save(employee=emp)
+        else:
+            instance = serializer.save()
+
+        # Handle uploaded files under key 'attachments' (frontend sends multiple files with this key)
+        try:
+            files = self.request.FILES.getlist('attachments') if hasattr(self.request.FILES, 'getlist') else []
+            from .models import LeaveAttachment
+            for f in files:
+                # create LeaveAttachment pointing to this leave request
+                LeaveAttachment.objects.create(leave_request=instance, file=f)
+        except Exception as e:
+            # don't fail the request if attachments saving has issues; log for debugging
+            print('Failed to save leave attachments:', e)
+
+    @action(detail=True, methods=['patch'])
+    def approve(self, request, pk=None):
+        instance = self.get_object()
+        instance.status = 'approved'
+        # allow admin to include an optional note when approving
+        instance.notes = request.data.get('notes', instance.notes)
+        instance.reviewed_by = request.user
+        instance.reviewed_at = timezone.now()
+        instance.save()
+        return Response(self.get_serializer(instance).data)
+
+    @action(detail=True, methods=['patch'])
+    def reject(self, request, pk=None):
+        instance = self.get_object()
+        instance.status = 'rejected'
+        instance.notes = request.data.get('notes', instance.notes)
+        instance.reviewed_by = request.user
+        instance.reviewed_at = timezone.now()
+        instance.save()
+        return Response(self.get_serializer(instance).data)
+
+
+class EditRequestViewSet(viewsets.ModelViewSet):
+    """ViewSet for edit requests with approval logic"""
+    queryset = EditRequest.objects.all()
+    serializer_class = EditRequestSerializer
+    # Temporarily allow unauthenticated requests for debugging the multipart POST from the frontend.
+    # Revert to IsAuthenticated after debugging.
+    permission_classes = [AllowAny]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+    
+    def get_queryset(self):
+        queryset = EditRequest.objects.all().select_related('employee', 'reviewed_by').order_by('-created_at')
+        status = self.request.query_params.get('status')
+        if status:
+            queryset = queryset.filter(status=status)
+        employee_id = self.request.query_params.get('employee_id')
+        if employee_id:
+            queryset = queryset.filter(employee_id=employee_id)
+        hub_id = self.request.query_params.get('hub_id')
+        if hub_id:
+            queryset = queryset.filter(employee__hub_id=hub_id)
+        return queryset
+    
+    def create(self, request, *args, **kwargs):
+        # DEBUG: log incoming request info for troubleshooting XHR failures
+        try:
+            print("--- EditRequest.create() debug ---")
+            print("Method:", request.method)
+            print("Content-Type:", request.META.get('CONTENT_TYPE'))
+            print("FILES keys:", list(request.FILES.keys()))
+            for k, f in request.FILES.items():
+                print(f"File {k}: name={f.name}, size={getattr(f, 'size', 'unknown')}, content_type={getattr(f, 'content_type', 'unknown')}")
+        except Exception as e:
+            print("Debug log failed:", str(e))
+
+        # Accept multipart/form-data: requested_data may be a JSON string
+        requested_data = request.data.get('requested_data', '{}')
+        try:
+            if isinstance(requested_data, str):
+                requested_data = json.loads(requested_data)
+        except Exception:
+            requested_data = {}
+
+        uploaded = request.FILES.get('uploaded_files')
+        # Validate uploaded file (if present)
+        if uploaded:
+            MAX_SIZE = 5 * 1024 * 1024  # 5 MB
+            allowed_prefix = 'image/'
+            if uploaded.size > MAX_SIZE:
+                return Response({'error': 'Uploaded file is too large. Max 5MB.'}, status=status.HTTP_400_BAD_REQUEST)
+            if not (uploaded.content_type and uploaded.content_type.startswith(allowed_prefix)):
+                return Response({'error': 'Invalid file type. Only images are allowed.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Build serializer data. If we can determine the employee from request.user,
+        # include it so the serializer doesn't reject the payload as missing `employee`.
+        data = {'requested_data': requested_data}
+        emp = None
+        if getattr(request, 'user', None) and getattr(request.user, 'is_authenticated', False):
+            emp = Employee.objects.filter(user_id=getattr(request.user, 'id', None)).first()
+
+        if emp:
+            data['employee'] = emp.id
+        else:
+            # If caller provided employee in the form/payload, accept it.
+            if request.data.get('employee'):
+                try:
+                    data['employee'] = int(request.data.get('employee'))
+                except Exception:
+                    data['employee'] = request.data.get('employee')
+
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer, uploaded=uploaded)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def perform_create(self, serializer, uploaded=None):
+        # Save using validated data for `employee` (provided in payload or set
+        # by create()). Only attach uploaded file here to avoid accidentally
+        # passing the wrong object for `employee`.
+        if uploaded:
+            serializer.save(uploaded_files=uploaded)
+        else:
+            serializer.save()
+
+    @action(detail=True, methods=['patch'])
+    def approve(self, request, pk=None):
+        instance = self.get_object()
+        instance.status = 'approved'
+        instance.reviewed_by = request.user
+        instance.reviewed_at = timezone.now()
+        instance.save()
+        # If there is an uploaded file attached to this edit request, replace the employee's profile image
+        try:
+            if instance.uploaded_files:
+                # Delete previous profile image if exists and different
+                if getattr(instance.employee, 'profile_image', None):
+                    try:
+                        # remove file from storage
+                        instance.employee.profile_image.delete(save=False)
+                    except Exception:
+                        pass
+
+                instance.employee.profile_image = instance.uploaded_files
+
+            # Apply other requested_data fields
+            requested_data = instance.requested_data or {}
+            for field, value in requested_data.items():
+                # Skip profile_image key if present (we handled uploaded_files)
+                if field == 'profile_image':
+                    continue
+                if hasattr(instance.employee, field):
+                    setattr(instance.employee, field, value)
+
+            instance.employee.save()
+        except Exception:
+            # If applying changes fails, still return the edit request status
+            pass
+        
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['patch'])
+    def reject(self, request, pk=None):
+        instance = self.get_object()
+        notes = request.data.get('notes', '')
+        instance.status = 'rejected'
+        instance.notes = notes
+        instance.reviewed_by = request.user
+        instance.reviewed_at = timezone.now()
+        instance.save()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+class EmployeeDocumentViewSet(viewsets.ModelViewSet):
+    """ViewSet for employee documents/attachments"""
+    queryset = EmployeeDocument.objects.all()
+    serializer_class = EmployeeDocumentSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        queryset = EmployeeDocument.objects.all()
+        employee_id = self.request.query_params.get('employee_id')
+        if employee_id:
+            queryset = queryset.filter(employee_id=employee_id)
+        return queryset
+
+class PayrollViewSet(viewsets.ModelViewSet):
+    """ViewSet for payroll
+
+    Harden create/update payloads for JSON NOT NULL constraints.
+
+    This UI uses PATCH for editing, but some clients may accidentally send a POST.
+    If a POST happens, we must still guarantee `deduction_details` is non-null.
+    """
+    """
+    We harden create/update payloads so NOT NULL JSON fields don't raise IntegrityError.
+    
+
+    Note:
+    - Some clients may POST partial payloads.
+    - `deduction_details` must never be null for NOT NULL DB constraint.
+    - We enforce default values on create to avoid 500 IntegrityError.
+
+
+    Note: Payslip management UI expects to always list employees for the selected hub,
+    even if they don't have a Payroll record yet. So we return a merged queryset:
+    - existing Payroll rows
+    - missing employees for the hub with net_pay=0 and status='draft'
+    """
+    queryset = Payroll.objects.all().order_by('-period_end')
+    serializer_class = PayrollSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Read filters
+        hub = self.request.query_params.get('hub')
+        status_filter = self.request.query_params.get('status')
+        period_start = self.request.query_params.get('period_start')
+        period_end = self.request.query_params.get('period_end')
+        search = self.request.query_params.get('search')
+        employee_id = self.request.query_params.get('employee_id')
+        year = self.request.query_params.get('year')
+
+        # Existing payroll rows
+        queryset = Payroll.objects.select_related('employee', 'employee__hub').order_by('-period_end')
+
+        if hub:
+            queryset = queryset.filter(employee__hub__name=hub)
+
+        if period_start and period_end:
+            queryset = queryset.filter(period_start=period_start, period_end=period_end)
+        elif period_start:
+            queryset = queryset.filter(period_start=period_start)
+        elif period_end:
+            queryset = queryset.filter(period_end=period_end)
+        elif year and year != 'All':
+            # Fallback: if only year provided, filter by period_end year
+            queryset = queryset.filter(period_end__year=year)
+
+        if status_filter and status_filter != 'All':
+            queryset = queryset.filter(status=status_filter)
+
+        if search:
+            queryset = queryset.filter(
+                models.Q(employee__firstname__icontains=search) |
+                models.Q(employee__lastname__icontains=search)
+            )
+
+        if employee_id:
+            queryset = queryset.filter(employee_id=employee_id)
+
+        # Build list of employees for the hub (or all)
+        employees_qs = Employee.objects.all().select_related('hub')
+        if hub:
+            employees_qs = employees_qs.filter(hub__name=hub)
+
+        if employee_id:
+            # If UI passes employee_id, restrict to it
+            try:
+                employees_qs = employees_qs.filter(id=int(employee_id))
+            except (ValueError, TypeError):
+                pass
+
+        if search:
+            employees_qs = employees_qs.filter(
+                models.Q(firstname__icontains=search) |
+                models.Q(lastname__icontains=search)
+            )
+
+        employees = list(employees_qs)
+        payroll_by_employee_id = {p.employee_id: p for p in queryset}
+
+        # If status is filtered, we still want to show employees with 0 net pay.
+        # We'll bypass filtering for missing employees by setting them to 'draft'.
+        missing_employees = [e for e in employees if e.id not in payroll_by_employee_id]
+
+        # Create lightweight in-memory objects compatible with PayrollSerializer
+        # so serializer can read fields like employee, period_start, period_end, net_pay, status.
+        from datetime import date
+        from decimal import Decimal
+
+        class _PayrollPlaceholder:
+            def __init__(self, employee, start_date, end_date):
+                self.id = None
+                self.employee = employee
+                self.employee_id = employee.id
+                self.period_start = start_date
+                self.period_end = end_date
+                self.total_hours = Decimal('0')
+                self.overtime_hours = Decimal('0')
+                self.lates = 0
+                self.absences = 0
+                self.basic_salary = Decimal('0')
+                self.allowances = Decimal('0')
+                self.overtime_pay = Decimal('0')
+                self.incentives = Decimal('0')
+                self.deduction_details = {}
+                self.sss_deduction = Decimal('0')
+                self.philhealth_deduction = Decimal('0')
+                self.pagibig_deduction = Decimal('0')
+                self.net_pay = Decimal('0')
+                self.status = 'draft'
+                self.payslip_image = None
+                self.created_at = timezone.now()
+                self.updated_at = timezone.now()
+
+                # Compute attendance-based summary for this employee and period
+                try:
+                    from datetime import timedelta
+
+                    qs = Attendance.objects.filter(employee=employee, date__gte=start_date, date__lte=end_date)
+
+                    total_seconds = 0.0
+                    overtime_seconds = 0.0
+                    late_count = 0
+                    present_days = set()
+
+                    LATE_HOUR = 10  # consistent with AttendanceViewSet.summary
+                    STANDARD_DAY_HOURS = 8
+
+                    for a in qs:
+                        if a.clock_in_time and a.clock_out_time:
+                            diff = (a.clock_out_time - a.clock_in_time).total_seconds()
+                            if diff > 0:
+                                total_seconds += diff
+                                hours = diff / 3600.0
+                                if hours > STANDARD_DAY_HOURS:
+                                    overtime_seconds += (hours - STANDARD_DAY_HOURS) * 3600.0
+                        # Count lates
+                        if a.clock_in_time and getattr(a.clock_in_time, 'hour', None) is not None:
+                            if a.clock_in_time.hour >= LATE_HOUR:
+                                late_count += 1
+                        if a.clock_in_time:
+                            present_days.add(a.date)
+
+                    total_hours_float = total_seconds / 3600.0
+                    overtime_hours_float = overtime_seconds / 3600.0
+
+                    self.total_hours = Decimal(str(round(total_hours_float, 2)))
+                    self.overtime_hours = Decimal(str(round(overtime_hours_float, 2)))
+                    self.lates = late_count
+
+                    # More accurate absences: count working weekdays excluding approved leave days
+                    from datetime import timedelta
+
+                    def count_weekdays(start, end):
+                        days = 0
+                        cur = start
+                        while cur <= end:
+                            if cur.weekday() < 5:  # Mon-Fri
+                                days += 1
+                            cur += timedelta(days=1)
+                        return days
+
+                    working_days = count_weekdays(start_date, end_date)
+
+                    # Count approved leave days overlapping this period for this employee
+                    approved_leaves = LeaveRequest.objects.filter(employee=employee, status='approved')
+                    leave_days = 0
+                    for lr in approved_leaves:
+                        # leave may span multiple days; compute overlap with period
+                        ls = lr.start_date
+                        le = lr.end_date
+                        # Find intersection
+                        overlap_start = max(ls, start_date)
+                        overlap_end = min(le, end_date)
+                        if overlap_start <= overlap_end:
+                            leave_days += count_weekdays(overlap_start, overlap_end)
+
+                    present_count = len(present_days)
+                    absences_count = max(0, working_days - present_count - leave_days)
+                    self.absences = absences_count
+
+                    # Compute government deductions based on hub rates and basic_salary
+                    try:
+                        sss_d, phil_d, pagibig_d = compute_gov_deductions(employee, self.basic_salary)
+                        self.sss_deduction = sss_d
+                        self.philhealth_deduction = phil_d
+                        self.pagibig_deduction = pagibig_d
+                    except Exception:
+                        # leave defaults (already zero)
+                        pass
+                except Exception:
+                    # If anything fails, keep zeros
+                    pass
+
+
+        # Determine date range for placeholders
+        try:
+            if period_start and period_end:
+                start_date = date.fromisoformat(period_start)
+                end_date = date.fromisoformat(period_end)
+            elif period_start:
+                start_date = date.fromisoformat(period_start)
+                end_date = start_date
+            elif period_end:
+                end_date = date.fromisoformat(period_end)
+                start_date = end_date
+            else:
+                start_date = date.today()
+                end_date = date.today()
+        except Exception:
+            start_date = date.today()
+            end_date = date.today()
+
+        placeholders = [_PayrollPlaceholder(e, start_date, end_date) for e in missing_employees]
+
+        # If status_filter is applied (Approved/Present/etc.), placeholders should still show.
+        # To keep behavior simple for UI, only suppress placeholders when status_filter is 'All'.
+        # (UI requirement: if they don't have record, show zero on their record in netpay.)
+        results = list(queryset) + placeholders
+
+        return results
+
+    def perform_create(self, serializer):
+        """Compute attendance, government deductions, and net_pay before persisting a new Payroll."""
+        try:
+            emp = serializer.validated_data.get('employee')
+            period_start = serializer.validated_data.get('period_start')
+            period_end = serializer.validated_data.get('period_end')
+            basic = serializer.validated_data.get('basic_salary', 0)
+            allowances = serializer.validated_data.get('allowances', 0)
+            overtime_pay = serializer.validated_data.get('overtime_pay', 0)
+            incentives = serializer.validated_data.get('incentives', 0)
+            deduction_details = serializer.validated_data.get('deduction_details', {}) or {}
+
+            # Use compute helper to calculate derived fields
+            summary = compute_payroll_summary(emp, period_start, period_end,
+                                             basic_salary=float(basic),
+                                             allowances=float(allowances),
+                                             overtime_pay=float(overtime_pay),
+                                             incentives=float(incentives),
+                                             deduction_details=deduction_details)
+
+            # Populate computed fields into validated_data so serializer.save() persists them
+            serializer.validated_data['total_hours'] = summary.get('total_hours', 0)
+            serializer.validated_data['overtime_hours'] = summary.get('overtime_hours', 0)
+            serializer.validated_data['lates'] = summary.get('lates', 0)
+            serializer.validated_data['absences'] = summary.get('absences', 0)
+            # Allow percent overrides from payload; if provided, compute gov deductions using overrides
+            total_earnings = float(summary.get('total_earnings', 0))
+            # Allow percent overrides from either validated_data or raw request payload
+            sss_pct = serializer.validated_data.get('sss_percent') if 'sss_percent' in serializer.validated_data else (self.request.data.get('sss_percent') or None)
+            phil_pct = serializer.validated_data.get('philhealth_percent') if 'philhealth_percent' in serializer.validated_data else (self.request.data.get('philhealth_percent') or None)
+            pagibig_pct = serializer.validated_data.get('pagibig_percent') if 'pagibig_percent' in serializer.validated_data else (self.request.data.get('pagibig_percent') or None)
+
+            if sss_pct is not None or phil_pct is not None or pagibig_pct is not None:
+                # Use provided percents when present (treat None or 0 as no-override)
+                try:
+                    sss_amt = float(total_earnings * (float(sss_pct or 0) / 100.0))
+                    phil_amt = float(total_earnings * (float(phil_pct or 0) / 100.0))
+                    pagibig_amt = float(total_earnings * (float(pagibig_pct or 0) / 100.0))
+                except Exception:
+                    sss_amt = summary.get('sss_deduction', 0)
+                    phil_amt = summary.get('philhealth_deduction', 0)
+                    pagibig_amt = summary.get('pagibig_deduction', 0)
+            else:
+                sss_amt = summary.get('sss_deduction', 0)
+                phil_amt = summary.get('philhealth_deduction', 0)
+                pagibig_amt = summary.get('pagibig_deduction', 0)
+
+            serializer.validated_data['sss_deduction'] = sss_amt
+            serializer.validated_data['philhealth_deduction'] = phil_amt
+            serializer.validated_data['pagibig_deduction'] = pagibig_amt
+
+            # Persist any percent overrides (ensure numeric or zero)
+            if sss_pct is not None:
+                serializer.validated_data['sss_percent'] = float(sss_pct or 0)
+            if phil_pct is not None:
+                serializer.validated_data['philhealth_percent'] = float(phil_pct or 0)
+            if pagibig_pct is not None:
+                serializer.validated_data['pagibig_percent'] = float(pagibig_pct or 0)
+
+            # Recompute net_pay using final deduction values
+            total_gov = float((sss_amt or 0) + (phil_amt or 0) + (pagibig_amt or 0))
+            serializer.validated_data['net_pay'] = summary.get('net_pay', 0)
+        except Exception:
+            # If computing fails, fall back to serializer defaults and allow model.save() to compute net_pay
+            pass
+
+        return serializer.save()
+
+    def perform_update(self, serializer):
+        """When updating a Payroll, recompute derived fields from the newest values and persist them."""
+        try:
+            # Determine effective values (use existing instance values for missing fields)
+            instance = serializer.instance
+            emp = serializer.validated_data.get('employee', instance.employee)
+            period_start = serializer.validated_data.get('period_start', instance.period_start)
+            period_end = serializer.validated_data.get('period_end', instance.period_end)
+            basic = serializer.validated_data.get('basic_salary', instance.basic_salary)
+            allowances = serializer.validated_data.get('allowances', instance.allowances)
+            overtime_pay = serializer.validated_data.get('overtime_pay', instance.overtime_pay)
+            incentives = serializer.validated_data.get('incentives', instance.incentives)
+            deduction_details = serializer.validated_data.get('deduction_details', instance.deduction_details) or {}
+
+            summary = compute_payroll_summary(emp, period_start, period_end,
+                                             basic_salary=float(basic),
+                                             allowances=float(allowances),
+                                             overtime_pay=float(overtime_pay),
+                                             incentives=float(incentives),
+                                             deduction_details=deduction_details)
+
+            serializer.validated_data['total_hours'] = summary.get('total_hours', getattr(instance, 'total_hours', 0))
+            serializer.validated_data['overtime_hours'] = summary.get('overtime_hours', getattr(instance, 'overtime_hours', 0))
+            serializer.validated_data['lates'] = summary.get('lates', getattr(instance, 'lates', 0))
+            serializer.validated_data['absences'] = summary.get('absences', getattr(instance, 'absences', 0))
+
+            total_earnings = float(summary.get('total_earnings', float(getattr(instance, 'basic_salary', 0)) + float(getattr(instance, 'allowances', 0))))
+            # For updates allow override via payload or validated_data; fall back to instance values
+            sss_pct = serializer.validated_data.get('sss_percent') if 'sss_percent' in serializer.validated_data else (self.request.data.get('sss_percent') or getattr(instance, 'sss_percent', None))
+            phil_pct = serializer.validated_data.get('philhealth_percent') if 'philhealth_percent' in serializer.validated_data else (self.request.data.get('philhealth_percent') or getattr(instance, 'philhealth_percent', None))
+            pagibig_pct = serializer.validated_data.get('pagibig_percent') if 'pagibig_percent' in serializer.validated_data else (self.request.data.get('pagibig_percent') or getattr(instance, 'pagibig_percent', None))
+
+            if sss_pct is not None or phil_pct is not None or pagibig_pct is not None:
+                try:
+                    sss_amt = float(total_earnings * (float(sss_pct or 0) / 100.0))
+                    phil_amt = float(total_earnings * (float(phil_pct or 0) / 100.0))
+                    pagibig_amt = float(total_earnings * (float(pagibig_pct or 0) / 100.0))
+                except Exception:
+                    sss_amt = summary.get('sss_deduction', getattr(instance, 'sss_deduction', 0))
+                    phil_amt = summary.get('philhealth_deduction', getattr(instance, 'philhealth_deduction', 0))
+                    pagibig_amt = summary.get('pagibig_deduction', getattr(instance, 'pagibig_deduction', 0))
+            else:
+                sss_amt = summary.get('sss_deduction', getattr(instance, 'sss_deduction', 0))
+                phil_amt = summary.get('philhealth_deduction', getattr(instance, 'philhealth_deduction', 0))
+                pagibig_amt = summary.get('pagibig_deduction', getattr(instance, 'pagibig_deduction', 0))
+
+            serializer.validated_data['sss_deduction'] = sss_amt
+            serializer.validated_data['philhealth_deduction'] = phil_amt
+            serializer.validated_data['pagibig_deduction'] = pagibig_amt
+
+            if 'sss_percent' in serializer.validated_data:
+                serializer.validated_data['sss_percent'] = float(serializer.validated_data.get('sss_percent') or 0)
+            if 'philhealth_percent' in serializer.validated_data:
+                serializer.validated_data['philhealth_percent'] = float(serializer.validated_data.get('philhealth_percent') or 0)
+            if 'pagibig_percent' in serializer.validated_data:
+                serializer.validated_data['pagibig_percent'] = float(serializer.validated_data.get('pagibig_percent') or 0)
+
+            # net_pay: recompute conservatively
+            try:
+                total_gov = float((sss_amt or 0) + (phil_amt or 0) + (pagibig_amt or 0))
+                other_ded = float(serializer.validated_data.get('deduction_details') and sum(serializer.validated_data.get('deduction_details', {}).values()) or getattr(instance, 'deduction_details') and sum(getattr(instance, 'deduction_details', {}).values()) or 0)
+            except Exception:
+                total_gov = 0
+                other_ded = 0
+            serializer.validated_data['net_pay'] = round((float(total_earnings) - other_ded - total_gov), 2)
+        except Exception:
+            pass
+
+        return serializer.save()
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def compute(self, request):
+        """Compute a payroll summary for an employee and period without persisting.
+
+        Query params: employee_id, period_start (YYYY-MM-DD), period_end (YYYY-MM-DD)
+        Optional: basic_salary, allowances, overtime_pay, incentives, deduction_details (json)
+        """
+        emp_id = request.query_params.get('employee_id')
+        period_start = request.query_params.get('period_start')
+        period_end = request.query_params.get('period_end')
+        if not emp_id or not period_start or not period_end:
+            return Response({'detail': 'employee_id, period_start and period_end are required'}, status=400)
+
+        try:
+            emp = Employee.objects.get(id=int(emp_id))
+        except Employee.DoesNotExist:
+            return Response({'detail': 'Employee not found'}, status=404)
+
+        try:
+            from datetime import date
+            start = date.fromisoformat(period_start)
+            end = date.fromisoformat(period_end)
+        except Exception:
+            return Response({'detail': 'Invalid period_start/period_end'}, status=400)
+
+        try:
+            basic = float(request.query_params.get('basic_salary', 0))
+            allowances = float(request.query_params.get('allowances', 0))
+            overtime_pay = float(request.query_params.get('overtime_pay', 0))
+            incentives = float(request.query_params.get('incentives', 0))
+        except Exception:
+            basic = allowances = overtime_pay = incentives = 0.0
+
+        dd = request.query_params.get('deduction_details')
+        try:
+            if dd:
+                import json as _json
+                dd_parsed = _json.loads(dd)
+            else:
+                dd_parsed = {}
+        except Exception:
+            dd_parsed = {}
+
+        summary = compute_payroll_summary(emp, start, end, basic_salary=basic, allowances=allowances, overtime_pay=overtime_pay, incentives=incentives, deduction_details=dd_parsed)
+        return Response(summary)
+
+
+class LiveLocationViewSet(viewsets.ModelViewSet):
+    """Live location tracking"""
+    queryset = LiveLocation.objects.all().order_by('-timestamp')
+    serializer_class = LiveLocationSerializer
+    permission_classes = [IsAuthenticated]
+
+class LoginView(APIView):
+    permission_classes = [AllowAny]
+    
+    # Track failed login attempts per user
+    failed_attempts = {}
+    MAX_FAILED_ATTEMPTS = 5
+    
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        username = serializer.validated_data.get('username')
+        password = serializer.validated_data.get('password')
+        
+        if not username or not password:
+            return Response({'error': 'Username and password are required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user = authenticate(username=username, password=password)
+        client_ip = self.get_client_ip(request)
+        
+        # Check failed login attempts
+        failed_count = self.failed_attempts.get(username, 0)
+        
+        if user and user.is_active:
+            try:
+                employee = Employee.objects.get(user=user)
+                role = employee.role
+                # Check if employee login is disabled
+                if not employee.can_login:
+                    SecurityAlert.objects.create(
+                        employee=employee,
+                        alert_type='account_disabled',
+                        severity='high',
+                        message=f'{employee.full_name} attempted login while account is disabled.',
+                        details={
+                            'username': username,
+                            'ip_address': client_ip,
+                            'timestamp': str(timezone.now())
+                        }
+                    )
+                    return Response(
+                        {'error': 'Account has been disabled by administrator'}, 
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+            except Employee.DoesNotExist:
+                employee = None
+                role = 'Admin' if user.is_superuser else 'HR' if user.is_staff else 'Employee'
+            
+            # Reset failed attempts on successful login
+            self.failed_attempts[username] = 0
+            
+            ActivityLog.objects.create(
+                user=user,
+                employee=employee,
+                role=role,
+                action='login',
+                details=f'{username} logged in successfully from {client_ip}',
+                ip_address=client_ip
+            )
+            
+            # Generate JWT token
+            refresh = RefreshToken.for_user(user)
+            
+            return Response({
+                'role': role,
+                'user': {
+                    'id': user.id,
+                    'username': user.username,
+                    'role': role
+                },
+                'employee': EmployeeSerializer(employee, context={'request': request}).data if employee else None,
+                'token': str(refresh.access_token),
+                'refresh': str(refresh)
+            })
+        
+        # Handle failed login
+        self.failed_attempts[username] = failed_count + 1
+        failed_count = self.failed_attempts[username]
+        
+        # Try to find the employee for security alert
+        try:
+            user_obj = User.objects.get(username=username)
+            employee = Employee.objects.get(user=user_obj)
+        except (User.DoesNotExist, Employee.DoesNotExist):
+            employee = None
+        
+        # Create security alert for failed login
+        alert_type = 'failed_login'
+        severity = 'low'
+        
+        if failed_count >= self.MAX_FAILED_ATTEMPTS:
+            alert_type = 'multiple_attempts'
+            severity = 'high'
+            message = f'Multiple failed login attempts detected for {username} ({failed_count} attempts from {client_ip})'
+        else:
+            message = f'Failed login attempt for {username}'
+        
+        SecurityAlert.objects.create(
+            employee=employee,
+            alert_type=alert_type,
+            severity=severity,
+            message=message,
+            details={
+                'username': username,
+                'ip_address': client_ip,
+                'failed_attempts': failed_count,
+                'timestamp': str(timezone.now())
+            }
+        )
+        
+        # Record failed login in activity log
+        if employee:
+            ActivityLog.objects.create(
+                employee=employee,
+                role=employee.role,
+                action='failed_login',
+                details=f'Failed login attempt #{failed_count} for {username}',
+                ip_address=client_ip
+            )
+        
+        error_msg = 'Invalid credentials'
+        if failed_count >= self.MAX_FAILED_ATTEMPTS:
+            error_msg = f'Too many failed login attempts. Please try again later.'
+        
+        return Response({'error': error_msg}, status=status.HTTP_401_UNAUTHORIZED)
+
+    def get_client_ip(self, request):
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            return x_forwarded_for.split(',')[0]
+        return request.META.get('REMOTE_ADDR')
+
+
+class CurrentUserView(APIView):
+    """Return current authenticated user with employee data"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        user = request.user
+        try:
+            employee = Employee.objects.get(user=user)
+            role = employee.role
+            employee_data = EmployeeSerializer(employee, context={'request': request}).data
+        except Employee.DoesNotExist:
+            employee = None
+            role = 'Admin' if user.is_superuser else 'HR' if user.is_staff else 'Employee'
+            employee_data = None
+        
+        return Response({
+            'role': role,
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'role': role
+            },
+            'employee': employee_data,
+        })
+
+class EmployeeStatsView(APIView):
+    def get(self, request):
+        total = Employee.objects.count()
+        active = Employee.objects.filter(status='Active').count()
+        inactive = Employee.objects.filter(status='Inactive').count()
+        resign = Employee.objects.filter(status='Resign').count()
+        awol = Employee.objects.filter(status='AWOL').count()
+        blacklist = Employee.objects.filter(status='Blacklist').count()
+        
+        full_time = Employee.objects.filter(employment_type='Full-time').count()
+        ocw = Employee.objects.filter(employment_type='OCW').count()
+        
+        return Response({
+            'total': total,
+            'active': active,
+            'inactive': inactive,
+            'resign': resign,
+            'awol': awol,
+            'blacklist': blacklist,
+            'fullTime': full_time,
+            'ocw': ocw,
+        })
+
+@api_view(['POST'])
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def toggle_account_status(request):
+    user_id = request.data.get('user_id')
+    if not user_id:
+        return Response({"error": "user_id required"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Convert user_id to integer if it's a string
+    try:
+        if isinstance(user_id, str):
+            user_id = int(user_id)
+    except (ValueError, TypeError):
+        return Response({"error": "Invalid user_id format. Must be an integer."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        employee = Employee.objects.get(id=user_id)
+        user = employee.user
+        
+        if not user:
+            return Response({"error": "User profile not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        user.is_active = not user.is_active
+        user.save()
+        return Response({"message": f"User {'enabled' if user.is_active else 'disabled'} successfully.", "is_active": user.is_active})
+    except Employee.DoesNotExist:
+        return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def login(request):
+    username = request.data.get('username')
+    password = request.data.get('password')
+    user = authenticate(username=username, password=password)
+
+    if user is None:
+        return Response({"error": "Invalid credentials."}, status=status.HTTP_401_UNAUTHORIZED)
+
+    if not user.is_active:
+        return Response({"error": "Account is disabled. Contact administrator."}, status=status.HTTP_403_FORBIDDEN)
+
+    # Get the associated employee
+    try:
+        employee = Employee.objects.get(user=user)
+        employee_data = {
+            'id': employee.id,
+            'firstname': employee.firstname,
+            'lastname': employee.lastname,
+            'middle_initial': employee.middle_initial,
+            'full_name': employee.full_name,
+            'position': employee.position,
+            'employment_type': employee.employment_type,
+            'status': employee.status,
+            'role': employee.role,
+            'hub': employee.hub_id,
+            'hub_name': employee.hub.name if employee.hub else None,
+            'employee_id': employee.employee_id,
+            'jtp_code': employee.jtp_code,
+            'profile_image_url': employee.profile_image.url if employee.profile_image else None,
+            'can_login': employee.can_login,
+            'can_edit_info': employee.can_edit_info,
+        }
+    except Employee.DoesNotExist:
+        return Response({"error": "Employee profile not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    refresh = RefreshToken.for_user(user)
+    
+    return Response({
+        "token": str(refresh.access_token),
+        "refresh": str(refresh),
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "role": employee.role,
+        },
+        "employee": employee_data,
+    })
+
+@api_view(['POST'])
+def approve_edit_request(request):
+    request_id = request.data.get('request_id')
+    if not request_id:
+        return Response({"error": "request_id required"}, status=400)
+    try:
+        edit_request = EditRequest.objects.get(id=request_id)
+        if edit_request.status != "approved":
+            return Response({"error": "Edit request not approved."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        employee = edit_request.employee
+        if not employee:
+            return Response({"error": "Employee not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+        requested_data = edit_request.requested_data or {}
+        for field, value in requested_data.items():
+            if hasattr(employee, field):
+                setattr(employee, field, value)
+        employee.save()
+        return Response({"message": "Employee information updated successfully."})
+    except EditRequest.DoesNotExist:
+        return Response({"error": "Edit request not found."}, status=status.HTTP_404_NOT_FOUND)
+
+
+# CSV Download for Payroll
+@api_view(['GET'])
+def download_hub_payroll_csv(request):
+    import csv
+    from django.http import HttpResponse
+    
+    hub_id = request.GET.get('hub_id') or request.query_params.get('hub_id')
+    if not hub_id:
+        return Response({"error": "hub_id required"}, status=400)
+    
+    period_start = request.GET.get('period_start') or request.query_params.get('period_start')
+    period_end = request.GET.get('period_end') or request.query_params.get('period_end')
+    status_filter = request.GET.get('status') or request.query_params.get('status')
+
+    payrolls = Payroll.objects.select_related('employee', 'employee__hub').filter(
+        employee__hub_id=hub_id
+    )
+
+    if period_start and period_end:
+        payrolls = payrolls.filter(
+            period_start=period_start,
+            period_end=period_end
+        )
+
+    if status_filter:
+        payrolls = payrolls.filter(status=status_filter)
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="hub_{hub_id}_payroll.csv"'
+
+    writer = csv.writer(response)
+
+    # HEADER
+    writer.writerow([
+        'Full Name',
+        'JTP Code',
+        'Hub',
+        'Period Start',
+        'Period End',
+        'Basic Salary',
+        'Allowances',
+        'Overtime Pay',
+        'Incentives',
+        'SSS',
+        'PhilHealth',
+        'Pag-IBIG',
+        'Net Pay',
+        'Status'
+    ])
+
+    # DATA
+    for p in payrolls:
+        writer.writerow([
+            f"{p.employee.firstname} {p.employee.lastname}",
+            p.employee.jtp_code,
+            p.employee.hub.name if p.employee.hub else '',
+            p.period_start,
+            p.period_end,
+            p.basic_salary,
+            p.allowances,
+            p.overtime_pay,
+            p.incentives,
+            p.sss_deduction,
+            p.philhealth_deduction,
+            p.pagibig_deduction,
+            p.net_pay,
+            p.status
+        ])
+
+    return response
+
+
+# ===================== ACTIVITY LOG VIEWSET =====================
+
+class ActivityLogViewSet(viewsets.ModelViewSet):
+    """ViewSet for activity logs"""
+    queryset = ActivityLog.objects.all()
+    serializer_class = ActivityLogSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        queryset = ActivityLog.objects.all().select_related('employee', 'user').order_by('-created_at')
+        
+        # Filter by role
+        role = self.request.query_params.get('role')
+        if role:
+            queryset = queryset.filter(role=role)
+        # Exclude roles (comma-separated)
+        exclude_role = self.request.query_params.get('exclude_role')
+        if exclude_role:
+            roles = [r.strip() for r in exclude_role.split(',') if r.strip()]
+            if roles:
+                queryset = queryset.exclude(role__in=roles)
+        
+        # Filter by action
+        action = self.request.query_params.get('action')
+        if action:
+            queryset = queryset.filter(action=action)
+        
+        # Filter by employee
+        employee_id = self.request.query_params.get('employee_id')
+        if employee_id:
+            queryset = queryset.filter(employee_id=employee_id)
+        # Exclude alerts for employees with certain roles (comma-separated)
+        exclude_role = self.request.query_params.get('exclude_role')
+        if exclude_role:
+            roles = [r.strip() for r in exclude_role.split(',') if r.strip()]
+            if roles:
+                queryset = queryset.exclude(employee__role__in=roles)
+
+        # Server-side: if requesting user is HR, automatically exclude activities
+        # that are either performed by Admins (`role='Admin'`) or target Admin employees
+        try:
+            user_employee = getattr(self.request.user, 'employee', None)
+            if user_employee and getattr(user_employee, 'role', '').lower() == 'hr':
+                queryset = queryset.exclude(models.Q(role__iexact='admin') | models.Q(employee__role__iexact='admin'))
+        except Exception:
+            pass
+
+        return queryset
+
+    def perform_create(self, serializer):
+        """Auto-log activity on creation"""
+        serializer.save()
+
+    @action(detail=False, methods=['post'])
+    def log_activity(self, request):
+        """Manual endpoint to log an activity"""
+        employee_id = request.data.get('employee_id')
+        role = request.data.get('role', 'Employee')
+        action = request.data.get('action')
+        details = request.data.get('details', '')
+        
+        employee = None
+        if employee_id:
+            try:
+                employee = Employee.objects.get(id=employee_id)
+            except Employee.DoesNotExist:
+                pass
+        
+        activity_log = ActivityLog.objects.create(
+            user=request.user if request.user.is_authenticated else None,
+            employee=employee,
+            role=role,
+            action=action,
+            details=details,
+            ip_address=self.get_client_ip(request)
+        )
+        return Response(ActivityLogSerializer(activity_log).data, status=status.HTTP_201_CREATED)
+    
+    def get_client_ip(self, request):
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip
+
+
+# ===================== SECURITY ALERT VIEWSET =====================
+
+class SecurityAlertViewSet(viewsets.ModelViewSet):
+    """ViewSet for security alerts"""
+    queryset = SecurityAlert.objects.all()
+    serializer_class = SecurityAlertSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        queryset = SecurityAlert.objects.all().select_related('employee', 'resolved_by').order_by('-created_at')
+        
+        # Filter by severity
+        severity = self.request.query_params.get('severity')
+        if severity:
+            queryset = queryset.filter(severity=severity)
+        
+        # Filter by alert_type
+        alert_type = self.request.query_params.get('alert_type')
+        if alert_type:
+            queryset = queryset.filter(alert_type=alert_type)
+        
+        # Filter resolved/unresolved
+        resolved = self.request.query_params.get('resolved')
+        if resolved is not None:
+            queryset = queryset.filter(is_resolved=resolved.lower() == 'true')
+        
+        # Filter by employee
+        employee_id = self.request.query_params.get('employee_id')
+        if employee_id:
+            queryset = queryset.filter(employee_id=employee_id)
+        
+        # Server-side: if requesting user is HR, automatically exclude alerts
+        # that reference Admin employees
+        try:
+            user_employee = getattr(self.request.user, 'employee', None)
+            if user_employee and getattr(user_employee, 'role', '').lower() == 'hr':
+                queryset = queryset.exclude(employee__role__iexact='admin')
+        except Exception:
+            pass
+
+        return queryset
+
+    @action(detail=True, methods=['patch'])
+    def resolve(self, request, pk=None):
+        """Mark alert as resolved"""
+        instance = self.get_object()
+        instance.is_resolved = True
+        instance.resolved_by = request.user
+        instance.resolved_at = timezone.now()
+        instance.save()
+        
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['post'])
+    def create_alert(self, request):
+        """Manual endpoint to create an alert"""
+        employee_id = request.data.get('employee_id')
+        alert_type = request.data.get('alert_type', 'login_attempt')
+        severity = request.data.get('severity', 'low')
+        message = request.data.get('message', '')
+        details = request.data.get('details', {})
+        
+        employee = None
+        if employee_id:
+            try:
+                employee = Employee.objects.get(id=employee_id)
+            except Employee.DoesNotExist:
+                return Response({"error": "Employee not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+        alert = SecurityAlert.objects.create(
+            employee=employee,
+            alert_type=alert_type,
+            severity=severity,
+            message=message,
+            details=details)
+        
+        return Response(SecurityAlertSerializer(alert).data, status=status.HTTP_201_CREATED)
+
+
+# ===================== HR PERMISSIONS VIEWSET =====================
+
+class HRPermissionViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing HR permissions"""
+    queryset = HRPermission.objects.all()
+    serializer_class = HRPermissionSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        # Only admins can view all HR permissions
+        user_employee = Employee.objects.filter(user=self.request.user).first()
+        if user_employee and user_employee.role == 'Admin':
+            return HRPermission.objects.all()
+        # HR can only view their own permissions
+        return HRPermission.objects.filter(hr_employee__user=self.request.user)
+
+
+# ===================== ACCOUNT MANAGEMENT ENDPOINTS =====================
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def lock_unlock_account(request, employee_id):
+    """Lock or unlock an employee account (controls can_login field)"""
+    try:
+        employee = Employee.objects.get(id=employee_id)
+        action = request.data.get('action')  # 'lock' or 'unlock'
+        
+        if action == 'lock':
+            employee.can_login = False
+        elif action == 'unlock':
+            employee.can_login = True
+        else:
+            return Response(
+                {"error": "Invalid action. Use 'lock' or 'unlock'."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        employee.save()
+        
+        # Get the role of the requesting user
+        try:
+            admin_employee = Employee.objects.get(user=request.user)
+            admin_role = admin_employee.role
+        except Employee.DoesNotExist:
+            admin_role = 'Admin' if request.user.is_superuser else 'HR' if request.user.is_staff else 'Unknown'
+        
+        # Log the activity
+        ActivityLog.objects.create(
+            employee=employee,
+            user=request.user,
+            role=admin_role,
+            action=f"Account {'locked' if action == 'lock' else 'unlocked'}",
+            details=f"Admin/HR {'locked' if action == 'lock' else 'unlocked'} account",
+            ip_address=request.META.get('REMOTE_ADDR', ''),
+            user_agent=request.META.get('HTTP_USER_AGENT', '')
+        )
+        
+        return Response({
+            "message": f"Account {'locked' if action == 'lock' else 'unlocked'} successfully.",
+            "can_login": employee.can_login
+        })
+    except Employee.DoesNotExist:
+        return Response(
+            {"error": "Employee not found."},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def reset_password(request, employee_id):
+    """Reset employee password (Admin only)"""
+    try:
+        # Check if user is admin
+        user_employee = Employee.objects.get(user=request.user)
+        if user_employee.role != 'Admin':
+            return Response(
+                {"error": "Only admins can reset passwords."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        employee = Employee.objects.get(id=employee_id)
+        user = employee.user
+        
+        # Generate temporary password
+        import secrets
+        import string
+        temp_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
+        
+        # Set new password
+        user.set_password(temp_password)
+        user.save()
+        
+        # Log the activity
+        ActivityLog.objects.create(
+            employee=employee,
+            user=request.user,
+            role='Admin',
+            action="Password reset",
+            description=f"Password reset by admin. Temporary password: {temp_password}",
+            ip_address=request.META.get('REMOTE_ADDR', ''),
+            user_agent=request.META.get('HTTP_USER_AGENT', '')
+        )
+        
+        # Create security alert
+        SecurityAlert.objects.create(
+            employee=employee,
+            alert_type='password_reset',
+            severity='medium',
+            message='Your password has been reset by an administrator',
+            details={'reset_by': request.user.username, 'temporary_password': temp_password}
+        )
+        
+        return Response({
+            "message": "Password reset successfully.",
+            "temporary_password": temp_password,
+            "note": "Share this password with the employee securely. They should change it on first login."
+        })
+    except Employee.DoesNotExist:
+        return Response(
+            {"error": "Employee not found."},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {"error": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
