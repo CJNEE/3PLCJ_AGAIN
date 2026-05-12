@@ -7,6 +7,8 @@ from django.conf import settings
 from .models import Hub, Employee, EditRequest, LeaveRequest, Attendance, LiveLocation, EmployeeDocument, Payroll, ActivityLog, SecurityAlert, HRPermission
 from django.http import QueryDict
 
+from .media_urls import absolute_media_url
+
 class HRPermissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = HRPermission
@@ -49,35 +51,14 @@ class AttendanceSerializer(serializers.ModelSerializer):
         ]
     
     def get_clock_in_image(self, obj):
-        request = self.context.get('request')
-
         if obj.clock_in_image:
-            if request:
-                return request.build_absolute_uri(obj.clock_in_image.url)
-            return f"http://127.0.0.1:8000{obj.clock_in_image.url}"
+            return absolute_media_url(self.context.get('request'), obj.clock_in_image.url)
         return None
-    
 
     def get_clock_out_image(self, obj):
-        request = self.context.get('request')
-
         if obj.clock_out_image:
-            if request:
-                return request.build_absolute_uri(obj.clock_out_image.url)
-            return f"http://127.0.0.1:8000{obj.clock_out_image.url}"
+            return absolute_media_url(self.context.get('request'), obj.clock_out_image.url)
         return None
-
-def get_document_url(self, obj, field_name):
-    field = getattr(obj, field_name, None)
-    if not field:
-        return None
-
-    request = self.context.get('request')
-    if request:
-        return request.build_absolute_uri(field.url)
-
-    # FORCE absolute URL instead of relative
-    return f"http://127.0.0.1:8000{field.url}"
 
 # ✅ DEFINE THIS FIRST
 class EmployeeDocumentSerializer(serializers.ModelSerializer):
@@ -104,10 +85,7 @@ class EmployeeDocumentSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'file_url', 'file_name', 'file_size', 'uploaded_at', 'document_type']
 
     def get_file_url(self, obj):
-        request = self.context.get('request')
-        if request:
-            return request.build_absolute_uri(obj.file.url)
-        return f'/media/{obj.file.name}'
+        return absolute_media_url(self.context.get('request'), obj.file.url)
 
 
 
@@ -143,12 +121,17 @@ class EmployeeSerializer(serializers.ModelSerializer):
         return f"{obj.firstname} {obj.middle_initial} {obj.lastname}".strip()
 
     def get_profile_image_url(self, obj):
-        request = self.context.get('request')
-        if obj.profile_image and request:
-            return request.build_absolute_uri(obj.profile_image.url)
         if obj.profile_image:
-            return f"http://127.0.0.1:8000{obj.profile_image.url}"
+            return absolute_media_url(self.context.get('request'), obj.profile_image.url)
         return None
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        req = self.context.get('request')
+        pi = data.get('profile_image')
+        if isinstance(pi, str) and pi.startswith('/'):
+            data['profile_image'] = absolute_media_url(req, pi)
+        return data
 
 class EmployeeCreateSerializer(serializers.ModelSerializer):
     username = serializers.CharField(write_only=True, required=False)
@@ -325,10 +308,10 @@ class PayrollSerializer(serializers.ModelSerializer):
 
     def get_profile_image(self, obj):
         if obj.employee and getattr(obj.employee, 'profile_image', None):
-            request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(obj.employee.profile_image.url)
-            return f'/media/{obj.employee.profile_image.name}'
+            return absolute_media_url(
+                self.context.get('request'),
+                obj.employee.profile_image.url,
+            )
         return None
 
     def get_profile_image_url(self, obj):
@@ -455,10 +438,7 @@ class PayrollSerializer(serializers.ModelSerializer):
 
     def get_payslip_image_url(self, obj):
         if obj.payslip_image:
-            request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(obj.payslip_image.url)
-            return f'/media/{obj.payslip_image.name}'
+            return absolute_media_url(self.context.get('request'), obj.payslip_image.url)
         return None
 
     # Attendance-derived fields (computed live)
@@ -562,6 +542,14 @@ class PayrollSerializer(serializers.ModelSerializer):
         except Exception:
             return int(obj.absences or 0)
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        req = self.context.get('request')
+        img = data.get('payslip_image')
+        if isinstance(img, str) and img.startswith('/'):
+            data['payslip_image'] = absolute_media_url(req, img)
+        return data
+
 class LeaveRequestSerializer(serializers.ModelSerializer):
     employee_name = serializers.SerializerMethodField()
     reviewed_by_name = serializers.SerializerMethodField()
@@ -591,10 +579,7 @@ class LeaveRequestSerializer(serializers.ModelSerializer):
             request = self.context.get('request')
             items = []
             for att in getattr(obj, 'attachments').all():
-                if request:
-                    items.append(request.build_absolute_uri(att.file.url))
-                else:
-                    items.append(f"/media/{att.file.name}")
+                items.append(absolute_media_url(request, att.file.url))
             return items
         except Exception:
             return []
@@ -649,10 +634,7 @@ class EditRequestSerializer(serializers.ModelSerializer):
     def get_image_url(self, obj):
         try:
             if obj.uploaded_files:
-                request = self.context.get('request')
-                if request:
-                    return request.build_absolute_uri(obj.uploaded_files.url)
-                return f'/media/{obj.uploaded_files.name}'
+                return absolute_media_url(self.context.get('request'), obj.uploaded_files.url)
         except AttributeError:
             pass
         return None

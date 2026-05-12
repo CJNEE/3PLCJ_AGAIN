@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -173,6 +174,15 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 # Media files (for image uploads)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Used when building media URLs without an HTTP request (and as fallback). Set on Render, e.g.
+# PUBLIC_SITE_URL=https://your-service.onrender.com
+PUBLIC_SITE_URL = os.environ.get('PUBLIC_SITE_URL', '').strip().rstrip('/')
+if not PUBLIC_SITE_URL:
+    for host in ALLOWED_HOSTS:
+        if host and host != '*' and not host.startswith('.'):
+            PUBLIC_SITE_URL = f'https://{host}'
+            break
 
 # Default government deduction rates (percentages). These are applied to total earnings
 # and are read-only for payslip calculations. Adjust here if needed site-wide.
