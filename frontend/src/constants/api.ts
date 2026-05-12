@@ -1,5 +1,9 @@
 const devFallback = 'http://localhost:8000/api';
 
+/** Default backend when `VITE_API_URL` is unset. Same host as `vercel.json` rewrites. */
+const DEFAULT_PRODUCTION_API =
+  'https://threeplcjfinal-final-final-na-talaga.onrender.com/api';
+
 function looksLikeLocalBackend(url: string): boolean {
   const t = url.trim();
   try {
@@ -29,18 +33,22 @@ function normalizeEnvApiBase(raw: string): string {
 }
 
 /**
- * Production: prefers same-origin `/api` (proxied via `vercel.json`). Ignores localhost in
- * `VITE_API_URL` when that variable is mistakenly set on the host (e.g. Vercel previews).
+ * Production: calls Render directly by default (CORS allows *.vercel.app). Same-origin `/api`
+ * only works if `vercel.json` lives in the Vercel **project root** — often the repo root, not
+ * `frontend/`. Set `VITE_API_URL=/api` to force the proxy when rewrites are configured.
  */
 function resolveApiBaseUrl(): string {
   const raw = import.meta.env.VITE_API_URL?.trim();
   const prod = !!import.meta.env.PROD;
 
   if (prod) {
-    if (!raw || looksLikeLocalBackend(raw)) {
+    if (raw === '/api') {
       return '/api';
     }
-    return normalizeEnvApiBase(raw);
+    if (raw && !looksLikeLocalBackend(raw)) {
+      return normalizeEnvApiBase(raw);
+    }
+    return DEFAULT_PRODUCTION_API;
   }
 
   if (raw) {
