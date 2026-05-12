@@ -1,4 +1,15 @@
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const devFallback = 'http://localhost:8000/api';
+
+/** In production builds, same-origin `/api` is rewritten by `vercel.json` to the Render backend. Set `VITE_API_URL` to override (e.g. point a preview at a staging API). */
+function resolveApiBaseUrl(): string {
+  const fromEnv = import.meta.env.VITE_API_URL?.trim();
+  if (fromEnv) {
+    return fromEnv.replace(/\/$/, '');
+  }
+  return import.meta.env.PROD ? '/api' : devFallback;
+}
+
+export const API_BASE_URL = resolveApiBaseUrl();
 
 export const API_ENDPOINTS = {
   // Auth

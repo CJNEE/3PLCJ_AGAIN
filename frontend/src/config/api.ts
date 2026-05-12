@@ -1,4 +1,14 @@
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const devFallback = 'http://localhost:8000/api';
+
+function resolveApiBaseUrl(): string {
+  const fromEnv = import.meta.env.VITE_API_URL?.trim();
+  if (fromEnv) {
+    return fromEnv.replace(/\/$/, '');
+  }
+  return import.meta.env.PROD ? '/api' : devFallback;
+}
+
+export const API_BASE_URL = resolveApiBaseUrl();
 
 // API endpoints
 export const API_ROUTES = {
