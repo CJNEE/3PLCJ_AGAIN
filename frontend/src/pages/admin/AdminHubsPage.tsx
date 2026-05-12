@@ -1,13 +1,82 @@
-  import { useState, useMemo, useEffect, useRef } from 'react';
-  import { Card, Badge, LoadingSpinner, EmptyState } from '@/components/common';
-  import { useGetHubs, useGetEmployees } from '@/hooks/useQueries';
-  import { MapPin, X, Search, BarChart3, Navigation, ChevronLeft, ChevronRight, Users, Clock } from 'lucide-react';
-  import { normalizeApiResponse } from '@/utils/apiResponseHandler';
-  import { MapContainer, TileLayer, Marker, Polyline, Popup } from 'react-leaflet';
-  import L from 'leaflet';
-  import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-  import 'leaflet/dist/leaflet.css';
-  import Sidebar from '@/components/Sidebar';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { Card, Badge, LoadingSpinner, EmptyState } from '@/components/common';
+import { useGetHubs, useGetEmployees } from '@/hooks/useQueries';
+import { MapPin, X, Search, Navigation, ChevronLeft, ChevronRight, Users, Footprints, Bike, Car } from 'lucide-react';
+import { normalizeApiResponse } from '@/utils/apiResponseHandler';
+import { MapContainer, TileLayer, Marker, Polyline, Popup } from 'react-leaflet';
+import L from 'leaflet';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import 'leaflet/dist/leaflet.css';
+import Sidebar from '@/components/Sidebar';
+import { ThemeToggle } from '@/context/ThemeContext';
+
+const OSRM_BASE = 'https://router.project-osrm.org/route/v1';
+
+export type ParsedOsrmRoute = {
+  coordinates: [number, number][];
+  distanceM: number;
+  durationSec: number;
+  turns: Array<{ instruction: string; distance: number; duration: number }>;
+  turnCount: number;
+};
+
+function parseOsrmResponse(data: any): ParsedOsrmRoute | null {
+  if (!data?.routes?.length) return null;
+  const route = data.routes[0];
+  const coordinates: [number, number][] = route.geometry.coordinates.map(
+    (coord: [number, number]) => [coord[1], coord[0]]
+  );
+  const turns: Array<{ instruction: string; distance: number; duration: number }> = [];
+  let turnCount = 0;
+
+  route.legs?.forEach((leg: any) => {
+    (leg.steps || []).forEach((step: any) => {
+      const instr = step.maneuver?.instruction;
+      if (instr) {
+        turns.push({
+          instruction: instr,
+          distance: Math.round(step.distance ?? 0),
+          duration: Math.round(step.duration ?? 0),
+        });
+      }
+      const t = step.maneuver?.type;
+      if (t && t !== 'depart' && t !== 'arrive') turnCount += 1;
+    });
+  });
+
+  if (turns.length === 0) {
+    turns.push({
+      instruction: 'Follow route',
+      distance: Math.round(route.distance),
+      duration: Math.round(route.duration),
+    });
+  }
+
+  if (turnCount === 0 && turns.length > 1) {
+    turnCount = Math.max(0, turns.length - 1);
+  }
+
+  return {
+    coordinates,
+    distanceM: route.distance,
+    durationSec: route.duration,
+    turns,
+    turnCount,
+  };
+}
+
+async function fetchOsrmProfile(
+  profile: string,
+  startLat: number,
+  startLon: number,
+  endLat: number,
+  endLon: number
+): Promise<ParsedOsrmRoute | null> {
+  const url = `${OSRM_BASE}/${profile}/${startLon},${startLat};${endLon},${endLat}?steps=true&geometries=geojson&overview=full`;
+  const response = await fetch(url);
+  const data = await response.json();
+  return parseOsrmResponse(data);
+}
 
   interface HubState {
     selectedHub: any | null;
@@ -25,14 +94,9 @@
     const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
     const [showDirections, setShowDirections] = useState(false);
     const [routeData, setRouteData] = useState<{
-      coordinates: [number, number][];
-      distance: number; // meters
-      duration: number; // seconds
-      turns: Array<{
-        instruction: string;
-        distance: number;
-        duration: number;
-      }>;
+      walking: ParsedOsrmRoute;
+      riding: ParsedOsrmRoute;
+      car: ParsedOsrmRoute;
     } | null>(null);
     const [loadingRoute, setLoadingRoute] = useState(false);
     const mapRef = useRef(null);
@@ -67,66 +131,44 @@
       return R * c;
     };
 
-    // Calculate travel times based on distance
-    const calculateTravelTimes = (distance: number) => {
-      const carSpeed = 40; // km/h average in city
-      const walkSpeed = 5; // km/h
-      const bikeSpeed = 25; // km/h for "ride" (motorbike)
-
-      return {
-        car: Math.round((distance / carSpeed) * 60), // minutes
-        walk: Math.round((distance / walkSpeed) * 60), // minutes
-        distance: Math.round(distance * 10) / 10, // km with 1 decimal
-      };
-    };
-
-    // Fetch real route from OSRM (Open Source Routing Machine)
+    // Fetch walking, riding (cycling), and car routes from OSRM in parallel
     const fetchRealRoute = async (startLat: number, startLon: number, endLat: number, endLon: number) => {
       setLoadingRoute(true);
       try {
-        // OSRM API endpoint - free, no authentication needed
-        const url = `https://router.project-osrm.org/route/v1/driving/${startLon},${startLat};${endLon},${endLat}?steps=true&geometries=geojson&overview=full`;
-        
-        const response = await fetch(url);
-        const data = await response.json();
+        const km = calculateDistance(startLat, startLon, endLat, endLon);
+        const line: [number, number][] = [
+          [startLat, startLon],
+          [endLat, endLon],
+        ];
+        const makeEstimate = (speedKmh: number, label: string): ParsedOsrmRoute => {
+          const durationSec = Math.max(60, Math.round((km / speedKmh) * 3600));
+          return {
+            coordinates: line,
+            distanceM: km * 1000,
+            durationSec,
+            turns: [
+              {
+                instruction: `${label} (straight-line estimate)`,
+                distance: Math.round(km * 1000),
+                duration: durationSec,
+              },
+            ],
+            turnCount: 0,
+          };
+        };
 
-        if (data.routes && data.routes.length > 0) {
-          const route = data.routes[0];
-          const coordinates = route.geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
-          const distanceKm = route.distance / 1000;
-          const durationSeconds = route.duration;
+        const [walkRes, rideRes, carRes] = await Promise.all([
+          fetchOsrmProfile('foot', startLat, startLon, endLat, endLon).catch(() => null),
+          fetchOsrmProfile('cycling', startLat, startLon, endLat, endLon).catch(() => null),
+          fetchOsrmProfile('driving', startLat, startLon, endLat, endLon).catch(() => null),
+        ]);
 
-          // Extract turn-by-turn instructions
-          const turns: Array<{instruction: string; distance: number; duration: number}> = [];
-          
-          if (route.legs) {
-            route.legs.forEach((leg: any) => {
-              if (leg.steps) {
-                leg.steps.forEach((step: any) => {
-                  if (step.maneuver && step.maneuver.instruction) {
-                    turns.push({
-                      instruction: step.maneuver.instruction,
-                      distance: Math.round(step.distance),
-                      duration: Math.round(step.duration),
-                    });
-                  }
-                });
-              }
-            });
-          }
+        const walking = walkRes ?? makeEstimate(5, 'Walking');
+        const riding = rideRes ?? makeEstimate(22, 'Riding');
+        const car = carRes ?? makeEstimate(40, 'Car');
 
-          setRouteData({
-            coordinates,
-            distance: route.distance,
-            duration: durationSeconds,
-            turns: turns.length > 0 ? turns : [{
-              instruction: 'Follow route',
-              distance: route.distance,
-              duration: durationSeconds,
-            }],
-          });
-          setShowDirections(true);
-        }
+        setRouteData({ walking, riding, car });
+        setShowDirections(true);
       } catch (error) {
         console.error('Error fetching route:', error);
         alert('Could not fetch route. Please try again.');
@@ -205,8 +247,11 @@
 
     if (isLoading) {
       return (
-        <div className="p-4 lg:p-6 lg:ml-64 flex items-center justify-center min-h-screen">
-          <LoadingSpinner />
+        <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
+          <Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} hideThemeToggle />
+          <div className="p-4 lg:p-6 lg:ml-64 flex items-center justify-center min-h-[50vh]">
+            <LoadingSpinner />
+          </div>
         </div>
       );
     }
@@ -266,32 +311,36 @@
       }
     };
 
-    return ( 
+    return (
       <>
-  <Sidebar
-    open={sidebarOpen}
-    onToggle={() => setSidebarOpen(!sidebarOpen)}
-  />
+        <Sidebar
+          open={sidebarOpen}
+          onToggle={() => setSidebarOpen(!sidebarOpen)}
+          hideThemeToggle
+        />
 
-  <div className="p-4 lg:p-6 lg:ml-64 space-y-6">
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold">Hubs</h1>
-            <p className="text-gray-600 dark:text-gray-400 text-sm">{filteredHubs.length} hub locations</p>
+        <div className="p-4 lg:p-6 lg:ml-64 space-y-6">
+          {/* Header + theme (top-right) */}
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">Hubs</h1>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{filteredHubs.length} hub locations</p>
+            </div>
+            <div className="flex shrink-0 items-center gap-3 sm:pt-0.5">
+              <ThemeToggle />
+            </div>
           </div>
-        </div>
 
-        {/* Search Box */}
-        <div className="mb-4">
-          <input
-            type="text"
-            placeholder="Search locations..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="input-field w-full max-w-md"
-          />
-        </div>
+          {/* Search */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <input
+              type="text"
+              placeholder="Search locations..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="input-field w-full max-w-md"
+            />
+          </div>
 
         {/* Map and Hub Details Container */}
         {filteredHubs.length > 0 ? (
@@ -341,12 +390,11 @@
 
                   {/* Polyline from user to selected hub */}
                   {showDirections && userLocation && hubState.selectedHub && routeData && (
-                    <Polyline 
-                      positions={routeData.coordinates}
+                    <Polyline
+                      positions={routeData.car.coordinates}
                       color="#dc2626"
                       weight={4}
-                      opacity={0.8}
-                      dashArray="none"
+                      opacity={0.85}
                     />
                   )}
                 </MapContainer>
@@ -375,52 +423,87 @@
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
                   {/* Directions Info - Show when directions are enabled */}
                   {showDirections && routeData && (
-                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-900/10 border border-blue-300 dark:border-blue-700 rounded-lg p-4 space-y-3">
-                      <div className="flex items-center gap-2 text-blue-900 dark:text-blue-200 font-semibold text-sm">
-                        <Navigation size={18} className="text-blue-600" />
-                        Route Information
-                      </div>
-                      
-                      {/* Main Stats */}
-                      <div className="grid grid-cols-3 gap-2">
-                        {/* Distance */}
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3 text-center border border-blue-200 dark:border-blue-700">
-                          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                            {(routeData.distance / 1000).toFixed(2)}
-                          </div>
-                          <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">km</div>
-                        </div>
-                        
-                        {/* Drive Time */}
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3 text-center border border-purple-200 dark:border-purple-700">
-                          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                            {Math.round(routeData.duration / 60)}
-                          </div>
-                          <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">min drive</div>
-                        </div>
-                        
-                        {/* Turns */}
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3 text-center border border-orange-200 dark:border-orange-700">
-                          <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                            {routeData.turns.length}
-                          </div>
-                          <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">turns</div>
+                    <div className="rounded-xl border border-slate-200/90 dark:border-slate-600/90 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900/60 dark:to-slate-900/30 p-4 space-y-4 shadow-sm">
+                      <div className="flex items-start gap-2">
+                        <Navigation className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+                        <div>
+                          <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 tracking-tight">
+                            Route information
+                          </h4>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                            Distances and times from OSRM (OpenStreetMap). Map line follows driving route.
+                          </p>
                         </div>
                       </div>
 
-                      {/* Turn-by-Turn Directions */}
-                      <div className="bg-white dark:bg-gray-800/50 rounded-lg p-3 max-h-48 overflow-y-auto border border-blue-200 dark:border-blue-700">
-                        <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Directions</h4>
+                      <div className="space-y-3">
+                        {(
+                          [
+                            { label: 'Walking', Icon: Footprints, r: routeData.walking, bar: 'from-emerald-600 to-teal-600' },
+                            { label: 'Riding', Icon: Bike, r: routeData.riding, bar: 'from-amber-500 to-orange-600' },
+                            { label: 'Car', Icon: Car, r: routeData.car, bar: 'from-red-600 to-rose-700' },
+                          ] as const
+                        ).map(({ label, Icon, r, bar }) => (
+                          <div
+                            key={label}
+                            className="rounded-lg border border-slate-200/80 dark:border-slate-600 bg-white/90 dark:bg-slate-800/90 overflow-hidden shadow-sm"
+                          >
+                            <div className={`h-1 bg-gradient-to-r ${bar}`} />
+                            <div className="p-3.5">
+                              <div className="flex items-center gap-2 mb-3">
+                                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700/80 text-slate-700 dark:text-slate-200">
+                                  <Icon size={16} strokeWidth={2} />
+                                </span>
+                                <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">{label}</span>
+                              </div>
+                              <div className="grid grid-cols-3 gap-2">
+                                <div className="rounded-md bg-slate-50 dark:bg-slate-900/50 px-2 py-2.5 text-center border border-slate-100 dark:border-slate-700">
+                                  <div className="text-lg font-bold tabular-nums text-slate-900 dark:text-white leading-none">
+                                    {(r.distanceM / 1000).toFixed(2)}
+                                  </div>
+                                  <div className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400 mt-1">
+                                    km
+                                  </div>
+                                </div>
+                                <div className="rounded-md bg-slate-50 dark:bg-slate-900/50 px-2 py-2.5 text-center border border-slate-100 dark:border-slate-700">
+                                  <div className="text-lg font-bold tabular-nums text-slate-900 dark:text-white leading-none">
+                                    {Math.max(1, Math.round(r.durationSec / 60))}
+                                  </div>
+                                  <div className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400 mt-1">
+                                    min
+                                  </div>
+                                </div>
+                                <div className="rounded-md bg-slate-50 dark:bg-slate-900/50 px-2 py-2.5 text-center border border-slate-100 dark:border-slate-700">
+                                  <div className="text-lg font-bold tabular-nums text-slate-900 dark:text-white leading-none">
+                                    {r.turnCount}
+                                  </div>
+                                  <div className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400 mt-1">
+                                    turns
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="rounded-lg border border-slate-200 dark:border-slate-600 bg-white/80 dark:bg-slate-800/60 p-3 max-h-44 overflow-y-auto">
+                        <h5 className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-2">
+                          Driving directions
+                        </h5>
                         <div className="space-y-2">
-                          {routeData.turns.map((turn, idx) => (
-                            <div key={idx} className="flex gap-2 text-xs text-gray-700 dark:text-gray-300 pb-2 border-b border-gray-200 dark:border-gray-700 last:border-0">
-                              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-semibold text-xs">
+                          {routeData.car.turns.map((turn, idx) => (
+                            <div
+                              key={idx}
+                              className="flex gap-2 text-xs text-slate-700 dark:text-slate-300 pb-2 border-b border-slate-100 dark:border-slate-700 last:border-0 last:pb-0"
+                            >
+                              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-50 dark:bg-red-950/50 text-[11px] font-semibold text-red-700 dark:text-red-300">
                                 {idx + 1}
                               </div>
-                              <div className="flex-1">
-                                <p className="font-medium text-gray-900 dark:text-white">{turn.instruction}</p>
-                                <p className="text-gray-500 dark:text-gray-400">
-                                  {(turn.distance / 1000).toFixed(2)} km • {Math.round(turn.duration / 60)} min
+                              <div className="min-w-0 flex-1">
+                                <p className="font-medium text-slate-900 dark:text-white leading-snug">{turn.instruction}</p>
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                  {(turn.distance / 1000).toFixed(2)} km · {Math.max(0, Math.round(turn.duration / 60))} min
                                 </p>
                               </div>
                             </div>
@@ -440,25 +523,15 @@
                     </div>
                   )}
 
-                  {/* Hub Stats */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-center">
-                      <div className="flex items-center justify-center mb-1">
-                        <Users size={18} className="text-red-600 dark:text-red-400" />
-                      </div>
-                      <p className="text-2xl font-bold text-red-600 dark:text-red-400">{hubEmployeesData.length}</p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">Employees</p>
+                  {/* Hub stats */}
+                  <div className="rounded-xl border border-red-200/80 dark:border-red-900/50 bg-gradient-to-br from-red-50/90 to-white dark:from-red-950/30 dark:to-slate-900/40 p-4 text-center shadow-sm">
+                    <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/40">
+                      <Users size={20} className="text-red-700 dark:text-red-300" />
                     </div>
-
-                    {employmentTypeData.length > 0 && (
-                      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-center">
-                        <div className="flex items-center justify-center mb-1">
-                          <BarChart3 size={18} className="text-blue-600 dark:text-blue-400" />
-                        </div>
-                        <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{employmentTypeData.length}</p>
-                        <p className="text-xs text-gray-600 dark:text-gray-400">Types</p>
-                      </div>
-                    )}
+                    <p className="text-3xl font-bold tabular-nums text-red-700 dark:text-red-300">{hubEmployeesData.length}</p>
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-600 dark:text-slate-400 mt-1">
+                      Employees at this hub
+                    </p>
                   </div>
 
                   {/* Search Box */}

@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Card, Button, Badge, LoadingSpinner } from '@/components/common';
 import { useToast } from '@/hooks/useToast';
 import { useAuth } from '@/hooks/useAuth';
 import { Upload, Edit2, Save, X, Clock, Send, ArrowLeft } from 'lucide-react';
 import { EditInfoRequestModal } from '@/components/EditInfoRequestModal';
 import apiClient from '@/api/apiService';
+import Sidebar from '@/components/Sidebar';
+import { ThemeToggle } from '@/context/ThemeContext';
 
 interface EmployeeData {
   id: number;
@@ -85,8 +87,13 @@ const FIELD_CONFIG = {
 export const EmployeeProfileDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { success, error } = useToast();
   const { employee: currentEmployee } = useAuth();
+
+  const showAdminSidebar =
+    location.pathname.startsWith('/admin') || location.pathname.startsWith('/hr');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<EmployeeData>>({});
@@ -230,15 +237,24 @@ export const EmployeeProfileDetailPage = () => {
   };
 
   return (
-    <div className="p-4 lg:p-6 lg:ml-64 space-y-6">
-      {/* Back Button */}
-      <Button
-        variant="secondary"
-        onClick={() => navigate(-1)}
-      >
-        <ArrowLeft size={18} className="mr-2" />
-        Back
-      </Button>
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
+      {showAdminSidebar && (
+        <Sidebar
+          open={sidebarOpen}
+          onToggle={() => setSidebarOpen(!sidebarOpen)}
+        />
+      )}
+      <div className={`p-4 lg:p-6 space-y-6 ${showAdminSidebar ? 'lg:ml-64' : ''}`}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Button
+          variant="secondary"
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft size={18} className="mr-2" />
+          Back
+        </Button>
+        {showAdminSidebar && <ThemeToggle />}
+      </div>
 
       {/* Loading State */}
       {isLoading && (
@@ -539,6 +555,7 @@ export const EmployeeProfileDetailPage = () => {
       />
         </>
       )}
+      </div>
     </div>
   );
 };
