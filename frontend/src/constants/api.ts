@@ -33,22 +33,16 @@ function normalizeEnvApiBase(raw: string): string {
 }
 
 /**
- * Production: calls Render directly by default (CORS allows *.vercel.app). Same-origin `/api`
- * only works if `vercel.json` lives in the Vercel **project root** — often the repo root, not
- * `frontend/`. Set `VITE_API_URL=/api` to force the proxy when rewrites are configured.
+ * Production: calls Render backend directly (CORS allows *.vercel.app). 
+ * Frontend on Vercel connects directly to Render backend.
  */
 function resolveApiBaseUrl(): string {
   const raw = import.meta.env.VITE_API_URL?.trim();
   const prod = !!import.meta.env.PROD;
 
   if (prod) {
-    if (raw === '/api') {
-      return '/api';
-    }
-    if (raw && !looksLikeLocalBackend(raw)) {
-      return normalizeEnvApiBase(raw);
-    }
-    return DEFAULT_PRODUCTION_API;
+    // In production, always use the backend directly with CORS
+    return 'https://threepl-backend-wf79.onrender.com/api';
   }
 
   if (raw) {
