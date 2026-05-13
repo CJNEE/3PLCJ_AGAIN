@@ -85,11 +85,15 @@ _DATABASE_URL = os.environ.get('DATABASE_URL', '').strip()
 if _DATABASE_URL:
     import dj_database_url
 
+    # Allow tuning of connection pooling and SSL via env vars
+    _CONN_MAX_AGE = int(os.environ.get('CONN_MAX_AGE', '600'))
+    _DB_SSL_REQUIRE = os.environ.get('DB_SSL_REQUIRE', 'True').lower() in ('1', 'true', 'yes')
+
     DATABASES = {
         'default': dj_database_url.config(
             default=_DATABASE_URL,
-            conn_max_age=600,
-            ssl_require=True,
+            conn_max_age=_CONN_MAX_AGE,
+            ssl_require=_DB_SSL_REQUIRE,
         )
     }
 else:
