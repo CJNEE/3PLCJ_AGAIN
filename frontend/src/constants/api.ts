@@ -2,7 +2,7 @@ const devFallback = 'http://localhost:8000/api';
 
 /** Default backend when `VITE_API_URL` is unset. Same host as `vercel.json` rewrites. */
 const DEFAULT_PRODUCTION_API =
-  'https://threeplcjfinal-final-final-na-talaga.onrender.com/api';
+  'https://threepl-backend-wf79.onrender.com/api';
 
 function looksLikeLocalBackend(url: string): boolean {
   const t = url.trim();
@@ -70,7 +70,7 @@ export function apiUrl(pathRelativeToApiRoot: string): string {
 
 export const API_ENDPOINTS = {
   // Auth
-  LOGIN: '/login/',
+  LOGIN: '/auth/login/',
   LOGOUT: '/logout/',
   CURRENT_USER: '/current-user/',
   

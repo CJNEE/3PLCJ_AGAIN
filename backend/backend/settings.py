@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-_4-^c(%mqhby%80&o1)s=#lw97439c$d25rjp6wk0m--j7^svl
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["threeplcjfinal-final-final-na-talaga.onrender.com"]
+ALLOWED_HOSTS = ["threepl-backend-wf79.onrender.com"]
 
 
 # Application definition
