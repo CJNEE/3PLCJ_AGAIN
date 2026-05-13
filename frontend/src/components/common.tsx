@@ -1,26 +1,12 @@
 import { ReactNode } from 'react';
-import { useLocation } from 'react-router-dom';
-import HRSidebar from './HRSidebar';
 
 interface LayoutProps {
   children: ReactNode;
 }
 
+/** HR and admin pages each render `Sidebar` + `min-h-screen` shell like the admin UI. */
 export const Layout = ({ children }: LayoutProps) => {
-  const location = useLocation();
-
-  return (
-    <div className="min-h-screen bg-gray-100 dark:bg-[#070B14] text-gray-900 dark:text-gray-100">
-      {location.pathname.startsWith('/hr') ? (
-        <div className="flex">
-          <HRSidebar />
-          <main className="flex-1 pt-0">{children}</main>
-        </div>
-      ) : (
-        <main className="pt-0">{children}</main>
-      )}
-    </div>
-  );
+  return <>{children}</>;
 };
 
 /* =========================

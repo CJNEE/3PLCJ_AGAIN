@@ -110,12 +110,15 @@ export const EditRequestsPanel = () => {
 
   if (loading) {
     return (
-      <div className="p-4 lg:p-6 lg:ml-64">
-        <Card>
-          <div className="text-center py-8">
-            <p className="text-gray-500">Loading edit requests...</p>
-          </div>
-        </Card>
+      <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
+        <Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+        <div className="p-4 lg:p-6 lg:ml-64">
+          <Card>
+            <div className="text-center py-8">
+              <p className="text-gray-500 dark:text-gray-400">Loading edit requests...</p>
+            </div>
+          </Card>
+        </div>
       </div>
     );
   }

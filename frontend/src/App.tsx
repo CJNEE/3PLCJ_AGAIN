@@ -77,6 +77,14 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 };
 
 
+function AuthenticatedHomeRedirect() {
+  const { user } = useAuth();
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role === 'HR') return <Navigate to="/hr" replace />;
+  if (user.role === 'Employee') return <Navigate to="/employee" replace />;
+  return <Navigate to="/admin" replace />;
+}
+
 function AppRoutes() {
   const { isAuthenticated } = useAuth();
 
@@ -157,7 +165,7 @@ function AppRoutes() {
       {/* Default route */}
       <Route
         path="/"
-        element={isAuthenticated ? <Navigate to="/admin" replace /> : <Navigate to="/login" replace />}
+        element={isAuthenticated ? <AuthenticatedHomeRedirect /> : <Navigate to="/login" replace />}
       />
 
       {/* 404 */}

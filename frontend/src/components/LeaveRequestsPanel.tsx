@@ -147,13 +147,16 @@ export const LeaveRequestsPanel = ({ initialFilter = 'pending' }: { initialFilte
 
   if (loading) {
     return (
-      <div className="p-4 lg:p-6 lg:ml-64">
-        <Card>
-          <div className="text-center py-8 flex items-center justify-center gap-3">
-            <LoadingSpinner />
-            <span className="text-gray-500">Loading leave requests...</span>
-          </div>
-        </Card>
+      <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
+        <Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+        <div className="p-4 lg:p-6 lg:ml-64">
+          <Card>
+            <div className="text-center py-8 flex items-center justify-center gap-3">
+              <LoadingSpinner />
+              <span className="text-gray-500 dark:text-gray-400">Loading leave requests...</span>
+            </div>
+          </Card>
+        </div>
       </div>
     );
   }

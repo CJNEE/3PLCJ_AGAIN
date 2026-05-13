@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { AttendancePage } from '@/pages/admin/AttendancePage';
 
 export default function HrAttendancePage() {
   const { user } = useAuth();
@@ -10,10 +11,5 @@ export default function HrAttendancePage() {
     if (user?.role === 'Admin') navigate('/', { replace: true });
   }, [user, navigate]);
 
-  return (
-    <div className="p-4 lg:p-6 lg:ml-64">
-      <h1 className="text-2xl font-bold">HR — Attendance</h1>
-      <p className="text-sm text-gray-600">Attendance management and history (HR view).</p>
-    </div>
-  );
+  return <AttendancePage />;
 }

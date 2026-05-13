@@ -247,7 +247,11 @@ export const AdminDashboard = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
-          <p className="text-gray-600 dark:text-gray-400">HR Business Solutions | Admin Overview</p>
+          <p className="text-gray-600 dark:text-gray-400">
+            {employee?.role === 'HR'
+              ? 'HR Business Solutions | HR overview'
+              : 'HR Business Solutions | Admin overview'}
+          </p>
         </div>
         
       </div>
