@@ -7,10 +7,15 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    # JWT endpoints (SimpleJWT)
     path("api/auth/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/auth/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+
+    # App API
     path("api/", include("employees.urls")),
 ]
+
 
 # Uploaded images/documents (needed outside DEBUG so Render/production can serve /media/)
 if settings.DEBUG:
