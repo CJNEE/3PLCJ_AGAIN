@@ -32,21 +32,21 @@ export const LoginScreen = () => {
         password,
       });
 
-      if (response.token && response.user && response.employee) {
-        // Store auth data
+      // Treat successful login as authenticated as long as token exists
+      if (response?.token) {
         localStorage.setItem('access_token', response.token);
-        localStorage.setItem('currentUser', JSON.stringify(response.user));
-        localStorage.setItem('currentEmployee', JSON.stringify(response.employee));
+        if (response?.user) localStorage.setItem('currentUser', JSON.stringify(response.user));
+        if (response?.employee) localStorage.setItem('currentEmployee', JSON.stringify(response.employee));
 
         setToken(response.token);
-        setUser(response.user);
-        setEmployee(response.employee);
+        setUser(response?.user ?? null);
+        setEmployee(response?.employee ?? null);
         setIsAuthenticated(true);
 
-        success(`Welcome back, ${response.user.username}!`);
+        const username = response?.user?.username ?? 'User';
+        success(`Welcome back, ${username}!`);
 
-        // Redirect based on role
-        const role = response.user.role;
+        const role = response?.user?.role;
         if (role === 'Admin') {
           navigate('/admin');
         } else if (role === 'HR') {
