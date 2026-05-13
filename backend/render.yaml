@@ -10,6 +10,12 @@ services:
         value: 3.10
       - key: DEBUG
         value: "False"
+      - key: DATABASE_URL
+        value: postgresql://db_3pl_db_user:1c252y1LRra5SogWdlOBRWNLBjAqHC3R@dpg-d823dkpkh4rs73br35d0-a.oregon-postgres.render.com/db_3pl_db
+      - key: CONN_MAX_AGE
+        value: "600"
+      - key: DB_SSL_REQUIRE
+        value: "True"
       - key: ALLOWED_HOSTS
         value: threepl-backend-wf79.onrender.com,*.vercel.app
       - key: PUBLIC_SITE_URL
