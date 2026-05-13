@@ -203,7 +203,7 @@ export const EmployeeEditModal = ({ isOpen, onClose, employee, onSuccess }: Empl
   
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Edit Employee" size="3xl">
-      <div className="max-h-[75vh] overflow-y-auto pr-2 px-2 sm:px-4">
+      <div className="pr-2 px-2 sm:px-4">
         {renderFieldSection('Personal Information', personalFields)}
         {renderFieldSection('Contact Information', contactFields)}
         {renderFieldSection('Emergency Contact', emergencyFields)}

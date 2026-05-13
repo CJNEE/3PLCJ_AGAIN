@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import action, api_view, permission_classes
@@ -18,6 +19,24 @@ from .serializers import (
     EditRequestSerializer, LeaveRequestSerializer, LoginSerializer, AttendanceSerializer, 
     LiveLocationSerializer, PayrollSerializer, ActivityLogSerializer, SecurityAlertSerializer, HRPermissionSerializer
 )
+
+def _client_ip(request):
+    xff = request.META.get('HTTP_X_FORWARDED_FOR')
+    if xff:
+        return xff.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR')
+
+
+def _request_actor_role(request):
+    try:
+        return Employee.objects.get(user=request.user).role
+    except Employee.DoesNotExist:
+        if request.user.is_superuser:
+            return 'Admin'
+        if request.user.is_staff:
+            return 'HR'
+        return 'Employee'
+
 
 class HubViewSet(viewsets.ModelViewSet):
     """ViewSet for viewing and editing hubs - J&T Quezon only"""
@@ -119,6 +138,222 @@ class EmployeeViewSet(viewsets.ModelViewSet):
                     changes.append(f"{field}: {old_data[field]} → {new_data[field]}")
         
         return '; '.join(changes) if changes else 'No significant changes'
+
+    def create(self, request, *args, **kwargs):
+        """Handle employee creation with activity logging"""
+        response = super().create(request, *args, **kwargs)
+
+        try:
+            employee = Employee.objects.get(id=response.data['id'])
+            ActivityLog.objects.create(
+                user=request.user,
+                employee=employee,
+                role=getattr(request.user, 'employee', None).role if hasattr(request.user, 'employee') else 'Admin',
+                action='create_employee',
+                details=f'Created new employee: {employee.full_name}',
+                ip_address=self.get_client_ip(request)
+            )
+        except Employee.DoesNotExist:
+            pass
+
+        return response
+
+    def get_queryset(self):
+        queryset = Employee.objects.all()
+        hub_id = self.request.query_params.get('hub_id')
+        if hub_id:
+            try:
+                hub_id_int = int(hub_id)
+                queryset = queryset.filter(hub_id=hub_id_int)
+            except (ValueError, TypeError):
+                print(f"⚠️ Invalid hub_id: {hub_id}")
+        status_filter = self.request.query_params.get('status')
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+        employment_type = self.request.query_params.get('employment_type')
+        if employment_type:
+            queryset = queryset.filter(employment_type=employment_type)
+        # Role inclusion/exclusion filters
+        role = self.request.query_params.get('role')
+        exclude_role = self.request.query_params.get('exclude_role')
+        if role:
+            queryset = queryset.filter(role=role)
+        if exclude_role:
+            # Exclude alerts belonging to certain employee roles (comma-separated)
+            roles = [r.strip() for r in exclude_role.split(',') if r.strip()]
+            if roles:
+                queryset = queryset.exclude(role__in=roles)
+        # Server-side: if requesting user is HR, automatically exclude Admin employees
+        try:
+            user_employee = getattr(self.request.user, 'employee', None)
+            if user_employee and getattr(user_employee, 'role', '').lower() == 'hr':
+                queryset = queryset.exclude(role__iexact='admin')
+        except Exception:
+            pass
+        return queryset
+
+    @action(detail=False, methods=['post'])
+    def bulk_toggle_login(self, request):
+        """Bulk toggle can_login for multiple employee IDs"""
+        employee_ids = request.data.get('employee_ids', [])
+        new_status = request.data.get('can_login', False)
+
+        updated_count = 0
+        for emp_id in employee_ids:
+            try:
+                employee = Employee.objects.get(id=emp_id)
+                employee.can_login = new_status
+                employee.save()
+                updated_count += 1
+            except Employee.DoesNotExist:
+                continue
+
+        ActivityLog.objects.create(
+            user=request.user,
+            employee=None,
+            role=_request_actor_role(request),
+            action='bulk_toggle_login',
+            details=f'Bulk set can_login={new_status} for {updated_count} account(s); ids={employee_ids}',
+            ip_address=_client_ip(request),
+        )
+
+        return Response({
+            'message': f'Updated {updated_count} accounts',
+            'can_login': new_status
+        })
+
+    @action(detail=True, methods=['post'])
+    def reset_password(self, request, pk=None):
+        """Reset employee password - returns temporary password"""
+        try:
+            employee = self.get_object()
+            if not employee.user:
+                return Response({'error': 'User account not found'}, status=status.HTTP_404_NOT_FOUND)
+
+            # Generate temporary password
+            import string
+            import random
+            temp_password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
+
+            employee.user.set_password(temp_password)
+            employee.user.save()
+
+            ActivityLog.objects.create(
+                user=request.user,
+                employee=employee,
+                role='Admin',
+                action='reset_password',
+                details=f'Password reset for {employee.full_name}',
+                ip_address=self.get_client_ip(request)
+            )
+
+            return Response({
+                'message': 'Password reset successfully',
+                'temporary_password': temp_password,
+                'employee_id': employee.id,
+                'employee_name': employee.full_name
+            })
+        except Employee.DoesNotExist:
+            return Response({'error': 'Employee not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=True, methods=['post'])
+    def blacklist_employee(self, request, pk=None):
+        """Blacklist an employee (change status to Blacklist)"""
+        try:
+            employee = self.get_object()
+            reason = request.data.get('reason', 'No reason provided')
+
+            employee.status = 'Blacklist'
+            employee.can_login = False
+            employee.save()
+
+            SecurityAlert.objects.create(
+                employee=employee,
+                alert_type='blacklist',
+                severity='high',
+                message=f'{employee.full_name} has been blacklisted',
+                details={'reason': reason}
+            )
+
+            ActivityLog.objects.create(
+                user=request.user,
+                employee=employee,
+                role='Admin',
+                action='blacklist',
+                details=f'Blacklisted {employee.full_name}. Reason: {reason}',
+                ip_address=self.get_client_ip(request)
+            )
+
+            serializer = self.get_serializer(employee)
+            return Response({
+                'message': 'Employee blacklisted successfully',
+                'employee': serializer.data
+            })
+        except Employee.DoesNotExist:
+            return Response({'error': 'Employee not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=True, methods=['post'])
+    def delete_employee(self, request, pk=None):
+        """Permanently delete employee and all associated data"""
+        try:
+            employee = self.get_object()
+            employee_name = employee.full_name
+            employee_id = employee.id
+
+            # Log before deletion
+            ActivityLog.objects.create(
+                user=request.user,
+                employee=employee,
+                role='Admin',
+                action='employee_deleted',
+                details=f'Employee {employee_name} has been permanently deleted',
+                ip_address=self.get_client_ip(request)
+            )
+
+            # Delete employee (cascades to all related records)
+            employee.delete()
+
+            return Response({
+                'message': 'Employee and all associated data deleted successfully',
+                'deleted_employee': {
+                    'id': employee_id,
+                    'name': employee_name
+                }
+            })
+        except Employee.DoesNotExist:
+            return Response({'error': 'Employee not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=True, methods=['post'])
+    def toggle_edit_permission(self, request, pk=None):
+        """Toggle whether employee can edit their own information"""
+        try:
+            employee = self.get_object()
+            can_edit = request.data.get('can_edit', True)
+
+            employee.can_edit_info = can_edit
+            employee.save()
+
+            ActivityLog.objects.create(
+                user=request.user,
+                employee=employee,
+                role='Admin',
+                action='toggle_edit_permission',
+                details=f'Edit permission set to {can_edit} for {employee.full_name}',
+                ip_address=self.get_client_ip(request)
+            )
+
+            return Response({
+                'message': f'Edit permission updated successfully',
+                'can_edit_info': employee.can_edit_info
+            })
+        except Employee.DoesNotExist:
+            return Response({'error': 'Employee not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    def get_client_ip(self, request):
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            return x_forwarded_for.split(',')[0]
+        return request.META.get('REMOTE_ADDR')
 
 
 # Helper: compute government deductions based on hub-specific rates or defaults
@@ -296,215 +531,6 @@ def compute_payroll_summary(employee: Employee, start_date, end_date, basic_sala
         'net_pay': net_pay,
     }
 
-    
-    def create(self, request, *args, **kwargs):
-        """Handle employee creation with activity logging"""
-        response = super().create(request, *args, **kwargs)
-        
-        try:
-            employee = Employee.objects.get(id=response.data['id'])
-            ActivityLog.objects.create(
-                user=request.user,
-                employee=employee,
-                role=getattr(request.user, 'employee', None).role if hasattr(request.user, 'employee') else 'Admin',
-                action='create_employee',
-                details=f'Created new employee: {employee.full_name}',
-                ip_address=self.get_client_ip(request)
-            )
-        except Employee.DoesNotExist:
-            pass
-        
-        return response
-    
-    def get_queryset(self):
-        queryset = Employee.objects.all()
-        hub_id = self.request.query_params.get('hub_id')
-        if hub_id:
-            try:
-                hub_id_int = int(hub_id)
-                queryset = queryset.filter(hub_id=hub_id_int)
-            except (ValueError, TypeError):
-                print(f"⚠️ Invalid hub_id: {hub_id}")
-        status_filter = self.request.query_params.get('status')
-        if status_filter:
-            queryset = queryset.filter(status=status_filter)
-        employment_type = self.request.query_params.get('employment_type')
-        if employment_type:
-            queryset = queryset.filter(employment_type=employment_type)
-        # Role inclusion/exclusion filters
-        role = self.request.query_params.get('role')
-        exclude_role = self.request.query_params.get('exclude_role')
-        if role:
-            queryset = queryset.filter(role=role)
-        if exclude_role: 
-            # Exclude alerts belonging to certain employee roles (comma-separated)
-            roles = [r.strip() for r in exclude_role.split(',') if r.strip()]
-            if roles:
-                queryset = queryset.exclude(role__in=roles)
-        # Server-side: if requesting user is HR, automatically exclude Admin employees
-        try:
-            user_employee = getattr(self.request.user, 'employee', None)
-            if user_employee and getattr(user_employee, 'role', '').lower() == 'hr':
-                queryset = queryset.exclude(role__iexact='admin')
-        except Exception:
-            pass
-        return queryset
-
-    @action(detail=False, methods=['post'])
-    def bulk_toggle_login(self, request):
-        """Bulk toggle can_login for multiple employee IDs"""
-        employee_ids = request.data.get('employee_ids', [])
-        new_status = request.data.get('can_login', False)
-        
-        updated_count = 0
-        for emp_id in employee_ids:
-            try:
-                employee = Employee.objects.get(id=emp_id)
-                employee.can_login = new_status
-                employee.save()
-                updated_count += 1
-            except Employee.DoesNotExist:
-                continue
-        
-        return Response({
-            'message': f'Updated {updated_count} accounts',
-            'can_login': new_status
-        })
-    
-    @action(detail=True, methods=['post'])
-    def reset_password(self, request, pk=None):
-        """Reset employee password - returns temporary password"""
-        try:
-            employee = self.get_object()
-            if not employee.user:
-                return Response({'error': 'User account not found'}, status=status.HTTP_404_NOT_FOUND)
-            
-            # Generate temporary password
-            import string
-            import random
-            temp_password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
-            
-            employee.user.set_password(temp_password)
-            employee.user.save()
-            
-            ActivityLog.objects.create(
-                user=request.user,
-                employee=employee,
-                role='Admin',
-                action='reset_password',
-                details=f'Password reset for {employee.full_name}',
-                ip_address=self.get_client_ip(request)
-            )
-            
-            return Response({
-                'message': 'Password reset successfully',
-                'temporary_password': temp_password,
-                'employee_id': employee.id,
-                'employee_name': employee.full_name
-            })
-        except Employee.DoesNotExist:
-            return Response({'error': 'Employee not found'}, status=status.HTTP_404_NOT_FOUND)
-    
-    @action(detail=True, methods=['post'])
-    def blacklist_employee(self, request, pk=None):
-        """Blacklist an employee (change status to Blacklist)"""
-        try:
-            employee = self.get_object()
-            reason = request.data.get('reason', 'No reason provided')
-            
-            employee.status = 'Blacklist'
-            employee.can_login = False
-            employee.save()
-            
-            SecurityAlert.objects.create(
-                employee=employee,
-                alert_type='blacklist',
-                severity='high',
-                message=f'{employee.full_name} has been blacklisted',
-                details={'reason': reason}
-            )
-            
-            ActivityLog.objects.create(
-                user=request.user,
-                employee=employee,
-                role='Admin',
-                action='blacklist',
-                details=f'Blacklisted {employee.full_name}. Reason: {reason}',
-                ip_address=self.get_client_ip(request)
-            )
-            
-            serializer = self.get_serializer(employee)
-            return Response({
-                'message': 'Employee blacklisted successfully',
-                'employee': serializer.data
-            })
-        except Employee.DoesNotExist:
-            return Response({'error': 'Employee not found'}, status=status.HTTP_404_NOT_FOUND)
-    
-
-    
-    @action(detail=True, methods=['post'])
-    def delete_employee(self, request, pk=None):
-        """Permanently delete employee and all associated data"""
-        try:
-            employee = self.get_object()
-            employee_name = employee.full_name
-            employee_id = employee.id
-            
-            # Log before deletion
-            ActivityLog.objects.create(
-                user=request.user,
-                employee=employee,
-                role='Admin',
-                action='employee_deleted',
-                details=f'Employee {employee_name} has been permanently deleted',
-                ip_address=self.get_client_ip(request)
-            )
-            
-            # Delete employee (cascades to all related records)
-            employee.delete()
-            
-            return Response({
-                'message': 'Employee and all associated data deleted successfully',
-                'deleted_employee': {
-                    'id': employee_id,
-                    'name': employee_name
-                }
-            })
-        except Employee.DoesNotExist:
-            return Response({'error': 'Employee not found'}, status=status.HTTP_404_NOT_FOUND)
-    
-    @action(detail=True, methods=['post'])
-    def toggle_edit_permission(self, request, pk=None):
-        """Toggle whether employee can edit their own information"""
-        try:
-            employee = self.get_object()
-            can_edit = request.data.get('can_edit', True)
-            
-            employee.can_edit_info = can_edit
-            employee.save()
-            
-            ActivityLog.objects.create(
-                user=request.user,
-                employee=employee,
-                role='Admin',
-                action='toggle_edit_permission',
-                details=f'Edit permission set to {can_edit} for {employee.full_name}',
-                ip_address=self.get_client_ip(request)
-            )
-            
-            return Response({
-                'message': f'Edit permission updated successfully',
-                'can_edit_info': employee.can_edit_info
-            })
-        except Employee.DoesNotExist:
-            return Response({'error': 'Employee not found'}, status=status.HTTP_404_NOT_FOUND)
-    
-    def get_client_ip(self, request):
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-        if x_forwarded_for:
-            return x_forwarded_for.split(',')[0]
-        return request.META.get('REMOTE_ADDR')
 
 class AttendanceViewSet(viewsets.ModelViewSet):
     """ViewSet for attendance records - clock in/out with images"""
@@ -552,6 +578,19 @@ class AttendanceViewSet(viewsets.ModelViewSet):
             attendance.clock_in_time = timezone.now()
             attendance.status = 'Present'
             attendance.save()
+
+            try:
+                emp = Employee.objects.get(id=employee_id)
+                ActivityLog.objects.create(
+                    user=request.user,
+                    employee=emp,
+                    role=emp.role,
+                    action='clock_in',
+                    details=f'Clock in at {attendance.clock_in_time}',
+                    ip_address=_client_ip(request),
+                )
+            except Employee.DoesNotExist:
+                pass
             
             serializer = AttendanceSerializer(attendance, context={'request': request})
             return Response(serializer.data)
@@ -587,6 +626,19 @@ class AttendanceViewSet(viewsets.ModelViewSet):
             
             attendance.clock_out_time = timezone.now()
             attendance.save()
+
+            try:
+                emp = Employee.objects.get(id=employee_id)
+                ActivityLog.objects.create(
+                    user=request.user,
+                    employee=emp,
+                    role=emp.role,
+                    action='clock_out',
+                    details=f'Clock out at {attendance.clock_out_time}',
+                    ip_address=_client_ip(request),
+                )
+            except Employee.DoesNotExist:
+                pass
             
             serializer = AttendanceSerializer(attendance, context={'request': request})
             return Response(serializer.data)
@@ -597,47 +649,63 @@ class AttendanceViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def summary(self, request):
-        """Attendance summary stats"""
-        total = Attendance.objects.count()
-        present = Attendance.objects.filter(status='Present').count()
-        absent = Attendance.objects.filter(status='Absent').count()
-        late = Attendance.objects.filter(clock_in_time__hour__gte=10).count()
-         # After 10AM = late
-        
+        """Attendance summary for today: present = clocked in; absent = active employees with no clock-in."""
+        today = timezone.localdate()
+        active_employees = Employee.objects.filter(status='Active')
+        active_count = active_employees.count()
+        present_today = (
+            Attendance.objects.filter(date=today, clock_in_time__isnull=False)
+            .values('employee_id')
+            .distinct()
+            .count()
+        )
+        absent_today = max(0, active_count - present_today)
+        late_today = Attendance.objects.filter(
+            date=today,
+            clock_in_time__isnull=False,
+            clock_in_time__hour__gte=10,
+        ).count()
+        total_records_today = Attendance.objects.filter(date=today).count()
+
         return Response({
-            'total': total,
-            'present': present,
-            'absent': absent,
-            'late': late,
+            'total': total_records_today,
+            'active_employees': active_count,
+            'present': present_today,
+            'absent': absent_today,
+            'late': late_today,
         })
 
     @action(detail=False, methods=['get'])
     def hub_summary(self, request):
-        """Attendance counts by hub for charting"""
-        date = request.query_params.get('date')
-        queryset = Attendance.objects.select_related('employee__hub').all()
-        if date:
-            queryset = queryset.filter(date=date)
+        """Attendance counts by hub for charting (read-only; does not mutate rows)."""
+        date_str = request.query_params.get('date')
+        target_date = timezone.localdate()
+        if date_str:
+            try:
+                from datetime import date as date_cls
+                target_date = date_cls.fromisoformat(date_str)
+            except Exception:
+                target_date = timezone.localdate()
 
         hub_stats = {}
-        for attendance in queryset:
-            hub_name = attendance.employee.hub.name if attendance.employee and attendance.employee.hub else 'Unknown'
+        employees = Employee.objects.filter(status='Active').select_related('hub')
+        for emp in employees:
+            hub_name = emp.hub.name if emp.hub else 'Unknown'
             if hub_name not in hub_stats:
                 hub_stats[hub_name] = {'present': 0, 'absent': 0, 'late': 0}
-            status = (attendance.status or 'Absent').lower()
-            if status == 'present':
-                hub_stats[hub_name]['present'] += 1
-            elif status == 'absent':
-                hub_stats[hub_name]['absent'] += 1
-            elif status == 'late':
-                hub_stats[hub_name]['late'] += 1
+
+            att = (
+                Attendance.objects.filter(employee=emp, date=target_date)
+                .order_by('-id')
+                .first()
+            )
+            if att and att.clock_in_time:
+                if att.clock_in_time.hour >= 10:
+                    hub_stats[hub_name]['late'] += 1
+                else:
+                    hub_stats[hub_name]['present'] += 1
             else:
                 hub_stats[hub_name]['absent'] += 1
-            if timezone.now().hour >= 10:
-                attendance.status = 'Late'
-            else:
-                attendance.status = 'Present'
-                attendance.save()
 
         result = [
             {
@@ -656,17 +724,37 @@ class LeaveRequestViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        qs = LeaveRequest.objects.all().select_related('employee', 'reviewed_by').order_by('-created_at')
+        qs = (
+            LeaveRequest.objects.all()
+            .select_related('employee', 'reviewed_by')
+            .prefetch_related('attachments')
+            .order_by('-created_at')
+        )
+        user = self.request.user
         status = self.request.query_params.get('status')
         employee_id = self.request.query_params.get('employee_id')
         hub_id = self.request.query_params.get('hub_id')
 
         if status:
             qs = qs.filter(status=status)
-        if employee_id:
-            qs = qs.filter(employee_id=employee_id)
-        if hub_id:
-            qs = qs.filter(employee__hub_id=hub_id)
+
+        try:
+            actor = Employee.objects.get(user=user)
+        except Employee.DoesNotExist:
+            actor = None
+
+        is_plain_employee = actor and getattr(actor, 'role', '').lower() == 'employee'
+
+        if is_plain_employee:
+            qs = qs.filter(employee=actor)
+        else:
+            if actor and getattr(actor, 'role', '').lower() == 'hr':
+                qs = qs.exclude(employee__role__iexact='admin')
+            if employee_id:
+                qs = qs.filter(employee_id=employee_id)
+            if hub_id:
+                qs = qs.filter(employee__hub_id=hub_id)
+
         return qs
 
     def perform_create(self, serializer):
@@ -694,6 +782,16 @@ class LeaveRequestViewSet(viewsets.ModelViewSet):
             # don't fail the request if attachments saving has issues; log for debugging
             print('Failed to save leave attachments:', e)
 
+        if emp:
+            ActivityLog.objects.create(
+                user=user,
+                employee=emp,
+                role=emp.role,
+                action='submit_leave_request',
+                details=f'Submitted leave request id={instance.id}',
+                ip_address=_client_ip(self.request),
+            )
+
     @action(detail=True, methods=['patch'])
     def approve(self, request, pk=None):
         instance = self.get_object()
@@ -703,6 +801,14 @@ class LeaveRequestViewSet(viewsets.ModelViewSet):
         instance.reviewed_by = request.user
         instance.reviewed_at = timezone.now()
         instance.save()
+        ActivityLog.objects.create(
+            user=request.user,
+            employee=instance.employee,
+            role=_request_actor_role(request),
+            action='approve_request',
+            details=f'Approved leave request id={instance.id} for {instance.employee.full_name}',
+            ip_address=_client_ip(request),
+        )
         return Response(self.get_serializer(instance).data)
 
     @action(detail=True, methods=['patch'])
@@ -713,6 +819,14 @@ class LeaveRequestViewSet(viewsets.ModelViewSet):
         instance.reviewed_by = request.user
         instance.reviewed_at = timezone.now()
         instance.save()
+        ActivityLog.objects.create(
+            user=request.user,
+            employee=instance.employee,
+            role=_request_actor_role(request),
+            action='reject_request',
+            details=f'Rejected leave request id={instance.id} for {instance.employee.full_name}',
+            ip_address=_client_ip(request),
+        )
         return Response(self.get_serializer(instance).data)
 
 
@@ -720,9 +834,7 @@ class EditRequestViewSet(viewsets.ModelViewSet):
     """ViewSet for edit requests with approval logic"""
     queryset = EditRequest.objects.all()
     serializer_class = EditRequestSerializer
-    # Temporarily allow unauthenticated requests for debugging the multipart POST from the frontend.
-    # Revert to IsAuthenticated after debugging.
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     
@@ -732,11 +844,22 @@ class EditRequestViewSet(viewsets.ModelViewSet):
         if status:
             queryset = queryset.filter(status=status)
         employee_id = self.request.query_params.get('employee_id')
-        if employee_id:
-            queryset = queryset.filter(employee_id=employee_id)
         hub_id = self.request.query_params.get('hub_id')
-        if hub_id:
-            queryset = queryset.filter(employee__hub_id=hub_id)
+        user = self.request.user
+        try:
+            actor = Employee.objects.get(user=user)
+        except Employee.DoesNotExist:
+            actor = None
+        is_plain_employee = actor and getattr(actor, 'role', '').lower() == 'employee'
+        if is_plain_employee:
+            queryset = queryset.filter(employee=actor)
+        else:
+            if actor and getattr(actor, 'role', '').lower() == 'hr':
+                queryset = queryset.exclude(employee__role__iexact='admin')
+            if employee_id:
+                queryset = queryset.filter(employee_id=employee_id)
+            if hub_id:
+                queryset = queryset.filter(employee__hub_id=hub_id)
         return queryset
     
     def create(self, request, *args, **kwargs):
@@ -797,9 +920,20 @@ class EditRequestViewSet(viewsets.ModelViewSet):
         # by create()). Only attach uploaded file here to avoid accidentally
         # passing the wrong object for `employee`.
         if uploaded:
-            serializer.save(uploaded_files=uploaded)
+            instance = serializer.save(uploaded_files=uploaded)
         else:
-            serializer.save()
+            instance = serializer.save()
+        try:
+            ActivityLog.objects.create(
+                user=self.request.user if self.request.user.is_authenticated else None,
+                employee=instance.employee,
+                role=instance.employee.role,
+                action='submit_edit_request',
+                details=f'Submitted edit request id={instance.id}',
+                ip_address=_client_ip(self.request),
+            )
+        except Exception:
+            pass
 
     @action(detail=True, methods=['patch'])
     def approve(self, request, pk=None):
@@ -834,6 +968,15 @@ class EditRequestViewSet(viewsets.ModelViewSet):
         except Exception:
             # If applying changes fails, still return the edit request status
             pass
+
+        ActivityLog.objects.create(
+            user=request.user,
+            employee=instance.employee,
+            role=_request_actor_role(request),
+            action='approve_request',
+            details=f'Approved edit request id={instance.id} for {instance.employee.full_name}',
+            ip_address=_client_ip(request),
+        )
         
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
@@ -847,6 +990,14 @@ class EditRequestViewSet(viewsets.ModelViewSet):
         instance.reviewed_by = request.user
         instance.reviewed_at = timezone.now()
         instance.save()
+        ActivityLog.objects.create(
+            user=request.user,
+            employee=instance.employee,
+            role=_request_actor_role(request),
+            action='reject_request',
+            details=f'Rejected edit request id={instance.id} for {instance.employee.full_name}',
+            ip_address=_client_ip(request),
+        )
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
@@ -855,13 +1006,34 @@ class EmployeeDocumentViewSet(viewsets.ModelViewSet):
     queryset = EmployeeDocument.objects.all()
     serializer_class = EmployeeDocumentSerializer
     permission_classes = [IsAuthenticated]
-    
+
     def get_queryset(self):
-        queryset = EmployeeDocument.objects.all()
+        qs = EmployeeDocument.objects.select_related('employee', 'employee__user').all()
+        user = self.request.user
         employee_id = self.request.query_params.get('employee_id')
-        if employee_id:
-            queryset = queryset.filter(employee_id=employee_id)
-        return queryset
+
+        if user.is_staff or user.is_superuser:
+            if employee_id:
+                qs = qs.filter(employee_id=employee_id)
+        else:
+            try:
+                emp = Employee.objects.get(user=user)
+                qs = qs.filter(employee=emp)
+            except Employee.DoesNotExist:
+                qs = qs.none()
+
+        return qs
+
+    def perform_destroy(self, instance):
+        user = self.request.user
+        if not (user.is_staff or user.is_superuser):
+            try:
+                emp = Employee.objects.get(user=user)
+                if instance.employee_id != emp.id:
+                    raise PermissionDenied('You can only delete your own documents.')
+            except Employee.DoesNotExist:
+                raise PermissionDenied('Employee profile not found.')
+        super().perform_destroy(instance)
 
 class PayrollViewSet(viewsets.ModelViewSet):
     """ViewSet for payroll
@@ -1161,6 +1333,7 @@ class PayrollViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         """When updating a Payroll, recompute derived fields from the newest values and persist them."""
+        old_status = getattr(serializer.instance, 'status', None)
         try:
             # Determine effective values (use existing instance values for missing fields)
             instance = serializer.instance
@@ -1227,10 +1400,32 @@ class PayrollViewSet(viewsets.ModelViewSet):
         except Exception:
             pass
 
-        return serializer.save()
+        saved = serializer.save()
+        try:
+            new_status = getattr(saved, 'status', None)
+            emp = getattr(saved, 'employee', None)
+            if emp and str(new_status).lower() == 'approved' and str(old_status or '').lower() != 'approved':
+                ActivityLog.objects.create(
+                    user=self.request.user,
+                    employee=emp,
+                    role=_request_actor_role(self.request),
+                    action='approve_payslip',
+                    details=f'Approved payslip payroll id={saved.id} period {saved.period_start}–{saved.period_end}',
+                    ip_address=_client_ip(self.request),
+                )
+            elif emp:
+                ActivityLog.objects.create(
+                    user=self.request.user,
+                    employee=emp,
+                    role=_request_actor_role(self.request),
+                    action='update_payslip',
+                    details=f'Updated payroll id={saved.id} status={new_status}',
+                    ip_address=_client_ip(self.request),
+                )
+        except Exception:
+            pass
 
-    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
-    def compute(self, request):
+        return saved
         """Compute a payroll summary for an employee and period without persisting.
 
         Query params: employee_id, period_start (YYYY-MM-DD), period_end (YYYY-MM-DD)
@@ -1299,18 +1494,21 @@ class LoginView(APIView):
         
         if not username or not password:
             return Response({'error': 'Username and password are required'}, status=status.HTTP_400_BAD_REQUEST)
-        
+
+        account = User.objects.filter(username=username).first()
+        if not account:
+            return Response({'error': 'Account did not exist'}, status=status.HTTP_400_BAD_REQUEST)
+        if not account.is_active:
+            return Response({'error': 'Account is disabled. Contact administrator.'}, status=status.HTTP_403_FORBIDDEN)
+
         user = authenticate(username=username, password=password)
         client_ip = self.get_client_ip(request)
-        
-        # Check failed login attempts
         failed_count = self.failed_attempts.get(username, 0)
-        
+
         if user and user.is_active:
             try:
                 employee = Employee.objects.get(user=user)
                 role = employee.role
-                # Check if employee login is disabled
                 if not employee.can_login:
                     SecurityAlert.objects.create(
                         employee=employee,
@@ -1324,16 +1522,15 @@ class LoginView(APIView):
                         }
                     )
                     return Response(
-                        {'error': 'Account has been disabled by administrator'}, 
+                        {'error': 'Account has been disabled by administrator'},
                         status=status.HTTP_403_FORBIDDEN
                     )
             except Employee.DoesNotExist:
                 employee = None
                 role = 'Admin' if user.is_superuser else 'HR' if user.is_staff else 'Employee'
-            
-            # Reset failed attempts on successful login
+
             self.failed_attempts[username] = 0
-            
+
             ActivityLog.objects.create(
                 user=user,
                 employee=employee,
@@ -1342,10 +1539,9 @@ class LoginView(APIView):
                 details=f'{username} logged in successfully from {client_ip}',
                 ip_address=client_ip
             )
-            
-            # Generate JWT token
+
             refresh = RefreshToken.for_user(user)
-            
+
             return Response({
                 'role': role,
                 'user': {
@@ -1357,29 +1553,26 @@ class LoginView(APIView):
                 'token': str(refresh.access_token),
                 'refresh': str(refresh)
             })
-        
-        # Handle failed login
+
+        # Known account, active user, wrong password
         self.failed_attempts[username] = failed_count + 1
         failed_count = self.failed_attempts[username]
-        
-        # Try to find the employee for security alert
+
         try:
             user_obj = User.objects.get(username=username)
             employee = Employee.objects.get(user=user_obj)
         except (User.DoesNotExist, Employee.DoesNotExist):
             employee = None
-        
-        # Create security alert for failed login
+
         alert_type = 'failed_login'
         severity = 'low'
-        
         if failed_count >= self.MAX_FAILED_ATTEMPTS:
             alert_type = 'multiple_attempts'
             severity = 'high'
             message = f'Multiple failed login attempts detected for {username} ({failed_count} attempts from {client_ip})'
         else:
             message = f'Failed login attempt for {username}'
-        
+
         SecurityAlert.objects.create(
             employee=employee,
             alert_type=alert_type,
@@ -1392,8 +1585,7 @@ class LoginView(APIView):
                 'timestamp': str(timezone.now())
             }
         )
-        
-        # Record failed login in activity log
+
         if employee:
             ActivityLog.objects.create(
                 employee=employee,
@@ -1402,11 +1594,12 @@ class LoginView(APIView):
                 details=f'Failed login attempt #{failed_count} for {username}',
                 ip_address=client_ip
             )
-        
-        error_msg = 'Invalid credentials'
+
         if failed_count >= self.MAX_FAILED_ATTEMPTS:
-            error_msg = f'Too many failed login attempts. Please try again later.'
-        
+            error_msg = 'Too many failed login attempts. Please try again later.'
+        else:
+            error_msg = 'Password is incorrect'
+
         return Response({'error': error_msg}, status=status.HTTP_401_UNAUTHORIZED)
 
     def get_client_ip(self, request):
@@ -1464,7 +1657,6 @@ class EmployeeStatsView(APIView):
             'ocw': ocw,
         })
 
-@api_view(['POST'])
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def toggle_account_status(request):
@@ -1655,12 +1847,11 @@ class ActivityLogViewSet(viewsets.ModelViewSet):
         role = self.request.query_params.get('role')
         if role:
             queryset = queryset.filter(role=role)
-        # Exclude roles (comma-separated)
         exclude_role = self.request.query_params.get('exclude_role')
         if exclude_role:
             roles = [r.strip() for r in exclude_role.split(',') if r.strip()]
             if roles:
-                queryset = queryset.exclude(role__in=roles)
+                queryset = queryset.exclude(role__in=roles).exclude(employee__role__in=roles)
         
         # Filter by action
         action = self.request.query_params.get('action')
@@ -1671,12 +1862,6 @@ class ActivityLogViewSet(viewsets.ModelViewSet):
         employee_id = self.request.query_params.get('employee_id')
         if employee_id:
             queryset = queryset.filter(employee_id=employee_id)
-        # Exclude alerts for employees with certain roles (comma-separated)
-        exclude_role = self.request.query_params.get('exclude_role')
-        if exclude_role:
-            roles = [r.strip() for r in exclude_role.split(',') if r.strip()]
-            if roles:
-                queryset = queryset.exclude(employee__role__in=roles)
 
         # Server-side: if requesting user is HR, automatically exclude activities
         # that are either performed by Admins (`role='Admin'`) or target Admin employees
@@ -1858,9 +2043,9 @@ def lock_unlock_account(request, employee_id):
             employee=employee,
             user=request.user,
             role=admin_role,
-            action=f"Account {'locked' if action == 'lock' else 'unlocked'}",
-            details=f"Admin/HR {'locked' if action == 'lock' else 'unlocked'} account",
-            ip_address=request.META.get('REMOTE_ADDR', ''),
+            action='update_employee',
+            details=f"Account {'locked' if action == 'lock' else 'unlocked'} (can_login={employee.can_login})",
+            ip_address=_client_ip(request),
             user_agent=request.META.get('HTTP_USER_AGENT', '')
         )
         
@@ -1905,9 +2090,9 @@ def reset_password(request, employee_id):
             employee=employee,
             user=request.user,
             role='Admin',
-            action="Password reset",
-            description=f"Password reset by admin. Temporary password: {temp_password}",
-            ip_address=request.META.get('REMOTE_ADDR', ''),
+            action='reset_password',
+            details=f'Password reset by admin for {employee.full_name}.',
+            ip_address=_client_ip(request),
             user_agent=request.META.get('HTTP_USER_AGENT', '')
         )
         

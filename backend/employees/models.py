@@ -366,26 +366,6 @@ class LeaveAttachment(models.Model):
 
 class ActivityLog(models.Model):
     """Track all employee, HR, and Admin activities"""
-    
-    ACTION_CHOICES = [
-        ('login', 'Login'),
-        ('logout', 'Logout'),
-        ('failed_login', 'Failed Login'),
-        ('create_employee', 'Create Employee'),
-        ('update_employee', 'Update Employee'),
-        ('delete_employee', 'Delete Employee'),
-        ('approve_request', 'Approve Request'),
-        ('reject_request', 'Reject Request'),
-        ('view_profile', 'View Profile'),
-        ('clock_in', 'Clock In'),
-        ('clock_out', 'Clock Out'),
-        ('update_payslip', 'Update Payslip'),
-        ('approve_payslip', 'Approve Payslip'),
-        ('reset_password', 'Reset Password'),
-        ('blacklist', 'Blacklist'),
-        ('employee_deleted', 'Employee Deleted'),
-        ('toggle_edit_permission', 'Toggle Edit Permission'),
-    ]
 
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     employee = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True, blank=True, related_name='activity_logs')
@@ -396,7 +376,8 @@ class ActivityLog(models.Model):
         ('Admin', 'Admin'),
     ], default='Employee')
     
-    action = models.CharField(max_length=30, choices=ACTION_CHOICES)
+    # Free-form action key (e.g. clock_in, approve_request, submit_leave_request)
+    action = models.CharField(max_length=50)
     details = models.TextField(blank=True)
     
     ip_address = models.GenericIPAddressField(null=True, blank=True)

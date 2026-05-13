@@ -22,8 +22,9 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const EMPLOYMENT_TYPE_COLORS: Record<string, string> = {
-  'Full time': '#1E40AF',   // dark blue
-  'OCW': '#3B82F6',         // light blue
+  'Full-time': '#1E40AF',
+  'Full time': '#1E40AF',
+  OCW: '#3B82F6',
 };
 
 export const AdminDashboard = () => {
@@ -312,22 +313,29 @@ export const AdminDashboard = () => {
           <p className="text-gray-600 dark:text-gray-400 text-xs font-medium mb-4">Employment Type</p>
           {employmentTypeData.length > 0 ? (
             <div className="space-y-4">
-              {employmentTypeData.map((entry, index) => (
+              {employmentTypeData.map((entry, index) => {
+                  const maxVal = Math.max(...employmentTypeData.map((d) => d.value), 1);
+                  const barPct = (entry.value / maxVal) * 100;
+                  return (
                 <div key={index} className="flex flex-col gap-2">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{entry.name}</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400 tabular-nums">
+                      {entry.value} <span className="text-gray-400">({Math.round(barPct)}%)</span>
+                    </span>
                   </div>
                   <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-6 overflow-hidden">
                     <div 
                       className="h-full rounded-full transition-all duration-300"
                       style={{ 
                         backgroundColor: EMPLOYMENT_TYPE_COLORS[entry.name] || '#3B82F6',
-                        width: `${(entry.value / Math.max(...employmentTypeData.map(d => d.value), 1)) * 100}%`
+                        width: `${barPct}%`
                       }}
                     />
                   </div>
                 </div>
-              ))}
+              );
+              })}
             </div>
           ) : null}
         </Card>

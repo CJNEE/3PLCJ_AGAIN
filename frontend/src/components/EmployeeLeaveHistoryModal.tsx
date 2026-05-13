@@ -2,7 +2,7 @@ import { Modal } from './Modal';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
-import { apiUrl } from '@/constants/api';
+import { apiClient } from '@/api/apiService';
 
 interface Props {
   isOpen: boolean;
@@ -19,16 +19,20 @@ export const EmployeeLeaveHistoryModal = ({ isOpen, onClose }: Props) => {
 
   useEffect(() => {
     if (!isOpen) return;
+    if (!employee?.id) {
+      setItems([]);
+      setLoading(false);
+      return;
+    }
     const fetcher = async () => {
       try {
         setLoading(true);
-        const params = employee?.id ? `?employee_id=${employee.id}` : '';
-        const res = await fetch(apiUrl(`leave-requests${params}`), {
-          headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
+        const res = await apiClient.get('/leave-requests/', {
+          params: { employee_id: employee.id },
         });
-        if (!res.ok) throw new Error('Failed to fetch leave history');
-        const data = await res.json();
-        setItems(data.results || data);
+        const data = res.data;
+        const list = Array.isArray(data) ? data : data?.results ?? [];
+        setItems(list);
       } catch (e) {
         console.error(e);
         error('Failed to load leave history');
@@ -37,8 +41,8 @@ export const EmployeeLeaveHistoryModal = ({ isOpen, onClose }: Props) => {
       }
     };
 
-    fetcher();
-  }, [isOpen, employee]);
+    void fetcher();
+  }, [isOpen, employee?.id]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="My Leave History" size="lg">

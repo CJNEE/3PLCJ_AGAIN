@@ -236,6 +236,7 @@ export const useUploadDocument = () => {
       documentAPI.uploadDocument(employeeId, file, fileName),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DOCUMENTS });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CURRENT_USER });
     },
   });
 };
@@ -246,6 +247,13 @@ export const useDeleteDocument = () => {
     mutationFn: (id: number) => documentAPI.deleteDocument(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DOCUMENTS });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CURRENT_USER });
+    },
+    onError: (err: any) => {
+      if (err?.response?.status === 404) {
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DOCUMENTS });
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CURRENT_USER });
+      }
     },
   });
 };

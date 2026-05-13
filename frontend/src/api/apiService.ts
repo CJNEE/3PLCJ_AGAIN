@@ -38,7 +38,9 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    if (error.response?.status === 401) {
+    const reqUrl = String(error.config?.url ?? '');
+    const isLoginCall = /\/login\/?$/i.test(reqUrl) || reqUrl.includes('/login/');
+    if (error.response?.status === 401 && !isLoginCall) {
       localStorage.removeItem('access_token');
       localStorage.removeItem('currentUser');
       localStorage.removeItem('currentEmployee');

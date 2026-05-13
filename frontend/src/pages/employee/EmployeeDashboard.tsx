@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useAuth } from '@/hooks/useAuth';
@@ -13,6 +13,7 @@ import { EmployeeLeaveRequestForm } from '@/components/EmployeeLeaveRequestForm'
 import { EmployeeLeaveHistoryModal } from '@/components/EmployeeLeaveHistoryModal';
 import { Modal } from '@/components/Modal';
 import { normalizeApiResponse } from '@/utils/apiResponseHandler';
+import { authAPI } from '@/api/apiService';
 
 import {
   LayoutDashboard,
@@ -79,7 +80,7 @@ const navigation = [
 export const EmployeeDashboard = () => {
   const navigate = useNavigate();
 
-  const { employee, user, logout } =
+  const { employee, user, logout, setEmployee, setUser } =
     useAuth();
 
   const [activeSection, setActiveSection] =
@@ -147,6 +148,22 @@ export const EmployeeDashboard = () => {
   /* ===================================
      HELPERS
   =================================== */
+
+  const refreshSessionEmployee = useCallback(async () => {
+    try {
+      const data = await authAPI.getCurrentUser();
+      if (data.user) {
+        setUser(data.user);
+        localStorage.setItem('currentUser', JSON.stringify(data.user));
+      }
+      if (data.employee) {
+        setEmployee(data.employee);
+        localStorage.setItem('currentEmployee', JSON.stringify(data.employee));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, [setEmployee, setUser]);
 
   const formatCurrency = (
     amount: number
@@ -385,6 +402,7 @@ export const EmployeeDashboard = () => {
                 employeeId={
                   employee?.id || 0
                 }
+                onUpdate={refreshSessionEmployee}
               />
             </div>
           </div>

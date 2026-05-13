@@ -53,6 +53,11 @@ export const DocumentsSection = ({ documents, employeeId, onUpdate, readOnly = f
       toast.success('Document deleted successfully');
       onUpdate?.();
     } catch (error: any) {
+      if (error.response?.status === 404) {
+        toast.success('Document removed');
+        onUpdate?.();
+        return;
+      }
       toast.error(error.response?.data?.message || 'Failed to delete document');
     }
   };
@@ -62,6 +67,9 @@ export const DocumentsSection = ({ documents, employeeId, onUpdate, readOnly = f
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
+
+  const displaySize = (doc: EmployeeDocument) =>
+    formatFileSize((doc.file_size ?? 0) * 1024);
   
   return (
     <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
@@ -109,7 +117,7 @@ export const DocumentsSection = ({ documents, employeeId, onUpdate, readOnly = f
                 <FileText size={20} className="text-[#8B0000]" />
                 <div>
                   <p className="font-medium text-gray-800 text-sm">{doc.file_name}</p>
-                  <p className="text-xs text-gray-500">{formatFileSize(doc.file_size)} | {new Date(doc.uploaded_at).toLocaleDateString()}</p>
+                  <p className="text-xs text-gray-500">{displaySize(doc)} | {new Date(doc.uploaded_at).toLocaleDateString()}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">

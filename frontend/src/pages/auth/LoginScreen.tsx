@@ -56,7 +56,13 @@ export const LoginScreen = () => {
         }
       }
     } catch (err: any) {
-      const errorMessage = err.response?.data?.detail || err.message || 'Login failed. Please try again.';
+      const data = err.response?.data;
+      const errorMessage =
+        (typeof data?.error === 'string' && data.error) ||
+        (typeof data?.detail === 'string' && data.detail) ||
+        (Array.isArray(data?.non_field_errors) && data.non_field_errors[0]) ||
+        err.message ||
+        'Login failed. Please try again.';
       setLoginError(errorMessage);
       error(errorMessage);
     }
@@ -64,8 +70,8 @@ export const LoginScreen = () => {
 
   return (
     <div className="min-h-screen bg-gray-200 flex items-center justify-center p-4">
-      <div className="w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden flex">
-        {/* Left Side - Logo */}
+      <div className="w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row">
+        {/* Left Side - Logo (desktop) */}
         <div className="hidden md:flex w-1/2 bg-white items-center justify-center p-8">
           <img 
             src={logo3pl} 
@@ -77,9 +83,17 @@ export const LoginScreen = () => {
         {/* Right Side - Login Form */}
         <div className="w-full md:w-1/2 bg-red-700 flex flex-col items-center justify-center p-8 md:p-12">
           <div className="w-full max-w-sm">
+            {/* Mobile logo — same asset as desktop */}
+            <div className="flex md:hidden justify-center mb-6">
+              <img
+                src={logo3pl}
+                alt="3PL Business Solutions"
+                className="max-w-[200px] h-auto object-contain"
+              />
+            </div>
             <h1 className="text-4xl font-bold text-white text-center mb-8">LOGIN</h1>
 
-            <form onSubmit={handleLogin} className="space-y-5">
+            <form onSubmit={handleLogin} className="space-y-5" autoComplete="on">
               {loginError && (
                 <div className="bg-red-900 border border-red-500 text-white px-4 py-3 rounded">
                   {loginError}
@@ -91,6 +105,8 @@ export const LoginScreen = () => {
                 <label className="block text-white text-sm font-medium mb-2">Username:</label>
                 <input
                   type="text"
+                  name="username"
+                  autoComplete="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder=""
@@ -105,6 +121,8 @@ export const LoginScreen = () => {
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    autoComplete="current-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder=""

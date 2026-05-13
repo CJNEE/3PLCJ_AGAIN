@@ -190,7 +190,7 @@ export const PayslipDetailModal = ({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="" size="lg">
-      <div className="max-h-[90vh] overflow-y-auto">
+      <div>
         <div className="bg-red-600 p-6 text-white relative">
           <div className="flex gap-6">
             <div>

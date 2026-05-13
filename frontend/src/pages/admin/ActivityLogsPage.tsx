@@ -65,6 +65,11 @@ export const ActivityLogsPage = () => {
       'blacklist': 'error',
       'employee_deleted': 'error',
       'toggle_edit_permission': 'warning',
+      'submit_edit_request': 'info',
+      'submit_leave_request': 'info',
+      'bulk_toggle_login': 'warning',
+      'approve_payslip': 'success',
+      'update_payslip': 'warning',
     };
     return actionColors[action] || 'default';
   };
