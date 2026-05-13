@@ -1868,7 +1868,12 @@ class ActivityLogViewSet(viewsets.ModelViewSet):
         try:
             user_employee = getattr(self.request.user, 'employee', None)
             if user_employee and getattr(user_employee, 'role', '').lower() == 'hr':
-                queryset = queryset.exclude(models.Q(role__iexact='admin') | models.Q(employee__role__iexact='admin'))
+                queryset = queryset.exclude(
+                    models.Q(role__iexact='admin')
+                    | models.Q(employee__role__iexact='admin')
+                    | models.Q(user__is_superuser=True)
+                    | models.Q(user__employee__role__iexact='admin')
+                )
         except Exception:
             pass
 
@@ -1949,6 +1954,17 @@ class SecurityAlertViewSet(viewsets.ModelViewSet):
             user_employee = getattr(self.request.user, 'employee', None)
             if user_employee and getattr(user_employee, 'role', '').lower() == 'hr':
                 queryset = queryset.exclude(employee__role__iexact='admin')
+                admin_usernames = User.objects.filter(
+                    models.Q(is_superuser=True) | models.Q(employee__role__iexact='Admin')
+                ).values_list('username', flat=True).distinct()
+                username_q = None
+                for un in admin_usernames:
+                    if not un:
+                        continue
+                    part = models.Q(details__username=un)
+                    username_q = part if username_q is None else (username_q | part)
+                if username_q is not None:
+                    queryset = queryset.exclude(username_q)
         except Exception:
             pass
 

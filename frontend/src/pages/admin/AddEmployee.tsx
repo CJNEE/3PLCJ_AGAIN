@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/api/apiService';
-import { API_ENDPOINTS } from '@/constants/api';
+import { API_ENDPOINTS, QUERY_KEYS } from '@/constants/api';
 
 type RoleType = string;
 type EmploymentType = string;
@@ -90,6 +91,7 @@ const initialFormState: EmployeeFormState = {
 };
 
 export const AddEmployee = ({ onCancel, onClose, onCreated }: AddEmployeeProps) => {
+  const queryClient = useQueryClient();
   const [formState, setFormState] = useState<EmployeeFormState>(initialFormState);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -242,10 +244,10 @@ export const AddEmployee = ({ onCancel, onClose, onCreated }: AddEmployeeProps) 
       });
 
       // POST to backend - endpoint expected: /api/employees
-      const response = await apiClient.post(API_ENDPOINTS.EMPLOYEES, formData);
-      const data = response.data;
+      await apiClient.post(API_ENDPOINTS.EMPLOYEES, formData);
 
       setSuccess('Employee created.');
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.EMPLOYEES });
       setFormState({ ...initialFormState, createdAt: new Date().toISOString() });
       onCreated?.();
       setTimeout(callClose, 600);
