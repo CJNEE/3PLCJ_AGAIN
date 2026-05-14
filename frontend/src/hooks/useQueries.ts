@@ -117,6 +117,16 @@ export const useDeleteHub = () => {
   });
 };
 
+export const useUpdateHub = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: any }) => hubAPI.updateHub({ id, data }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.HUBS] });
+    },
+  });
+};
+
 // Attendance hooks
 export const useGetAttendance = (params?: Record<string, any>) => {
   return useQuery({

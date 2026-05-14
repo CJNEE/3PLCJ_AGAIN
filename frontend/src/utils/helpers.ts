@@ -1,7 +1,7 @@
 export const polylineDecoder = (encoded: string): Array<[number, number]> => {
   const inv = 1.0 / 1e5;
   const decoded: Array<[number, number]> = [];
-  let previous = [0, 0];
+  const previous = [0, 0];
   let i = 0;
 
   while (i < encoded.length) {

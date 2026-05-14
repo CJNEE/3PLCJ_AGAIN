@@ -144,6 +144,11 @@ export const hubAPI = {
     const response = await apiClient.delete(API_ENDPOINTS.HUB_DETAIL(id));
     return response.data;
   },
+
+  updateHub: async ({ id, data }: { id: number; data: any }) => {
+    const response = await apiClient.patch(API_ENDPOINTS.HUB_DETAIL(id), data);
+    return response.data;
+  },
 };
 
 /* =========================

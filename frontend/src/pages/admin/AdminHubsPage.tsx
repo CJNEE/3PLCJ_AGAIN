@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Card, Badge, LoadingSpinner, EmptyState } from '@/components/common';
-import { useGetHubs, useGetEmployees, useCreateHub, useDeleteHub } from '@/hooks/useQueries';
-import { MapPin, X, Search, Navigation, ChevronLeft, ChevronRight, Users, Footprints, Bike, Car, Plus, Trash2 } from 'lucide-react';
+import { useGetHubs, useGetEmployees, useCreateHub, useDeleteHub, useUpdateHub } from '@/hooks/useQueries';
+import { MapPin, X, Search, Navigation, ChevronLeft, ChevronRight, Users, Footprints, Bike, Car, Plus, Trash2, Edit2 } from 'lucide-react';
 import { normalizeApiResponse } from '@/utils/apiResponseHandler';
 import { MapContainer, TileLayer, Marker, Polyline, Popup } from 'react-leaflet';
 import L from 'leaflet';
@@ -105,21 +105,42 @@ async function fetchOsrmProfile(
     const { data: employeesData } = useGetEmployees();
     
     const createHubMutation = useCreateHub();
+    const updateHubMutation = useUpdateHub();
     const deleteHubMutation = useDeleteHub();
 
     const [showAddModal, setShowAddModal] = useState(false);
+    const [editingHubId, setEditingHubId] = useState<number | null>(null);
     const [newHub, setNewHub] = useState({ name: '', location: '', city: 'Quezon', address: '', latitude: 14.6760, longitude: 121.0437 });
 
     const handleAddHub = async (e: React.FormEvent) => {
       e.preventDefault();
       try {
-        await createHubMutation.mutateAsync(newHub);
+        if (editingHubId) {
+          await updateHubMutation.mutateAsync({ id: editingHubId, data: newHub });
+        } else {
+          await createHubMutation.mutateAsync(newHub);
+        }
         setShowAddModal(false);
+        setEditingHubId(null);
         setNewHub({ name: '', location: '', city: 'Quezon', address: '', latitude: 14.6760, longitude: 121.0437 });
       } catch (error) {
-        console.error("Failed to add hub", error);
-        alert("Failed to add hub");
+        console.error("Failed to save hub", error);
+        alert("Failed to save hub");
       }
+    };
+
+    const handleEditClick = (hub: any, e: any) => {
+      e.stopPropagation();
+      setEditingHubId(hub.id);
+      setNewHub({
+        name: hub.name,
+        location: hub.location || '',
+        city: hub.city || 'Quezon',
+        address: hub.address || '',
+        latitude: hub.latitude || 14.6760,
+        longitude: hub.longitude || 121.0437,
+      });
+      setShowAddModal(true);
     };
 
     const handleDeleteHub = async (id: number) => {
@@ -703,13 +724,22 @@ async function fetchOsrmProfile(
                       )}
                     </div>
                     <div className="text-right flex flex-col items-end gap-2">
-                      <button 
-                        onClick={(e: any) => { e.stopPropagation(); handleDeleteHub(hub.id); }}
-                        className="text-red-500 hover:text-red-700 transition-colors p-1"
-                        title="Delete Hub"
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                      <div className="flex flex-row gap-2">
+                        <button 
+                          onClick={(e: any) => handleEditClick(hub, e)}
+                          className="text-blue-500 hover:text-blue-700 transition-colors p-1"
+                          title="Edit Hub"
+                        >
+                          <Edit2 size={18} />
+                        </button>
+                        <button 
+                          onClick={(e: any) => { e.stopPropagation(); handleDeleteHub(hub.id); }}
+                          className="text-red-500 hover:text-red-700 transition-colors p-1"
+                          title="Delete Hub"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
                       <div>
                         <p className="text-3xl font-bold text-red-700">{employeeCount}</p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">Employees</p>
@@ -730,8 +760,8 @@ async function fetchOsrmProfile(
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md overflow-hidden flex flex-col">
             <div className="bg-gradient-to-r from-red-600 to-red-700 p-4 text-white flex items-center justify-between">
-              <h3 className="font-bold text-lg">Add New Hub</h3>
-              <button onClick={() => setShowAddModal(false)} className="hover:bg-red-800 p-1 rounded transition-colors">
+              <h3 className="font-bold text-lg">{editingHubId ? 'Edit Hub' : 'Add New Hub'}</h3>
+              <button onClick={() => { setShowAddModal(false); setEditingHubId(null); setNewHub({ name: '', location: '', city: 'Quezon', address: '', latitude: 14.6760, longitude: 121.0437 }); }} className="hover:bg-red-800 p-1 rounded transition-colors">
                 <X size={20} />
               </button>
             </div>
@@ -766,12 +796,13 @@ async function fetchOsrmProfile(
               </form>
             </div>
             <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3 bg-gray-50 dark:bg-gray-900">
-              <button type="button" onClick={() => setShowAddModal(false)} className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">
-                Cancel
-              </button>
-              <button type="submit" form="add-hub-form" disabled={createHubMutation.isPending} className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50">
-                {createHubMutation.isPending ? 'Adding...' : 'Add Hub'}
-              </button>
+                  <button type="button" onClick={() => { setShowAddModal(false); setEditingHubId(null); setNewHub({ name: '', location: '', city: 'Quezon', address: '', latitude: 14.6760, longitude: 121.0437 }); }} className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors">
+                    Cancel
+                  </button>
+                  <button type="submit" form="add-hub-form" disabled={createHubMutation.isPending || updateHubMutation.isPending} className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2">
+                    {(createHubMutation.isPending || updateHubMutation.isPending) && <LoadingSpinner size="sm" />}
+                    {editingHubId ? 'Save Changes' : 'Add Hub'}
+                  </button>
             </div>
           </div>
         </div>
