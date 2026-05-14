@@ -85,29 +85,25 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-# Use PostgreSQL on Render (DATABASE_URL) so data survives deploys; SQLite locally only.
-_DATABASE_URL = os.environ.get('DATABASE_URL', '').strip()
-if _DATABASE_URL:
-    import dj_database_url
+# Use PostgreSQL exclusively. Set DATABASE_URL in environment or fallback to local DB.
+_DATABASE_URL = os.environ.get('DATABASE_URL', 'postgresql://db_3pl_db_user:1c252y1LRra5SogWdlOBRWNLBjAqHC3R@dpg-d823dkpkh4rs73br35d0-a.oregon-postgres.render.com/db_3pl_db').strip()
 
-    # Allow tuning of connection pooling and SSL via env vars
-    _CONN_MAX_AGE = int(os.environ.get('CONN_MAX_AGE', '600'))
-    _DB_SSL_REQUIRE = os.environ.get('DB_SSL_REQUIRE', 'True').lower() in ('1', 'true', 'yes')
+import dj_database_url
 
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=_DATABASE_URL,
-            conn_max_age=_CONN_MAX_AGE,
-            ssl_require=_DB_SSL_REQUIRE,
-        )
-    }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+# Allow tuning of connection pooling and SSL via env vars
+_CONN_MAX_AGE = int(os.environ.get('CONN_MAX_AGE', '600'))
+# For local dev without SSL, you might want to set DB_SSL_REQUIRE=False or default to False if DATABASE_URL is local.
+# We'll default to False for the fallback but respect env var.
+_default_ssl = 'False' if 'localhost' in _DATABASE_URL or '127.0.0.1' in _DATABASE_URL else 'True'
+_DB_SSL_REQUIRE = os.environ.get('DB_SSL_REQUIRE', _default_ssl).lower() in ('1', 'true', 'yes')
+
+DATABASES = {
+    'default': dj_database_url.config(
+        default=_DATABASE_URL,
+        conn_max_age=_CONN_MAX_AGE,
+        ssl_require=_DB_SSL_REQUIRE,
+    )
+}
 
 
 # Password validation

@@ -5,7 +5,7 @@
 ✅ **System Health Check: PASSED** (97-100% success rate)
 
 ### Database Status
-- ✅ Database: Working (SQLite locally, PostgreSQL on Render)
+- ✅ Database: Working (PostgreSQL)
 - ✅ Schema: All migrations applied
 - ✅ Data: 10 hubs, 15 employees, 15 attendance records
 
