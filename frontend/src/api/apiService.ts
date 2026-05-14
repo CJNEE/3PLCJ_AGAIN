@@ -134,6 +134,16 @@ export const hubAPI = {
     const response = await apiClient.get(API_ENDPOINTS.HUB_DETAIL(id));
     return response.data;
   },
+
+  createHub: async (data: any) => {
+    const response = await apiClient.post(API_ENDPOINTS.HUBS, data);
+    return response.data;
+  },
+
+  deleteHub: async (id: number) => {
+    const response = await apiClient.delete(API_ENDPOINTS.HUB_DETAIL(id));
+    return response.data;
+  },
 };
 
 /* =========================

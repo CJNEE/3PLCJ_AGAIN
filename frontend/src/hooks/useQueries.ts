@@ -97,6 +97,26 @@ export const useGetHub = (id: number) => {
   });
 };
 
+export const useCreateHub = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) => hubAPI.createHub(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.HUBS] });
+    },
+  });
+};
+
+export const useDeleteHub = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => hubAPI.deleteHub(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.HUBS] });
+    },
+  });
+};
+
 // Attendance hooks
 export const useGetAttendance = (params?: Record<string, any>) => {
   return useQuery({

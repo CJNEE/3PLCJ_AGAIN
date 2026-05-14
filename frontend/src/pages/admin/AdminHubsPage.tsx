@@ -1,7 +1,7 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Card, Badge, LoadingSpinner, EmptyState } from '@/components/common';
-import { useGetHubs, useGetEmployees } from '@/hooks/useQueries';
-import { MapPin, X, Search, Navigation, ChevronLeft, ChevronRight, Users, Footprints, Bike, Car } from 'lucide-react';
+import { useGetHubs, useGetEmployees, useCreateHub, useDeleteHub } from '@/hooks/useQueries';
+import { MapPin, X, Search, Navigation, ChevronLeft, ChevronRight, Users, Footprints, Bike, Car, Plus, Trash2 } from 'lucide-react';
 import { normalizeApiResponse } from '@/utils/apiResponseHandler';
 import { MapContainer, TileLayer, Marker, Polyline, Popup } from 'react-leaflet';
 import L from 'leaflet';
@@ -103,6 +103,38 @@ async function fetchOsrmProfile(
 
     const { data, isLoading } = useGetHubs();
     const { data: employeesData } = useGetEmployees();
+    
+    const createHubMutation = useCreateHub();
+    const deleteHubMutation = useDeleteHub();
+
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [newHub, setNewHub] = useState({ name: '', location: '', city: 'Quezon', address: '', latitude: 14.6760, longitude: 121.0437 });
+
+    const handleAddHub = async (e: React.FormEvent) => {
+      e.preventDefault();
+      try {
+        await createHubMutation.mutateAsync(newHub);
+        setShowAddModal(false);
+        setNewHub({ name: '', location: '', city: 'Quezon', address: '', latitude: 14.6760, longitude: 121.0437 });
+      } catch (error) {
+        console.error("Failed to add hub", error);
+        alert("Failed to add hub");
+      }
+    };
+
+    const handleDeleteHub = async (id: number) => {
+      if (window.confirm("Are you sure you want to delete this hub?")) {
+        try {
+          await deleteHubMutation.mutateAsync(id);
+          if (hubState.selectedHub?.id === id) {
+            handleCloseHub();
+          }
+        } catch (error) {
+          console.error("Failed to delete hub", error);
+          alert("Failed to delete hub");
+        }
+      }
+    };
 
     const hubs = normalizeApiResponse(data);
     const allEmployees = normalizeApiResponse(employeesData);
@@ -331,15 +363,22 @@ async function fetchOsrmProfile(
             </div>
           </div>
 
-          {/* Search */}
+          {/* Search and Add Hub */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <input
               type="text"
               placeholder="Search locations..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e: any) => setSearchTerm(e.target.value)}
               className="input-field w-full max-w-md"
             />
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+            >
+              <Plus size={18} />
+              Add Hub
+            </button>
           </div>
 
         {/* Map and Hub Details Container */}
@@ -492,7 +531,7 @@ async function fetchOsrmProfile(
                           Driving directions
                         </h5>
                         <div className="space-y-2">
-                          {routeData.car.turns.map((turn, idx) => (
+                          {routeData.car.turns.map((turn: any, idx: number) => (
                             <div
                               key={idx}
                               className="flex gap-2 text-xs text-slate-700 dark:text-slate-300 pb-2 border-b border-slate-100 dark:border-slate-700 last:border-0 last:pb-0"
@@ -541,7 +580,7 @@ async function fetchOsrmProfile(
                       type="text"
                       placeholder="Search employee..."
                       value={employeeSearch}
-                      onChange={(e) => {
+                      onChange={(e: any) => {
                         setEmployeeSearch(e.target.value);
                         setCurrentPage(1);
                       }}
@@ -663,9 +702,18 @@ async function fetchOsrmProfile(
                         <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">{hub.address}</p>
                       )}
                     </div>
-                    <div className="text-right">
-                      <p className="text-3xl font-bold text-red-700">{employeeCount}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Employees</p>
+                    <div className="text-right flex flex-col items-end gap-2">
+                      <button 
+                        onClick={(e: any) => { e.stopPropagation(); handleDeleteHub(hub.id); }}
+                        className="text-red-500 hover:text-red-700 transition-colors p-1"
+                        title="Delete Hub"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                      <div>
+                        <p className="text-3xl font-bold text-red-700">{employeeCount}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Employees</p>
+                      </div>
                     </div>
                   </div>
                 </Card>
@@ -676,6 +724,58 @@ async function fetchOsrmProfile(
           <EmptyState title="No hubs found" description="Try adjusting your search filters" />
         )}
       </div>
+
+      {/* Add Hub Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md overflow-hidden flex flex-col">
+            <div className="bg-gradient-to-r from-red-600 to-red-700 p-4 text-white flex items-center justify-between">
+              <h3 className="font-bold text-lg">Add New Hub</h3>
+              <button onClick={() => setShowAddModal(false)} className="hover:bg-red-800 p-1 rounded transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto max-h-[70vh]">
+              <form id="add-hub-form" onSubmit={handleAddHub} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Hub Name</label>
+                  <input required type="text" value={newHub.name} onChange={(e: any) => setNewHub({...newHub, name: e.target.value})} className="input-field w-full" placeholder="e.g. Quezon Hub 1" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Location</label>
+                  <input required type="text" value={newHub.location} onChange={(e: any) => setNewHub({...newHub, location: e.target.value})} className="input-field w-full" placeholder="e.g. Novaliches" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">City</label>
+                  <input required type="text" value={newHub.city} onChange={(e: any) => setNewHub({...newHub, city: e.target.value})} className="input-field w-full" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Address</label>
+                  <input required type="text" value={newHub.address} onChange={(e: any) => setNewHub({...newHub, address: e.target.value})} className="input-field w-full" placeholder="Full address" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Latitude</label>
+                    <input required type="number" step="any" value={newHub.latitude} onChange={(e: any) => setNewHub({...newHub, latitude: parseFloat(e.target.value)})} className="input-field w-full" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Longitude</label>
+                    <input required type="number" step="any" value={newHub.longitude} onChange={(e: any) => setNewHub({...newHub, longitude: parseFloat(e.target.value)})} className="input-field w-full" />
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3 bg-gray-50 dark:bg-gray-900">
+              <button type="button" onClick={() => setShowAddModal(false)} className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                Cancel
+              </button>
+              <button type="submit" form="add-hub-form" disabled={createHubMutation.isPending} className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50">
+                {createHubMutation.isPending ? 'Adding...' : 'Add Hub'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       </>
     );
   };
