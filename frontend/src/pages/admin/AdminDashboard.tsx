@@ -374,7 +374,7 @@ export const AdminDashboard = () => {
               className="input-field text-sm flex-1 max-w-md"
             />
           </div>
-          <div className="w-full h-80 rounded border border-gray-200 overflow-hidden">
+          <div className="w-full h-full min-h-[400px] rounded border border-gray-200 overflow-hidden">
             {hubs.length > 0 ? (
               <MapContainer 
                 center={[12.5797, 124.0758]} 
@@ -801,4 +801,5 @@ export const AdminDashboard = () => {
   </div>
   );
 };
+
 

@@ -13,6 +13,7 @@ export const AttendancePage = () => {
   const [hubFilter, setHubFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
+  const [dateFilter, setDateFilter] = useState(new Date().toISOString().split('T')[0]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [photoViewerOpen, setPhotoViewerOpen] = useState(false);
@@ -55,29 +56,58 @@ export const AttendancePage = () => {
   // Calculate stats - Presents, Absents, Lates
   const stats = useMemo(() => {
     const totalEmployees = employees.length;
-    const presents = attendance.filter((a: any) => a.status === 'Present').length;
-    const absents = attendance.filter((a: any) => a.status === 'Absent').length;
-    const lates = attendance.filter((a: any) => a.status === 'Late').length;
+    
+    const todaysAttendance = attendance.filter((a: any) => {
+      const aDate = a.date || (a.clock_in_time ? a.clock_in_time.split('T')[0] : '');
+      return aDate === dateFilter;
+    });
+
+    const presents = todaysAttendance.filter((a: any) => a.status === 'Present').length;
+    const lates = todaysAttendance.filter((a: any) => a.status === 'Late').length;
+    const absents = totalEmployees - (presents + lates);
 
     return {
       totalEmployees,
       presents,
-      absents,
+      absents: absents > 0 ? absents : 0,
       lates,
     };
-  }, [attendance, employees]);
+  }, [attendance, employees, dateFilter]);
 
   // Group attendance by hub
   const attendanceByHub = useMemo(() => {
     const grouped: { [key: string]: any[] } = {};
 
-    attendance.forEach((record: any) => {
-      const hubName = record.hub_name || record.hub || 'Unknown Hub';
+    const todaysAttendance = attendance.filter((a: any) => {
+      const aDate = a.date || (a.clock_in_time ? a.clock_in_time.split('T')[0] : '');
+      return aDate === dateFilter;
+    });
+
+    const attendanceMap = new Map();
+    todaysAttendance.forEach((a: any) => {
+      const empId = a.employee || a.employee_id || a.jtp_code;
+      if (empId) attendanceMap.set(empId.toString(), a);
+    });
+
+    employees.forEach((emp: any) => {
+      const hubName = emp.hub_name || 'Unknown Hub';
       if (!grouped[hubName]) {
         grouped[hubName] = [];
       }
 
-      // Filter based on search and filters
+      const empIdStr = (emp.id || emp.employee_id || emp.jtp_code)?.toString();
+      const existingRecord = attendanceMap.get(empIdStr);
+
+      const record = existingRecord || {
+        employee_name: emp.full_name,
+        employee_id: emp.employee_id,
+        jtp_code: emp.jtp_code,
+        hub_name: hubName,
+        status: 'Absent',
+        clock_in_time: null,
+        clock_out_time: null
+      };
+
       const matchesSearch =
         !searchTerm ||
         record.employee_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -93,7 +123,7 @@ export const AttendancePage = () => {
     });
 
     return grouped;
-  }, [attendance, searchTerm, hubFilter, statusFilter]);
+  }, [attendance, employees, searchTerm, hubFilter, statusFilter, dateFilter]);
 
   const handleDownload = (hubName: string) => {
     const hubData = attendanceByHub[hubName];
@@ -279,6 +309,18 @@ export const AttendancePage = () => {
         <div className="flex flex-col lg:flex-row gap-3 items-end">
           <div className="flex-1">
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+              Date
+            </label>
+            <input
+              type="date"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="input-field w-full"
+            />
+          </div>
+
+          <div className="flex-1">
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
               Hub Name
             </label>
             <select
@@ -321,7 +363,7 @@ export const AttendancePage = () => {
               <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
               <input
                 type="text"
-                placeholder="Search by name, JTP code..."
+                placeholder="Search user here..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="input-field pl-10 w-full"

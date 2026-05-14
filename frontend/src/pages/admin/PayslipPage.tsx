@@ -282,7 +282,7 @@ export const PayslipPage = () => {
                 <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
                 <input
                   type="text"
-                  placeholder="Search by name..."
+                  placeholder="Search user here..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="input-field pl-10 w-full"
@@ -399,3 +399,4 @@ export const PayslipPage = () => {
     </div>
   );
 };
+

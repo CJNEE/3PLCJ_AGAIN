@@ -175,7 +175,7 @@ export const AccessControlPage = () => {
           ))}
         </select>
 
-        <div className="relative flex-1 md:flex-initial">
+        <div className="relative flex-1 w-full lg:w-auto">
           <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
           <input
             type="text"
@@ -258,3 +258,4 @@ export const AccessControlPage = () => {
        </div>
   );
 };
+

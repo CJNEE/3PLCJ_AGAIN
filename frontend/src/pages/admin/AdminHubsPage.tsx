@@ -301,7 +301,7 @@ async function fetchOsrmProfile(
     if (isLoading) {
       return (
         <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
-          <Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} hideThemeToggle />
+          <Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
           <div className="p-4 lg:p-6 lg:ml-64 flex items-center justify-center min-h-[50vh]">
             <LoadingSpinner />
           </div>
@@ -366,11 +366,7 @@ async function fetchOsrmProfile(
 
     return (
       <>
-        <Sidebar
-          open={sidebarOpen}
-          onToggle={() => setSidebarOpen(!sidebarOpen)}
-          hideThemeToggle
-        />
+        <Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
 
         <div className="p-4 lg:p-6 lg:ml-64 space-y-6">
           {/* Header + theme (top-right) */}
@@ -379,9 +375,7 @@ async function fetchOsrmProfile(
               <h1 className="text-2xl font-bold tracking-tight">Hubs</h1>
               <p className="text-sm text-gray-600 dark:text-gray-400">{filteredHubs.length} hub locations</p>
             </div>
-            <div className="flex shrink-0 items-center gap-3 sm:pt-0.5">
-              <ThemeToggle />
-            </div>
+            
           </div>
 
           {/* Search and Add Hub */}
@@ -810,3 +804,4 @@ async function fetchOsrmProfile(
       </>
     );
   };
+
