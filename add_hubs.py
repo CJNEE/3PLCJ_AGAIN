@@ -24,7 +24,7 @@ hubs_data = [
     {
         'name': 'Lucena DH1 (Main Hub)',
         'location': 'Lucena DH1 (Main Hub)',
-        'city': 'Lucena City',
+        'city': 'Lucena City, Quezon',
         'company': 'J&T Express',
         'latitude': 14.2562,
         'longitude': 121.6155,
@@ -33,7 +33,7 @@ hubs_data = [
     {
         'name': 'Lucena DH2 (Gulang-Gulang)',
         'location': 'Lucena DH2 (Gulang-Gulang)',
-        'city': 'Lucena City',
+        'city': 'Lucena City, Quezon',
         'company': 'J&T Express',
         'latitude': 14.2580,
         'longitude': 121.6200,
@@ -42,7 +42,7 @@ hubs_data = [
     {
         'name': 'Lucena DH3 (Dalahican)',
         'location': 'Lucena DH3 (Dalahican)',
-        'city': 'Lucena City',
+        'city': 'Lucena City, Quezon',
         'company': 'J&T Express',
         'latitude': 14.2598,
         'longitude': 121.7032,
@@ -51,7 +51,7 @@ hubs_data = [
     {
         'name': 'Tayabas DH1',
         'location': 'Tayabas DH1',
-        'city': 'Tayabas',
+        'city': 'Tayabas, Quezon',
         'company': 'J&T Express',
         'latitude': 14.0447,
         'longitude': 121.5242,
@@ -60,7 +60,7 @@ hubs_data = [
     {
         'name': 'Sariaya DH1',
         'location': 'Sariaya DH1',
-        'city': 'Sariaya',
+        'city': 'Sariaya, Quezon',
         'company': 'J&T Express',
         'latitude': 13.8968,
         'longitude': 121.4523,
@@ -69,7 +69,7 @@ hubs_data = [
     {
         'name': 'Candelaria DH1',
         'location': 'Candelaria DH1',
-        'city': 'Candelaria',
+        'city': 'Candelaria, Quezon',
         'company': 'J&T Express',
         'latitude': 13.8254,
         'longitude': 121.5542,
@@ -78,7 +78,7 @@ hubs_data = [
     {
         'name': 'Gumaca DH1',
         'location': 'Gumaca DH1',
-        'city': 'Gumaca',
+        'city': 'Gumaca, Quezon',
         'company': 'J&T Express',
         'latitude': 13.6987,
         'longitude': 121.8456,
@@ -87,7 +87,7 @@ hubs_data = [
     {
         'name': 'Lopez DH1',
         'location': 'Lopez DH1',
-        'city': 'Lopez',
+        'city': 'Lopez, Quezon',
         'company': 'J&T Express',
         'latitude': 13.5234,
         'longitude': 121.9876,
@@ -96,7 +96,7 @@ hubs_data = [
     {
         'name': 'Infanta DH1',
         'location': 'Infanta DH1',
-        'city': 'Infanta',
+        'city': 'Infanta, Quezon',
         'company': 'J&T Express',
         'latitude': 14.0156,
         'longitude': 121.8756,
@@ -105,7 +105,7 @@ hubs_data = [
     {
         'name': 'Real DH1',
         'location': 'Real DH1',
-        'city': 'Real',
+        'city': 'Real, Quezon',
         'company': 'J&T Express',
         'latitude': 14.3245,
         'longitude': 121.9234,
@@ -114,7 +114,7 @@ hubs_data = [
     {
         'name': 'Gen. Nakar DH1',
         'location': 'Gen. Nakar DH1',
-        'city': 'General Nakar',
+        'city': 'General Nakar, Quezon',
         'company': 'J&T Express',
         'latitude': 14.5234,
         'longitude': 121.7654,
@@ -123,7 +123,7 @@ hubs_data = [
     {
         'name': 'Tiaong DH1',
         'location': 'Tiaong DH1',
-        'city': 'Tiaong',
+        'city': 'Tiaong, Quezon',
         'company': 'J&T Express',
         'latitude': 14.1654,
         'longitude': 121.3876,
@@ -132,7 +132,7 @@ hubs_data = [
     {
         'name': 'Dolores DH1',
         'location': 'Dolores DH1',
-        'city': 'Dolores',
+        'city': 'Dolores, Quezon',
         'company': 'J&T Express',
         'latitude': 14.2876,
         'longitude': 121.4234,
@@ -141,7 +141,7 @@ hubs_data = [
     {
         'name': 'San Antonio DH1',
         'location': 'San Antonio DH1',
-        'city': 'San Antonio',
+        'city': 'San Antonio, Quezon',
         'company': 'J&T Express',
         'latitude': 14.3456,
         'longitude': 121.4876,
