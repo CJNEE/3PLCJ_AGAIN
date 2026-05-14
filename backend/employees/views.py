@@ -158,6 +158,30 @@ class EmployeeViewSet(viewsets.ModelViewSet):
 
         return response
 
+    def destroy(self, request, *args, **kwargs):
+        """Override delete to ensure associated User is also deleted"""
+        instance = self.get_object()
+        user = instance.user
+        
+        # Log the deletion before it's gone
+        ActivityLog.objects.create(
+            user=request.user,
+            employee=None, # Employee will be deleted
+            role=_request_actor_role(request),
+            action='delete_employee',
+            details=f'Deleted employee: {instance.full_name} (ID: {instance.employee_id})',
+            ip_address=_client_ip(request),
+        )
+
+        # Delete the user if it exists (which cascades to employee)
+        # or delete the employee instance directly
+        if user:
+            user.delete()
+        else:
+            instance.delete()
+            
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     def get_queryset(self):
         queryset = Employee.objects.all()
         hub_id = self.request.query_params.get('hub_id')
@@ -310,11 +334,15 @@ class EmployeeViewSet(viewsets.ModelViewSet):
                 ip_address=self.get_client_ip(request)
             )
 
-            # Delete employee (cascades to all related records)
-            employee.delete()
+            # Delete associated user if exists
+            if employee.user:
+                employee.user.delete()
+            else:
+                # Delete employee (cascades to all related records)
+                employee.delete()
 
             return Response({
-                'message': 'Employee and all associated data deleted successfully',
+                'message': 'Employee and associated user account deleted successfully',
                 'deleted_employee': {
                     'id': employee_id,
                     'name': employee_name
