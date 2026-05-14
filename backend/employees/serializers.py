@@ -92,6 +92,14 @@ class EmployeeDocumentSerializer(serializers.ModelSerializer):
 # ✅ THEN THIS
 class EmployeeSerializer(serializers.ModelSerializer):
     hub_name = serializers.CharField(source='hub.name', read_only=True)
+    hub_id = serializers.PrimaryKeyRelatedField(
+        queryset=Hub.objects.all(),
+        source='hub',
+        write_only=True,
+        required=False,
+        allow_null=True,
+        label='Hub ID'
+    )
     user_info = UserSerializer(source='user', read_only=True)
 
     attendance_history = AttendanceSerializer(
