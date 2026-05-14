@@ -40,7 +40,7 @@ def _request_actor_role(request):
 
 class HubViewSet(viewsets.ModelViewSet):
     """ViewSet for viewing and editing hubs - J&T Quezon only"""
-    queryset = Hub.objects.filter(city__icontains="Quezon", company="J&T Express").order_by('name')
+    queryset = Hub.objects.all().order_by('name')
     serializer_class = HubSerializer
     permission_classes = [IsAuthenticated]
 
