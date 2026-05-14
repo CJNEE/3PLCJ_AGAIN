@@ -74,7 +74,6 @@ export const LoginScreen = () => {
         console.error('No token in response:', response);
         setLoginError('Login failed: No token received');
       }
-      }
     } catch (err: any) {
       const data = err.response?.data;
       const errorMessage =
