@@ -28,8 +28,9 @@ hubs_data = [
 ]
 
 created_count = 0
+updated_count = 0
 for h in hubs_data:
-    obj, created = Hub.objects.get_or_create(
+    obj, created = Hub.objects.update_or_create(
         name=h["name"],
         defaults={
             "location": h["city"],
@@ -44,6 +45,8 @@ for h in hubs_data:
         created_count += 1
         print(f"Created: {h['name']}")
     else:
-        print(f"Already exists: {h['name']}")
+        updated_count += 1
+        print(f"Updated: {h['name']}")
 
 print(f"Total hubs created: {created_count}")
+print(f"Total hubs updated: {updated_count}")
