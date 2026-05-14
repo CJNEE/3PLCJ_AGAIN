@@ -32,6 +32,8 @@ export const LoginScreen = () => {
         password,
       });
 
+      console.log('Login response:', response);
+
       // Treat successful login as authenticated as long as token exists
       if (response?.token) {
         localStorage.setItem('access_token', response.token);
@@ -40,6 +42,9 @@ export const LoginScreen = () => {
 
         // Ensure user object has role
         const userWithRole = response?.user ? { ...response.user, role: response.user.role || response?.employee?.role } : null;
+        
+        console.log('User role:', userWithRole?.role);
+        console.log('Employee role:', response?.employee?.role);
         
         setToken(response.token);
         setUser(userWithRole);
@@ -50,16 +55,25 @@ export const LoginScreen = () => {
         success(`Welcome back, ${username}!`);
 
         const role = response?.user?.role || response?.employee?.role;
+        console.log('Navigating with role:', role);
+        
         if (role === 'Admin') {
+          console.log('Navigating to /admin');
           navigate('/admin', { replace: true });
         } else if (role === 'HR') {
+          console.log('Navigating to /hr');
           navigate('/hr', { replace: true });
         } else if (role === 'Employee') {
+          console.log('Navigating to /employee');
           navigate('/employee', { replace: true });
         } else {
-          // Default to admin if role is unclear
+          console.log('No role match, navigating to /admin');
           navigate('/admin', { replace: true });
         }
+      } else {
+        console.error('No token in response:', response);
+        setLoginError('Login failed: No token received');
+      }
       }
     } catch (err: any) {
       const data = err.response?.data;

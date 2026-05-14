@@ -64,7 +64,7 @@ export function apiUrl(pathRelativeToApiRoot: string): string {
 
 export const API_ENDPOINTS = {
   // Auth
-  LOGIN: '/auth/login/',
+  LOGIN: '/login/',
   LOGOUT: '/logout/',
   CURRENT_USER: '/current-user/',
   
