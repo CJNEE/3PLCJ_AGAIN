@@ -40,12 +40,20 @@ apiClient.interceptors.response.use(
   (error: AxiosError) => {
     const reqUrl = String(error.config?.url ?? '');
     const isLoginCall = /\/login\/?$/i.test(reqUrl) || reqUrl.includes('/login/');
+    
     if (error.response?.status === 401 && !isLoginCall) {
+      // Clear auth data on 401 response
       localStorage.removeItem('access_token');
       localStorage.removeItem('currentUser');
       localStorage.removeItem('currentEmployee');
-      window.location.href = '/login';
+      localStorage.removeItem('auth-store');
+      
+      // Redirect to login if not already there
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     }
+    
     return Promise.reject(error);
   }
 );

@@ -38,21 +38,27 @@ export const LoginScreen = () => {
         if (response?.user) localStorage.setItem('currentUser', JSON.stringify(response.user));
         if (response?.employee) localStorage.setItem('currentEmployee', JSON.stringify(response.employee));
 
+        // Ensure user object has role
+        const userWithRole = response?.user ? { ...response.user, role: response.user.role || response?.employee?.role } : null;
+        
         setToken(response.token);
-        setUser(response?.user ?? null);
+        setUser(userWithRole);
         setEmployee(response?.employee ?? null);
         setIsAuthenticated(true);
 
         const username = response?.user?.username ?? 'User';
         success(`Welcome back, ${username}!`);
 
-        const role = response?.user?.role;
+        const role = response?.user?.role || response?.employee?.role;
         if (role === 'Admin') {
-          navigate('/admin');
+          navigate('/admin', { replace: true });
         } else if (role === 'HR') {
-          navigate('/hr');
+          navigate('/hr', { replace: true });
+        } else if (role === 'Employee') {
+          navigate('/employee', { replace: true });
         } else {
-          navigate('/employee');
+          // Default to admin if role is unclear
+          navigate('/admin', { replace: true });
         }
       }
     } catch (err: any) {

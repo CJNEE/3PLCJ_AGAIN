@@ -55,13 +55,24 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, employee } = useAuth();
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  if (requiredRole && !requiredRole.includes(user?.role || '')) {
+  // Get role from user object first, then fall back to employee object
+  const userRole = user?.role || employee?.role;
+
+  if (requiredRole && userRole && !requiredRole.includes(userRole)) {
+    // Redirect to appropriate dashboard based on actual role
+    if (userRole === 'Admin') {
+      return <Navigate to="/admin" replace />;
+    } else if (userRole === 'HR') {
+      return <Navigate to="/hr" replace />;
+    } else if (userRole === 'Employee') {
+      return <Navigate to="/employee" replace />;
+    }
     return <Navigate to="/login" replace />;
   }
 
@@ -78,10 +89,14 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
 
 function AuthenticatedHomeRedirect() {
-  const { user } = useAuth();
-  if (!user) return <Navigate to="/login" replace />;
-  if (user.role === 'HR') return <Navigate to="/hr" replace />;
-  if (user.role === 'Employee') return <Navigate to="/employee" replace />;
+  const { user, employee } = useAuth();
+  if (!user && !employee) return <Navigate to="/login" replace />;
+  
+  // Get role from user object first, then fall back to employee object
+  const userRole = user?.role || employee?.role;
+  
+  if (userRole === 'HR') return <Navigate to="/hr" replace />;
+  if (userRole === 'Employee') return <Navigate to="/employee" replace />;
   return <Navigate to="/admin" replace />;
 }
 

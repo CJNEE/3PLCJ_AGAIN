@@ -26,7 +26,12 @@ SECRET_KEY = 'django-insecure-_4-^c(%mqhby%80&o1)s=#lw97439c$d25rjp6wk0m--j7^svl
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["threepl-backend-wf79.onrender.com"]
+# Read from env var for flexibility, default to hardcoded for production
+_ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS', '').strip()
+if _ALLOWED_HOSTS_ENV:
+    ALLOWED_HOSTS = [host.strip() for host in _ALLOWED_HOSTS_ENV.split(',')]
+else:
+    ALLOWED_HOSTS = ["threepl-backend-wf79.onrender.com", "*.vercel.app", "localhost", "127.0.0.1"]
 
 
 # Application definition
@@ -179,6 +184,12 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https://.*\.vercel\.app$",
 ]
+
+# Allow environment to override CORS settings if needed
+_CORS_ORIGINS_ENV = os.environ.get('CORS_ALLOWED_ORIGINS', '').strip()
+if _CORS_ORIGINS_ENV:
+    CORS_ALLOWED_ORIGINS.extend([origin.strip() for origin in _CORS_ORIGINS_ENV.split(',')])
+
 CORS_ALLOW_CREDENTIALS = True
 
 # Ensure common headers (including Authorization) are allowed in CORS preflight
