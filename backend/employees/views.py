@@ -1559,23 +1559,23 @@ class LoginView(APIView):
             try:
                 employee = Employee.objects.get(user=user)
                 role = employee.role
-                # Skipping can_login restriction for now
-                # if not employee.can_login:
-                #     SecurityAlert.objects.create(
-                #         employee=employee,
-                #         alert_type='account_disabled',
-                #         severity='high',
-                #         message=f'{employee.full_name} attempted login while account is disabled.',
-                #         details={
-                #             'username': username,
-                #             'ip_address': client_ip,
-                #             'timestamp': str(timezone.now())
-                #         }
-                #     )
-                #     return Response(
-                #         {'error': 'Account has been disabled by administrator'},
-                #         status=status.HTTP_403_FORBIDDEN
-                #     )
+                # ✓ ENABLED: Check can_login restriction to prevent unauthorized access
+                if not employee.can_login:
+                    SecurityAlert.objects.create(
+                        employee=employee,
+                        alert_type='account_disabled',
+                        severity='high',
+                        message=f'{employee.full_name} attempted login while account is disabled.',
+                        details={
+                            'username': username,
+                            'ip_address': client_ip,
+                            'timestamp': str(timezone.now())
+                        }
+                    )
+                    return Response(
+                        {'error': 'Account has been disabled by administrator'},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
             except Employee.DoesNotExist:
                 employee = None
                 role = 'Admin' if user.is_superuser else 'HR' if user.is_staff else 'Employee'
