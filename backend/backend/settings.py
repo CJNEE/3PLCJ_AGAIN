@@ -200,6 +200,40 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# Persistent media storage configuration
+# Set MEDIA_STORAGE env var to 's3' to use Amazon S3 via django-storages,
+# otherwise files will be stored on the local filesystem under MEDIA_ROOT.
+_MEDIA_STORAGE = os.environ.get('MEDIA_STORAGE', 'local').lower()
+if _MEDIA_STORAGE == 's3':
+    # Use django-storages S3 backend. Ensure django-storages[boto3] and boto3
+    # are installed in your environment when enabling S3.
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+    AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME') or None
+    AWS_S3_ENDPOINT_URL = os.environ.get('AWS_S3_ENDPOINT_URL') or None
+    AWS_S3_CUSTOM_DOMAIN = os.environ.get('AWS_S3_CUSTOM_DOMAIN') or None
+
+    # Recommended settings for uploads
+    AWS_DEFAULT_ACL = None
+    AWS_QUERYSTRING_AUTH = False
+
+    # If a custom domain is provided, use it as MEDIA_URL; otherwise build default
+    if AWS_S3_CUSTOM_DOMAIN:
+        MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
+    elif AWS_STORAGE_BUCKET_NAME and AWS_S3_REGION_NAME:
+        MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/'
+    elif AWS_STORAGE_BUCKET_NAME:
+        MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/'
+    else:
+        # leave MEDIA_URL as default; storage backend will raise if bucket missing
+        pass
+else:
+    # Local filesystem (default)
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+
 # Used when building media URLs without an HTTP request (and as fallback). Set on Render, e.g.
 # PUBLIC_SITE_URL=https://your-service.onrender.com
 PUBLIC_SITE_URL = os.environ.get('PUBLIC_SITE_URL', '').strip().rstrip('/')

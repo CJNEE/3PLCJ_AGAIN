@@ -7,3 +7,5 @@ PyJWT>=2.8
 gunicorn>=21.2
 dj-database-url>=2.1
 psycopg2-binary>=2.9
+django-storages[boto3]>=1.13
+boto3>=1.26

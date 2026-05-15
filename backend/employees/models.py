@@ -195,7 +195,7 @@ class Attendance(models.Model):
     clock_in_time = models.DateTimeField(null=True, blank=True)
     clock_out_time = models.DateTimeField(null=True, blank=True)
 
-    clock_in_image = models.ImageField(upload_to='attendance/clock_in/', null=True, blank=True)
+    clock_in_image = models.ImageField(upload_to=attendance_clock_in_path, null=True, blank=True)
     clock_out_image = models.ImageField(upload_to=attendance_clock_out_path, null=True, blank=True)
 
     status = models.CharField(max_length=20, default='Present')
@@ -432,3 +432,186 @@ class SecurityAlert(models.Model):
 
     def __str__(self):
         return f"{self.alert_type} - {self.severity} - {self.created_at}"
+
+
+# ===================== PERMANENT IMAGE STORAGE =====================
+
+def saved_image_path(instance, filename):
+    """Generate permanent path for saved images"""
+    ext = filename.split('.')[-1] if '.' in filename else 'jpg'
+    emp_id = instance.employee.employee_id or instance.employee.id
+    timestamp = instance.created_at.strftime('%Y%m%d_%H%M%S')
+    return f'saved_images/{emp_id}/{instance.image_type}/{timestamp}.{ext}'
+
+
+class SavedImage(models.Model):
+    """
+    Permanent storage for all employee images.
+    Images stored here are retained until explicitly deleted.
+    This prevents image loss when editing profiles, approving requests, or deleting temporary records.
+    """
+    
+    IMAGE_TYPE_CHOICES = [
+        ('profile', 'Profile Picture'),
+        ('edit_request', 'Edit Request Image'),
+        ('clock_in', 'Clock In'),
+        ('clock_out', 'Clock Out'),
+        ('leave_attachment', 'Leave Request Attachment'),
+        ('payslip', 'Payslip'),
+    ]
+    
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='saved_images')
+    image = models.ImageField(upload_to=saved_image_path)
+    image_type = models.CharField(max_length=20, choices=IMAGE_TYPE_CHOICES)
+    
+    # Binary data storage for database persistence
+    image_data = models.BinaryField(null=True, blank=True)
+    content_type = models.CharField(max_length=100, null=True, blank=True)
+    original_filename = models.CharField(max_length=255, null=True, blank=True)
+    
+    # Link to original request/record (optional, for reference)
+    edit_request = models.ForeignKey(EditRequest, on_delete=models.SET_NULL, null=True, blank=True, related_name='saved_images')
+    attendance = models.ForeignKey(Attendance, on_delete=models.SET_NULL, null=True, blank=True, related_name='saved_images')
+    leave_attachment = models.ForeignKey(LeaveAttachment, on_delete=models.SET_NULL, null=True, blank=True, related_name='saved_images')
+    
+    # Status tracking
+    is_active = models.BooleanField(default=True)  # Can be soft-deleted
+    is_approved = models.BooleanField(default=False)  # For edit requests/leave requests
+    
+    description = models.TextField(blank=True)  # Additional metadata
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['employee', 'image_type']),
+            models.Index(fields=['employee', 'created_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.employee.full_name} - {self.image_type} - {self.created_at.strftime('%Y-%m-%d')}"
+    
+    def save(self, *args, **kwargs):
+        # If image is provided but image_data is not yet populated
+        if self.image and not self.image_data:
+            try:
+                # Open the image file safely
+                self.image.open()
+                self.image_data = self.image.read()
+                
+                # Store metadata if available
+                if hasattr(self.image.file, 'content_type'):
+                    self.content_type = self.image.file.content_type
+                
+                self.original_filename = os.path.basename(self.image.name)
+                
+                # Close after reading
+                self.image.close()
+            except Exception as e:
+                print(f"Error reading image data for DB storage: {e}")
+                
+        super().save(*args, **kwargs)
+    
+    def delete(self, *args, **kwargs):
+        """Delete the image file when deleting the record"""
+        if self.image:
+            self.image.delete(save=False)
+        super().delete(*args, **kwargs)
+
+
+# ===================== SIGNALS FOR PERMANENT BACKUP =====================
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+@receiver(post_save, sender=Employee)
+def backup_employee_profile_image(sender, instance, created, **kwargs):
+    """Backup employee profile image to SavedImage whenever it's updated"""
+    if instance.profile_image:
+        # Check if this image is already backed up
+        existing = SavedImage.objects.filter(
+            employee=instance,
+            image_type='profile',
+            original_filename=os.path.basename(instance.profile_image.name)
+        ).exists()
+        
+        if not existing:
+            try:
+                SavedImage.objects.create(
+                    employee=instance,
+                    image=instance.profile_image,
+                    image_type='profile',
+                    description=f"Auto-backup of profile image for {instance.full_name}"
+                )
+            except Exception as e:
+                print(f"Error auto-backing up profile image: {e}")
+
+@receiver(post_save, sender=Attendance)
+def backup_attendance_images(sender, instance, created, **kwargs):
+    """Backup clock in/out images to SavedImage"""
+    # Backup clock in image
+    if instance.clock_in_image:
+        existing_in = SavedImage.objects.filter(
+            employee=instance.employee,
+            image_type='clock_in',
+            attendance=instance,
+            original_filename=os.path.basename(instance.clock_in_image.name)
+        ).exists()
+        
+        if not existing_in:
+            try:
+                SavedImage.objects.create(
+                    employee=instance.employee,
+                    image=instance.clock_in_image,
+                    image_type='clock_in',
+                    attendance=instance,
+                    description=f"Auto-backup of clock-in image for {instance.employee.full_name} on {instance.date}"
+                )
+            except Exception as e:
+                print(f"Error auto-backing up clock-in image: {e}")
+
+    # Backup clock out image
+    if instance.clock_out_image:
+        existing_out = SavedImage.objects.filter(
+            employee=instance.employee,
+            image_type='clock_out',
+            attendance=instance,
+            original_filename=os.path.basename(instance.clock_out_image.name)
+        ).exists()
+        
+        if not existing_out:
+            try:
+                SavedImage.objects.create(
+                    employee=instance.employee,
+                    image=instance.clock_out_image,
+                    image_type='clock_out',
+                    attendance=instance,
+                    description=f"Auto-backup of clock-out image for {instance.employee.full_name} on {instance.date}"
+                )
+            except Exception as e:
+                print(f"Error auto-backing up clock-out image: {e}")
+
+@receiver(post_save, sender=LeaveAttachment)
+def backup_leave_attachment(sender, instance, created, **kwargs):
+    """Backup leave attachments to SavedImage"""
+    if instance.file:
+        existing = SavedImage.objects.filter(
+            employee=instance.leave_request.employee,
+            image_type='leave_attachment',
+            leave_attachment=instance,
+            original_filename=os.path.basename(instance.file.name)
+        ).exists()
+        
+        if not existing:
+            try:
+                SavedImage.objects.create(
+                    employee=instance.leave_request.employee,
+                    image=instance.file,
+                    image_type='leave_attachment',
+                    leave_attachment=instance,
+                    description=f"Auto-backup of leave attachment for {instance.leave_request.employee.full_name} (Request #{instance.leave_request.id})"
+                )
+            except Exception as e:
+                print(f"Error auto-backing up leave attachment: {e}")

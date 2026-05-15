@@ -4,7 +4,7 @@ from django.utils.text import slugify
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.conf import settings
-from .models import Hub, Employee, EditRequest, LeaveRequest, Attendance, LiveLocation, EmployeeDocument, Payroll, ActivityLog, SecurityAlert, HRPermission
+from .models import Hub, Employee, EditRequest, LeaveRequest, Attendance, LiveLocation, EmployeeDocument, Payroll, ActivityLog, SecurityAlert, HRPermission, SavedImage
 from django.http import QueryDict
 
 from .media_urls import absolute_media_url
@@ -47,8 +47,26 @@ class AttendanceSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'employee', 'employee_name', 'jtp_code', 'hub_name', 'city', 'date',
             'clock_in_time', 'clock_out_time', 'clock_in_image', 'clock_out_image',
+            'permanent_clock_in_image_url', 'permanent_clock_out_image_url',
             'status',
         ]
+    
+    permanent_clock_in_image_url = serializers.SerializerMethodField()
+    permanent_clock_out_image_url = serializers.SerializerMethodField()
+
+    def get_permanent_clock_in_image_url(self, obj):
+        from .models import SavedImage
+        saved_image = SavedImage.objects.filter(attendance=obj, image_type='clock_in').first()
+        if saved_image:
+            return absolute_media_url(self.context.get('request'), f"/api/saved-images/{saved_image.id}/")
+        return None
+
+    def get_permanent_clock_out_image_url(self, obj):
+        from .models import SavedImage
+        saved_image = SavedImage.objects.filter(attendance=obj, image_type='clock_out').first()
+        if saved_image:
+            return absolute_media_url(self.context.get('request'), f"/api/saved-images/{saved_image.id}/")
+        return None
     
     def get_clock_in_image(self, obj):
         if obj.clock_in_image:
@@ -111,6 +129,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
     documents = EmployeeDocumentSerializer(many=True, read_only=True)
 
     profile_image_url = serializers.SerializerMethodField()
+    permanent_profile_image_url = serializers.SerializerMethodField()
     full_name = serializers.SerializerMethodField()
 
     class Meta:
@@ -131,6 +150,13 @@ class EmployeeSerializer(serializers.ModelSerializer):
     def get_profile_image_url(self, obj):
         if obj.profile_image:
             return absolute_media_url(self.context.get('request'), obj.profile_image.url)
+        return None
+
+    def get_permanent_profile_image_url(self, obj):
+        from .models import SavedImage
+        saved_image = obj.saved_images.filter(image_type='profile').first()
+        if saved_image:
+            return absolute_media_url(self.context.get('request'), f"/api/saved-images/{saved_image.id}/")
         return None
 
     def to_representation(self, instance):
@@ -750,3 +776,34 @@ class SecurityAlertSerializer(serializers.ModelSerializer):
         if obj.employee:
             return f"{obj.employee.firstname} {obj.employee.lastname}"
         return "Unknown"
+
+
+# ===================== SAVED IMAGE SERIALIZER =====================
+
+class SavedImageSerializer(serializers.ModelSerializer):
+    employee_name = serializers.SerializerMethodField()
+    image_url = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = SavedImage
+        fields = [
+            'id', 'employee', 'employee_name', 'image', 'image_url',
+            'image_type', 'is_active', 'is_approved', 'description',
+            'edit_request', 'attendance', 'leave_attachment',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def get_employee_name(self, obj):
+        try:
+            return f"{obj.employee.firstname} {obj.employee.lastname}"
+        except:
+            return "Unknown"
+    
+    def get_image_url(self, obj):
+        try:
+            if obj.image:
+                return absolute_media_url(self.context.get('request'), obj.image.url)
+        except:
+            pass
+        return None

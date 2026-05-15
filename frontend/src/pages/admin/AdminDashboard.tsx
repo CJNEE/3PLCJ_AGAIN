@@ -363,8 +363,8 @@ export const AdminDashboard = () => {
       {/* Hub Locations Map & Hub Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Hub Locations Map */}
-        <Card className="p-4">
-          <div className="flex justify-between items-center mb-3">
+        <Card className="p-0 overflow-hidden">
+          <div className="flex justify-between items-center p-4 pb-2 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
             <h2 className="text-lg font-semibold">Hub Locations</h2>
             <input 
               type="text" 
@@ -374,7 +374,7 @@ export const AdminDashboard = () => {
               className="input-field text-sm flex-1 max-w-md"
             />
           </div>
-          <div className="w-full h-full min-h-[400px] rounded border border-gray-200 overflow-hidden">
+          <div className="w-full h-[400px]">
             {hubs.length > 0 ? (
               <MapContainer 
                 center={[12.5797, 124.0758]} 
@@ -436,7 +436,7 @@ export const AdminDashboard = () => {
                   })}
               </MapContainer>
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gray-50">
+              <div className="w-full h-full flex items-center justify-center bg-gray-50 dark:bg-gray-800">
                 <p className="text-gray-500">No hubs available to display</p>
               </div>
             )}

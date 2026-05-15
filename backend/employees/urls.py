@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
+from .views import ServeSavedImageView
 
 router = DefaultRouter()
 router.register(r'employees', views.EmployeeViewSet)
@@ -27,4 +28,6 @@ urlpatterns = [
     path('lock-unlock-account/<int:employee_id>/', views.lock_unlock_account, name='lock_unlock_account'),
     path('reset-password/<int:employee_id>/', views.reset_password, name='reset_password'),
     path('payroll/download/<int:hub_id>/', views.download_hub_payroll_csv, name='download_hub_payroll_csv'),
+    # Permanent image serving from DB
+    path('saved-images/<int:pk>/', ServeSavedImageView.as_view(), name='serve-saved-image'),
 ]

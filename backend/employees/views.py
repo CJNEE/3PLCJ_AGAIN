@@ -13,7 +13,8 @@ from django.utils import timezone
 from django.conf import settings
 from django.db import models
 import json
-from .models import Hub, Employee, EditRequest, LeaveRequest, Attendance, LiveLocation, Payroll, EmployeeDocument, ActivityLog, SecurityAlert, HRPermission
+from django.http import HttpResponse, Http404
+from .models import Hub, Employee, EditRequest, LeaveRequest, Attendance, LiveLocation, Payroll, EmployeeDocument, ActivityLog, SecurityAlert, HRPermission, SavedImage
 from .serializers import (
     HubSerializer, EmployeeSerializer, EmployeeCreateSerializer, EmployeeDocumentSerializer,
     EditRequestSerializer, LeaveRequestSerializer, LoginSerializer, AttendanceSerializer, 
@@ -598,10 +599,22 @@ class AttendanceViewSet(viewsets.ModelViewSet):
                 return Response({'error': 'Already clocked in today'}, status=400)
                 
             if image:
-                # Generate unique filename with employee_id and date
+                # Save image to both Attendance and SavedImage (for permanent storage)
                 ext = image.name.split('.')[-1] if '.' in image.name else 'jpg'
                 filename = f'clock_in_{employee_id}_{today}.{ext}'
                 attendance.clock_in_image.save(filename, image, save=True)
+                
+                # Also save to SavedImage for permanent archival
+                try:
+                    SavedImage.objects.create(
+                        employee_id=employee_id,
+                        image=attendance.clock_in_image,
+                        image_type='clock_in',
+                        attendance=attendance,
+                        description=f'Clock in for {today}'
+                    )
+                except Exception as e:
+                    print(f"Error saving clock in image to SavedImage: {str(e)}")
             
             attendance.clock_in_time = timezone.now()
             attendance.status = 'Present'
@@ -647,10 +660,22 @@ class AttendanceViewSet(viewsets.ModelViewSet):
                 return Response({'error': 'Already clocked out today'}, status=400)
                 
             if image:
-                # Generate unique filename with employee_id and date
+                # Save image to both Attendance and SavedImage (for permanent storage)
                 ext = image.name.split('.')[-1] if '.' in image.name else 'jpg'
                 filename = f'clock_out_{employee_id}_{today}.{ext}'
                 attendance.clock_out_image.save(filename, image, save=True)
+                
+                # Also save to SavedImage for permanent archival
+                try:
+                    SavedImage.objects.create(
+                        employee_id=employee_id,
+                        image=attendance.clock_out_image,
+                        image_type='clock_out',
+                        attendance=attendance,
+                        description=f'Clock out for {today}'
+                    )
+                except Exception as e:
+                    print(f"Error saving clock out image to SavedImage: {str(e)}")
             
             attendance.clock_out_time = timezone.now()
             attendance.save()
@@ -805,7 +830,18 @@ class LeaveRequestViewSet(viewsets.ModelViewSet):
             from .models import LeaveAttachment
             for f in files:
                 # create LeaveAttachment pointing to this leave request
-                LeaveAttachment.objects.create(leave_request=instance, file=f)
+                att = LeaveAttachment.objects.create(leave_request=instance, file=f)
+                try:
+                    # persist permanently in SavedImage
+                    SavedImage.objects.create(
+                        employee=instance.employee,
+                        image=att.file,
+                        image_type='leave_attachment',
+                        leave_attachment=att,
+                        description=f'Leave attachment for request {instance.id}'
+                    )
+                except Exception as e:
+                    print('Failed to create SavedImage for leave attachment:', e)
         except Exception as e:
             # don't fail the request if attachments saving has issues; log for debugging
             print('Failed to save leave attachments:', e)
@@ -970,19 +1006,23 @@ class EditRequestViewSet(viewsets.ModelViewSet):
         instance.reviewed_by = request.user
         instance.reviewed_at = timezone.now()
         instance.save()
-        # If there is an uploaded file attached to this edit request, replace the employee's profile image
+        
+        # If there is an uploaded file attached to this edit request, save it permanently
         try:
             if instance.uploaded_files:
-                # Delete previous profile image if exists and different
-                if getattr(instance.employee, 'profile_image', None):
-                    try:
-                        # remove file from storage
-                        instance.employee.profile_image.delete(save=False)
-                    except Exception:
-                        pass
-
-                instance.employee.profile_image = instance.uploaded_files
-
+                # Save to SavedImage for permanent storage
+                saved_image = SavedImage.objects.create(
+                    employee=instance.employee,
+                    image=instance.uploaded_files,
+                    image_type='edit_request',
+                    edit_request=instance,
+                    is_approved=True,
+                    description=f'Profile picture update request #{instance.id} - Approved'
+                )
+                
+                # Update employee's profile image to reference the permanent saved image
+                instance.employee.profile_image = saved_image.image
+            
             # Apply other requested_data fields
             requested_data = instance.requested_data or {}
             for field, value in requested_data.items():
@@ -991,12 +1031,13 @@ class EditRequestViewSet(viewsets.ModelViewSet):
                     continue
                 if hasattr(instance.employee, field):
                     setattr(instance.employee, field, value)
-
+            
             instance.employee.save()
-        except Exception:
-            # If applying changes fails, still return the edit request status
+        except Exception as e:
+            # Log error but don't fail the approval
+            print(f"Error saving approved image: {str(e)}")
             pass
-
+        
         ActivityLog.objects.create(
             user=request.user,
             employee=instance.employee,
@@ -1521,6 +1562,28 @@ class LiveLocationViewSet(viewsets.ModelViewSet):
     queryset = LiveLocation.objects.all().order_by('-timestamp')
     serializer_class = LiveLocationSerializer
     permission_classes = [IsAuthenticated]
+
+class ServeSavedImageView(APIView):
+    """Serve images directly from the database (binary data)"""
+    permission_classes = [AllowAny] # Or IsAuthenticated if preferred
+
+    def get(self, request, pk):
+        try:
+            saved_image = SavedImage.objects.get(pk=pk, is_active=True)
+            if not saved_image.image_data:
+                # Fallback to file if data is missing for some reason
+                if saved_image.image:
+                    return HttpResponse(saved_image.image.read(), content_type=saved_image.content_type or 'image/jpeg')
+                raise Http404("Image data not found")
+            
+            response = HttpResponse(saved_image.image_data, content_type=saved_image.content_type or 'image/jpeg')
+            # Optional: Add cache headers
+            response['Cache-Control'] = 'public, max-age=31536000'
+            return response
+        except SavedImage.DoesNotExist:
+            raise Http404("Image not found")
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
 
 class LoginView(APIView):
     permission_classes = [AllowAny]
