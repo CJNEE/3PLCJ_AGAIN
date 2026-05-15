@@ -5,6 +5,7 @@ import { CheckCircle, XCircle, Clock, Trash2, Eye, Download, X } from 'lucide-re
 import { useClearAllLeaveRequests } from '@/hooks/useQueries';
 import { Sidebar } from '@/components/Sidebar';
 import { apiUrl } from '@/constants/api';
+import { AttachmentPreviewModal } from './AttachmentPreviewModal';
 
 type LeaveRequestStatus = 'pending' | 'approved' | 'rejected';
 
@@ -362,39 +363,12 @@ export const LeaveRequestsPanel = ({ initialFilter = 'pending' }: { initialFilte
         )}
       </div>
 
-      {/* Floating Preview Modal */}
       {previewFile && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 animate-in fade-in duration-200">
-          <button 
-            onClick={() => setPreviewFile(null)}
-            className="absolute top-6 right-6 text-white hover:text-red-500 transition-colors bg-white/10 p-2 rounded-full backdrop-blur-md"
-          >
-            <X size={32} />
-          </button>
-          <div className="max-w-5xl w-full h-[85vh] flex items-center justify-center">
-            {previewFile.type === 'image' ? (
-              <img src={previewFile.url} alt="Preview" className="max-w-full max-h-full object-contain shadow-2xl rounded-lg" />
-            ) : previewFile.type === 'pdf' ? (
-              <iframe src={previewFile.url} className="w-full h-full rounded-lg bg-white" title="PDF Preview" />
-            ) : (
-              <div className="bg-white dark:bg-gray-900 p-12 rounded-3xl text-center shadow-2xl max-w-sm">
-                <div className="p-6 bg-red-50 dark:bg-red-900/20 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-8">
-                  <Download className="text-red-600" size={48} />
-                </div>
-                <h3 className="text-2xl font-bold mb-4">No Preview Available</h3>
-                <p className="text-gray-500 mb-10">This file type must be downloaded to be viewed.</p>
-                <a 
-                  href={previewFile.url} 
-                  download 
-                  className="w-full inline-flex items-center justify-center gap-3 px-8 py-4 bg-red-600 text-white rounded-2xl font-black hover:bg-red-700 transition-all shadow-2xl shadow-red-600/30 active:scale-95"
-                >
-                  <Download size={22} />
-                  Download Now
-                </a>
-              </div>
-            )}
-          </div>
-        </div>
+        <AttachmentPreviewModal
+          url={previewFile.url}
+          type={previewFile.type}
+          onClose={() => setPreviewFile(null)}
+        />
       )}
     </div>
   );
