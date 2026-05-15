@@ -610,24 +610,38 @@ def backup_employee_profile_image(sender, instance, created, **kwargs):
             print(f"[signal] Error auto-backing up profile image: {e}")
 
 def _read_image_bytes(image_field):
-    """Try to read bytes from an ImageField; returns bytes or None."""
+    """
+    Try to read bytes from an ImageField/FileField; returns bytes or None.
+    This is critical for persisting images in PostgreSQL BinaryField.
+    """
     if not image_field:
         return None
     data = None
     try:
+        # 1. Try reading from the underlying file object (e.g. UploadedFile)
+        # This is fastest and works before save to disk.
         raw = getattr(image_field, 'file', None)
-        if raw is not None:
-            raw.seek(0)
-            data = raw.read()
-    except Exception:
+        if raw:
+            try:
+                if hasattr(raw, 'seek'):
+                    raw.seek(0)
+                data = raw.read()
+                if hasattr(raw, 'seek'):
+                    raw.seek(0) # reset for other uses
+            except Exception:
+                data = None
+        
+        # 2. Fallback: Try opening the file (if it's already on disk)
+        if not data:
+            try:
+                image_field.open('rb')
+                data = image_field.read()
+                image_field.close()
+            except Exception:
+                data = None
+    except Exception as e:
+        print(f"[models] Critical error in _read_image_bytes: {e}")
         data = None
-    if not data:
-        try:
-            image_field.open('rb')
-            data = image_field.read()
-            image_field.close()
-        except Exception:
-            data = None
     return data or None
 
 

@@ -2335,15 +2335,22 @@ class ServeSavedImageView(APIView):
     This bypasses the filesystem entirely, so images remain accessible even
     after Render restarts or redeploys (ephemeral disk is wiped on every deploy).
     """
-    permission_classes = [IsAuthenticated]
+    # NOTE: Changed to AllowAny because browsers do not send Authorization headers
+    # when loading images via <img> tags. Secure this in the future with signed URLs
+    # or UUIDs if necessary.
+    permission_classes = [AllowAny]
 
     def get(self, request, pk):
         try:
-            # Try to get the record (include is_active check if desired)
+            # Try to get the record
             saved = SavedImage.objects.filter(pk=pk).first()
             if not saved:
+                print(f"[ServeSavedImage] Image {pk} not found in database")
                 raise Http404("Image record not found")
-        except Exception:
+        except Exception as e:
+            if isinstance(e, Http404):
+                raise e
+            print(f"[ServeSavedImage] Error fetching image {pk}: {e}")
             raise Http404("Invalid request")
 
         # --- 1. Prefer binary data stored in PostgreSQL ---
@@ -2357,13 +2364,17 @@ class ServeSavedImageView(APIView):
                 elif not isinstance(data, (bytes, bytearray)):
                     data = bytes(data)
                 
+                if not data:
+                    print(f"[ServeSavedImage] Image {pk} has empty image_data field")
+                    raise Http404("Image data is empty")
+
                 response = HttpResponse(data, content_type=content_type)
                 fname = saved.original_filename or f'image_{pk}.jpg'
                 response['Content-Disposition'] = f'inline; filename="{fname}"'
                 response['Cache-Control'] = 'private, max-age=86400'
                 return response
             except Exception as e:
-                print(f"[ServeSavedImage] Error serving binary data: {e}")
+                print(f"[ServeSavedImage] Error serving binary data for {pk}: {e}")
 
         # --- 2. Fallback: try to read from filesystem ---
         if saved.image:
@@ -2380,6 +2391,7 @@ class ServeSavedImageView(APIView):
                     response['Cache-Control'] = 'private, max-age=86400'
                     return response
             except Exception as e:
-                print(f"[ServeSavedImage] FS Fallback failed: {e}")
+                print(f"[ServeSavedImage] FS Fallback failed for {pk}: {e}")
 
+        print(f"[ServeSavedImage] Image {pk} has no data in DB and no file on disk")
         raise Http404("Image data not available in DB or on disk")
