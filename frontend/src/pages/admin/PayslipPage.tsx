@@ -3,10 +3,12 @@ import { Card, Badge, LoadingSpinner, EmptyState } from '@/components/common';
 import { Sidebar } from '@/components/Sidebar';
 import { PayslipDetailModal } from '@/components/PayslipDetailModal';
 import { useGetPayroll, useGetHubs, useGetEmployees } from '@/hooks/useQueries';
-import { Download, Search } from 'lucide-react';
+import { Download, Search, Shield } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import { normalizeApiResponse } from '@/utils/apiResponseHandler';
 
 export const PayslipPage = () => {
+  const { canEditPayroll } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Sidebar should render even on desktop

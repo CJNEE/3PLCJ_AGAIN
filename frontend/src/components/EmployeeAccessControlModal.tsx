@@ -3,8 +3,8 @@ import { HRPermission } from '@/types';
 import { Modal } from './Modal';
 import { useToast } from '@/hooks/useToast';
 import { apiClient } from '@/api/apiService';
-import { AlertCircle, Lock, Unlock, Shield, Key } from 'lucide-react';
-import { LoadingSpinner } from './common';
+import { AlertCircle, Lock, Unlock, Shield, Key, Eye, EyeOff, ShieldCheck, UserCheck, Trash2, FileText, UserPlus } from 'lucide-react';
+import { LoadingSpinner, Button } from './common';
 
 interface EmployeeAccessControlModalProps {
   isOpen: boolean;
@@ -23,9 +23,18 @@ export const EmployeeAccessControlModal = ({
   const [isLoading, setIsLoading] = useState(false);
   const [accountLocked, setAccountLocked] = useState(!employee?.can_login);
   const [tempPassword, setTempPassword] = useState<string | null>(null);
+  
+  // Manual Password State
+  const [showManualPassword, setShowManualPassword] = useState(false);
+  const [showPass, setShowPass] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [manualData, setManualData] = useState({
+    password: '',
+    confirm: '',
+  });
 
   type PermKey = keyof Pick<HRPermission,
-    'can_view_employees' | 'can_edit_employee_info' | 'can_edit_payslip' | 'can_delete_employees' | 'can_reset_password' | 'can_enable_employee_edit'>;
+    'can_view_employees' | 'can_edit_employee_info' | 'can_edit_payslip' | 'can_delete_employees' | 'can_reset_password'>;
 
   const [hrPermissions, setHrPermissions] = useState<Record<PermKey, boolean>>({
     can_view_employees: false,
@@ -33,7 +42,6 @@ export const EmployeeAccessControlModal = ({
     can_edit_payslip: false,
     can_delete_employees: false,
     can_reset_password: false,
-    can_enable_employee_edit: false,
   });
   const [loadingPermissions, setLoadingPermissions] = useState(true);
 
@@ -61,7 +69,6 @@ export const EmployeeAccessControlModal = ({
           can_edit_payslip: perms.can_edit_payslip || false,
           can_delete_employees: perms.can_delete_employees || false,
           can_reset_password: perms.can_reset_password || false,
-          can_enable_employee_edit: perms.can_enable_employee_edit || false,
         });
       }
     } catch (error: any) {
@@ -127,14 +134,33 @@ export const EmployeeAccessControlModal = ({
     }
   };
 
-  const handleResetPassword = async () => {
-    if (!confirm('Reset password for this employee? A temporary password will be generated.')) return;
+  const handleResetPassword = async (isManual = false) => {
+    if (isManual) {
+      if (manualData.password !== manualData.confirm) {
+        toast.error('Passwords do not match');
+        return;
+      }
+      if (manualData.password.length < 8) {
+        toast.error('Password must be at least 8 characters');
+        return;
+      }
+    } else {
+      if (!confirm('Reset password for this employee? A temporary password will be generated.')) return;
+    }
 
     try {
       setIsLoading(true);
-      const response = await apiClient.post(`reset-password/${employee.id}/`, {});
-      setTempPassword(response.data.temporary_password);
-      toast.success(`Password reset successful.`);
+      const payload = isManual ? { manual_password: manualData.password } : {};
+      const response = await apiClient.post(`reset-password/${employee.id}/`, payload);
+      
+      if (!isManual) {
+        setTempPassword(response.data.temporary_password);
+        toast.success(`Temporary password generated.`);
+      } else {
+        toast.success('Password updated successfully');
+        setShowManualPassword(false);
+        setManualData({ password: '', confirm: '' });
+      }
       onUpdate?.();
     } catch (error: any) {
       toast.error(
@@ -147,144 +173,214 @@ export const EmployeeAccessControlModal = ({
 
   const getStatusBadgeClass = (status: string) => {
     switch (status?.toLowerCase()) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'inactive': return 'bg-yellow-100 text-yellow-800';
-      case 'blacklist': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'active': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+      case 'inactive': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
+      case 'blacklist': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400';
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Employee Access Control" size="sm">
-      <div className="p-6 space-y-6">
-        <div className="text-center space-y-4">
-          <div className="flex justify-center">
-            {employee?.profile_image_url ? (
-              <img
-                src={employee.profile_image_url}
-                alt={employee.full_name}
-                className="w-20 h-20 rounded-full object-cover border-4 border-gray-200 dark:border-gray-700"
-              />
-            ) : (
-              <div className="w-20 h-20 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-white text-2xl font-bold">
-                {employee?.full_name?.charAt(0).toUpperCase()}
+    <Modal isOpen={isOpen} onClose={onClose} title="Access & Security Control" size="sm">
+      <div className="p-0 overflow-hidden">
+        {/* Profile Header */}
+        <div className="p-8 bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-800">
+          <div className="flex flex-col items-center text-center space-y-4">
+            <div className="relative">
+              <div className="w-24 h-24 rounded-3xl overflow-hidden border-4 border-white dark:border-gray-800 shadow-2xl shadow-gray-200/50 dark:shadow-none">
+                {employee?.profile_image_url ? (
+                  <img
+                    src={employee.profile_image_url}
+                    alt={employee.full_name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-red-600 flex items-center justify-center text-white text-3xl font-black">
+                    {employee?.full_name?.charAt(0).toUpperCase()}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+              <div className={`absolute -bottom-2 -right-2 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-lg ${getStatusBadgeClass(employee?.status)}`}>
+                {employee?.status || 'Active'}
+              </div>
+            </div>
 
-          <div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">{employee?.full_name}</h3>
-            <p className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full inline-block mt-2 ${getStatusBadgeClass(employee?.status)}`}>
-              {employee?.status || 'Active'}
-            </p>
-          </div>
-
-          <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-            <p className="font-bold text-gray-700 dark:text-gray-200 uppercase tracking-tight">{employee?.position}</p>
-            <p className="font-medium">{employee?.role}</p>
+            <div>
+              <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight">{employee?.full_name}</h3>
+              <p className="text-[10px] font-black uppercase tracking-widest text-red-600 mt-1">{employee?.position}</p>
+              <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">#{employee?.employee_id}</p>
+            </div>
           </div>
         </div>
 
-        <hr className="border-gray-200 dark:border-gray-700" />
-
-        {/* Account Lock/Unlock */}
-        <div className="space-y-3">
-          <h4 className="font-black text-[10px] uppercase tracking-widest text-gray-500">Security Status</h4>
-          <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="p-8 space-y-8 max-h-[60vh] overflow-y-auto custom-scrollbar">
+          {/* Account Lock/Unlock */}
+          <section className="space-y-4">
             <div className="flex items-center gap-3">
-              {accountLocked ? <Lock size={20} className="text-red-600" /> : <Unlock size={20} className="text-green-600" />}
-              <div>
-                <label className="text-sm font-bold text-gray-900 dark:text-white block">{accountLocked ? 'Locked' : 'Active'}</label>
-                <p className="text-[10px] text-gray-500">{accountLocked ? 'No login access' : 'Full login access'}</p>
+              <Lock size={16} className="text-gray-400" />
+              <h4 className="font-black text-[10px] uppercase tracking-widest text-gray-400">Security Access</h4>
+            </div>
+            <div className="flex items-center justify-between p-5 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all hover:shadow-md">
+              <div className="flex items-center gap-4">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${accountLocked ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
+                  {accountLocked ? <Lock size={24} /> : <Unlock size={24} />}
+                </div>
+                <div>
+                  <label className="text-sm font-black text-gray-900 dark:text-white block">{accountLocked ? 'Account Locked' : 'Access Granted'}</label>
+                  <p className="text-[10px] text-gray-500 font-medium uppercase tracking-tight">{accountLocked ? 'No login capabilities' : 'Full system availability'}</p>
+                </div>
               </div>
+              <button
+                onClick={() => toggleAccountLock(!accountLocked)}
+                disabled={isLoading}
+                className={`relative inline-flex h-7 w-12 items-center rounded-full transition-all duration-300 ${accountLocked ? 'bg-gray-200 dark:bg-gray-700' : 'bg-red-600'}`}
+              >
+                <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-300 ${accountLocked ? 'translate-x-1' : 'translate-x-6'}`} />
+              </button>
             </div>
-            <button
-              onClick={() => toggleAccountLock(!accountLocked)}
-              disabled={isLoading}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${accountLocked ? 'bg-gray-300' : 'bg-green-600'}`}
-            >
-              <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${accountLocked ? 'translate-x-1' : 'translate-x-6'}`} />
-            </button>
-          </div>
-        </div>
+          </section>
 
-        {/* Temporary Password Reveal */}
-        {tempPassword && (
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900/40 p-4 rounded-xl animate-in zoom-in-95">
-            <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-400 mb-2">
-              <Key size={16} />
-              <span className="text-xs font-black uppercase tracking-widest">New Password Generated</span>
-            </div>
-            <div className="bg-white dark:bg-gray-900 p-3 rounded-lg border border-yellow-100 dark:border-yellow-900/30 text-center">
-              <code className="text-xl font-black tracking-[0.3em] text-red-600">{tempPassword}</code>
-            </div>
-            <p className="text-[10px] text-yellow-700 dark:text-yellow-500 mt-2 text-center font-medium">Please copy and provide this to the employee immediately.</p>
-          </div>
-        )}
-
-        {/* HR Permissions Section - Only show if employee is HR */}
-        {isHR && (
-          <>
-            <hr className="border-gray-200 dark:border-gray-700" />
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
+          {/* HR Permissions Section - Only show if employee is HR */}
+          {isHR && (
+            <section className="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+              <div className="flex items-center gap-3">
                 <Shield size={16} className="text-red-600" />
-                <h4 className="font-black text-[10px] uppercase tracking-widest text-gray-500">HR Administrative Powers</h4>
+                <h4 className="font-black text-[10px] uppercase tracking-widest text-red-600">HR Administrative Powers</h4>
               </div>
 
               {loadingPermissions ? (
-                <div className="text-center py-4"><LoadingSpinner size="sm" /></div>
+                <div className="text-center py-6"><LoadingSpinner size="sm" /></div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {[
-                    { key: 'can_view_employees', label: 'View Employee Records' },
-                    { key: 'can_edit_employee_info', label: 'Modify Personnel Info' },
-                    { key: 'can_edit_payslip', label: 'Process Payroll/Payslips' },
-                    { key: 'can_delete_employees', label: 'Terminate/Delete Staff' },
-                    { key: 'can_enable_employee_edit', label: 'Authorize Profile Edits' },
+                    { key: 'can_view_employees', label: 'View Employee Records', icon: FileText, desc: 'HR can view employee directory' },
+                    { key: 'can_edit_employee_info', label: 'Modify Personnel Info', icon: UserPlus, desc: 'HR can edit employee details' },
+                    { key: 'can_edit_payslip', label: 'Process Payroll/Payslips', icon: ShieldCheck, desc: 'HR can manage salary records' },
+                    { key: 'can_delete_employees', label: 'Terminate/Delete Staff', icon: Trash2, desc: 'HR can remove employee accounts' },
+                    { key: 'can_reset_password', label: 'Security Management', icon: Key, desc: 'HR can reset user passwords' },
                   ].map((perm) => (
-                    <div key={perm.key} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-transparent hover:border-red-100 dark:hover:border-red-900/20 transition-all">
-                      <label className="text-xs font-bold text-gray-700 dark:text-gray-300">{perm.label}</label>
+                    <div key={perm.key} className="flex items-center justify-between p-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-xl border border-transparent hover:border-red-100 dark:hover:border-red-900/20 transition-all group">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-400 group-hover:text-red-600 transition-colors">
+                          <perm.icon size={16} />
+                        </div>
+                        <div>
+                          <label className="text-[11px] font-black text-gray-700 dark:text-gray-200 block uppercase tracking-tight">{perm.label}</label>
+                          <p className="text-[9px] text-gray-400 font-medium">{perm.desc}</p>
+                        </div>
+                      </div>
                       <button
                         onClick={() => togglePermission(perm.key as PermKey)}
                         disabled={isLoading}
-                        className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors ${hrPermissions[perm.key as PermKey] ? 'bg-red-600' : 'bg-gray-300 dark:bg-gray-700'}`}
+                        className={`relative inline-flex h-5 w-10 items-center rounded-full transition-all duration-300 ${hrPermissions[perm.key as PermKey] ? 'bg-red-600' : 'bg-gray-300 dark:bg-gray-700'}`}
                       >
-                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${hrPermissions[perm.key as PermKey] ? 'translate-x-5' : 'translate-x-1'}`} />
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300 ${hrPermissions[perm.key as PermKey] ? 'translate-x-5' : 'translate-x-1'}`} />
                       </button>
                     </div>
                   ))}
                   
-                  <button
+                  <Button
                     onClick={handleSavePermissions}
                     disabled={isLoading}
-                    className="w-full mt-4 bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest text-[10px] py-3 rounded-xl transition-all shadow-lg shadow-red-600/20"
+                    className="w-full mt-4 bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest text-[10px] py-4 rounded-xl transition-all shadow-xl shadow-red-600/20"
                   >
-                    {isLoading ? 'Processing...' : 'Save Administrative Powers'}
-                  </button>
+                    {isLoading ? 'Processing...' : 'Apply Administrative Changes'}
+                  </Button>
                 </div>
               )}
+            </section>
+          )}
+
+          {/* Password Management */}
+          <section className="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Key size={16} className="text-gray-400" />
+                <h4 className="font-black text-[10px] uppercase tracking-widest text-gray-400">Credentials Management</h4>
+              </div>
+              <button 
+                onClick={() => setShowManualPassword(!showManualPassword)}
+                className="text-[9px] font-black uppercase tracking-widest text-red-600 hover:underline"
+              >
+                {showManualPassword ? 'Use Random Generator' : 'Manual Entry'}
+              </button>
             </div>
-          </>
-        )}
 
-        <hr className="border-gray-200 dark:border-gray-700" />
+            {tempPassword && (
+              <div className="bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 p-5 rounded-2xl animate-in zoom-in-95">
+                <div className="flex items-center gap-2 text-red-600 mb-3">
+                  <Shield size={16} />
+                  <span className="text-[10px] font-black uppercase tracking-widest">New Credentials Generated</span>
+                </div>
+                <div className="bg-white dark:bg-gray-900 p-4 rounded-xl border border-red-100 dark:border-red-900/30 text-center shadow-inner">
+                  <code className="text-2xl font-black tracking-[0.4em] text-red-600">{tempPassword}</code>
+                </div>
+                <p className="text-[9px] text-red-700 dark:text-red-400 mt-3 text-center font-bold uppercase tracking-widest">Provide this password to the employee immediately.</p>
+              </div>
+            )}
 
-        <div className="space-y-3">
-          <button
-            onClick={handleResetPassword}
-            disabled={isLoading}
-            className="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-black uppercase tracking-widest text-[10px] py-3 rounded-xl transition-all hover:bg-gray-800 dark:hover:bg-gray-100"
-          >
-            {isLoading ? 'Resetting...' : 'Generate New Password'}
-          </button>
-          
-          <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/10 rounded-xl border border-red-100 dark:border-red-900/20">
-            <AlertCircle size={14} className="text-red-600 mt-0.5 flex-shrink-0" />
-            <p className="text-[10px] text-red-700 dark:text-red-400 leading-tight">
-              Security changes are instant. Resetting the password will invalidate the current one immediately.
-            </p>
-          </div>
+            {!showManualPassword ? (
+              <div className="space-y-4">
+                <Button
+                  onClick={() => handleResetPassword(false)}
+                  disabled={isLoading}
+                  variant="secondary"
+                  className="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-black uppercase tracking-widest text-[10px] py-4 rounded-2xl hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  {isLoading ? 'Generating...' : 'Generate New Password'}
+                </Button>
+                
+                <div className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700">
+                  <AlertCircle size={16} className="text-gray-400 mt-0.5 flex-shrink-0" />
+                  <p className="text-[10px] text-gray-500 font-medium leading-relaxed">
+                    Automated reset creates a cryptographically secure 12-character password. Current credentials will be invalidated immediately.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4 p-5 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm animate-in fade-in slide-in-from-top-4">
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">New Password</label>
+                    <div className="relative">
+                      <input
+                        type={showPass ? 'text' : 'password'}
+                        value={manualData.password}
+                        onChange={(e) => setManualData({...manualData, password: e.target.value})}
+                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-red-600 transition-all"
+                        placeholder="At least 8 characters"
+                      />
+                      <button onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                        {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Confirm Password</label>
+                    <div className="relative">
+                      <input
+                        type={showConfirm ? 'text' : 'password'}
+                        value={manualData.confirm}
+                        onChange={(e) => setManualData({...manualData, confirm: e.target.value})}
+                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-red-600 transition-all"
+                        placeholder="Re-type password"
+                      />
+                      <button onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                        {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => handleResetPassword(true)}
+                  disabled={isLoading}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest text-[10px] py-4 rounded-xl shadow-lg shadow-red-600/20"
+                >
+                  {isLoading ? 'Updating...' : 'Save Manual Password'}
+                </Button>
+              </div>
+            )}
+          </section>
         </div>
       </div>
     </Modal>

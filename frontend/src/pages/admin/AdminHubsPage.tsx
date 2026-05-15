@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Card, Badge, LoadingSpinner, EmptyState } from '@/components/common';
 import { useGetHubs, useGetEmployees, useCreateHub, useDeleteHub, useUpdateHub } from '@/hooks/useQueries';
-import { MapPin, X, Search, Navigation, ChevronLeft, ChevronRight, Users, Footprints, Bike, Car, Plus, Trash2, Edit2, CloudRain, Sun, Cloud, Thermometer, Route } from 'lucide-react';
+import { MapPin, X, Search, Navigation, ChevronLeft, ChevronRight, Users, Footprints, Bike, Car, Plus, Trash2, Edit2, CloudRain, Sun, Cloud, Thermometer, Route, Shield } from 'lucide-react';
 import { normalizeApiResponse } from '@/utils/apiResponseHandler';
 import { MapContainer, TileLayer, Marker, Polyline, Popup } from 'react-leaflet';
 import L from 'leaflet';
@@ -10,6 +10,7 @@ import 'leaflet/dist/leaflet.css';
 import Sidebar from '@/components/Sidebar';
 import { ThemeToggle } from '@/context/ThemeContext';
 import { fetchWeather } from '@/utils/weather';
+import { useAuth } from '@/hooks/useAuth';
 
 const OSRM_BASE = 'https://router.project-osrm.org/route/v1';
 
@@ -101,6 +102,7 @@ interface HubState {
 }
 
 export const AdminHubsPage = () => {
+  const { canViewEmployees } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [employeeSearch, setEmployeeSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -506,7 +508,13 @@ export const AdminHubsPage = () => {
                       <div className="w-[25%] text-center">Status</div>
                     </div>
                     <div className="max-h-[200px] overflow-y-auto">
-                      {paginatedEmployees.length > 0 ? paginatedEmployees.map((emp: any) => (
+                      {!canViewEmployees ? (
+                        <div className="py-12 text-center flex flex-col items-center justify-center space-y-2">
+                          <Shield size={24} className="text-gray-300" />
+                          <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest italic">Restricted Access</p>
+                          <p className="text-[9px] text-gray-400">View Employee Records permission is off</p>
+                        </div>
+                      ) : paginatedEmployees.length > 0 ? paginatedEmployees.map((emp: any) => (
                         <div key={emp.id} className="flex items-center px-3 py-3 border-b border-gray-50 dark:border-gray-800 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                           <div className="w-[45%] font-bold text-gray-900 dark:text-white truncate pr-2">{emp.full_name}</div>
                           <div className="w-[30%] text-gray-500 truncate pr-2">{emp.position || 'N/A'}</div>

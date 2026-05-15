@@ -3,7 +3,10 @@ import { Sidebar } from '@/components/Sidebar';
 import { EmployeeManagePanel } from '@/components/EmployeeManagePanel';
 import { AddEmployee } from '@/pages/admin/AddEmployee';
 
+import { useAuth } from '@/hooks/useAuth';
+
 export const AdminEmployeesPage = () => {
+  const { canEditEmployeeInfo } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
 
@@ -31,11 +34,13 @@ export const AdminEmployeesPage = () => {
             <p className="text-gray-600 dark:text-gray-400">Manage employees and their information</p>
           </div>
 
-          <div>
-            <button onClick={() => setShowAdd(true)} className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md">
-              Add Employee
-            </button>
-          </div>
+          {canEditEmployeeInfo && (
+            <div>
+              <button onClick={() => setShowAdd(true)} className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md">
+                Add Employee
+              </button>
+            </div>
+          )}
         </div>
 
         <EmployeeManagePanel />

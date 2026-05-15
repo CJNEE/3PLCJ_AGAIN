@@ -34,12 +34,25 @@ export const useAuth = () => {
     }
   }, []);
   
+  const isHR = store.employee?.role?.toLowerCase() === 'hr';
+  const isAdmin = store.employee?.role?.toLowerCase() === 'admin' || store.user?.role?.toLowerCase() === 'admin';
+  const permissions = store.employee?.hr_permissions || {};
+
   return {
     user: store.user,
     employee: store.employee,
     token: store.token || localStorage.getItem('access_token'),
     isAuthenticated: store.isAuthenticated,
+    isAdmin,
+    isHR,
     
+    // Permission Helpers
+    canViewEmployees: isAdmin || (isHR && permissions.can_view_employees),
+    canEditEmployeeInfo: isAdmin || (isHR && permissions.can_edit_employee_info),
+    canEditPayroll: isAdmin || (isHR && permissions.can_edit_payslip),
+    canDeleteEmployees: isAdmin || (isHR && permissions.can_delete_employees),
+    canResetPassword: isAdmin || (isHR && permissions.can_reset_password),
+
     setUser: store.setUser,
     setEmployee: store.setEmployee,
     setToken: store.setToken,

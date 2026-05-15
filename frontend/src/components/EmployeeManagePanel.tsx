@@ -27,7 +27,7 @@ interface Employee {
 
 export const EmployeeManagePanel = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isAdmin, isHR, canDeleteEmployees } = useAuth();
   const { data, isLoading } = useGetEmployees();
   const deleteMutation = useDeleteEmployee();
   const bulkToggleMutation = useBulkToggleLogin();
@@ -177,13 +177,15 @@ export const EmployeeManagePanel = () => {
                         >
                           <Eye size={16} />
                         </Button>
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          onClick={() => setDeleteConfirm({ isOpen: true, employeeId: emp.id })}
-                        >
-                          <Trash2 size={16} />
-                        </Button>
+                        {canDeleteEmployees && (
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => setDeleteConfirm({ isOpen: true, employeeId: emp.id })}
+                          >
+                            <Trash2 size={16} />
+                          </Button>
+                        )}
                       </td>
                     </tr>
                   ))}

@@ -246,16 +246,15 @@ export const AccessControlPage = () => {
         )}
       </Card>
     </div>
-    {/* Employee Access Control Modal */}
-    {selectedEmployee && (
-      <EmployeeAccessControlModal
-        isOpen={isModalOpen}
-        onClose={handleModalClose}
-        employee={selectedEmployee}
-        onUpdate={handleModalUpdate}
-      />
-    )}
-       </div>
+      {selectedEmployee && (
+        <EmployeeAccessControlModal
+          isOpen={isModalOpen}
+          onClose={handleModalClose}
+          employee={selectedEmployee}
+          onUpdate={handleModalUpdate}
+        />
+      )}
+    </div>
   );
 };
 

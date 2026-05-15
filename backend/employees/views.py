@@ -2268,35 +2268,55 @@ def lock_unlock_account(request, employee_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def reset_password(request, employee_id):
-    """Reset employee password (Admin only)"""
+    """Reset employee password (Admin or authorized HR)"""
     try:
-        # Check if user is admin
-        user_employee = Employee.objects.get(user=request.user)
-        if user_employee.role != 'Admin':
-            return Response(
-                {"error": "Only admins can reset passwords."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        # Check requester role and permissions
+        requester_employee = Employee.objects.get(user=request.user)
+        is_admin = requester_employee.role == 'Admin'
+        
+        # Check HR permissions if not admin
+        if not is_admin:
+            if requester_employee.role != 'HR':
+                return Response({"error": "Unauthorized access."}, status=status.HTTP_403_FORBIDDEN)
+            
+            # Check if this HR has reset_password permission
+            try:
+                perms = requester_employee.hr_permissions
+                if not perms.can_reset_password:
+                    return Response({"error": "You do not have permission to reset passwords."}, status=status.HTTP_403_FORBIDDEN)
+            except HRPermission.DoesNotExist:
+                return Response({"error": "HR permissions not configured."}, status=status.HTTP_403_FORBIDDEN)
         
         employee = Employee.objects.get(id=employee_id)
         user = employee.user
+        if not user:
+             return Response({"error": "User account not found for this employee."}, status=status.HTTP_404_NOT_FOUND)
         
-        # Generate temporary password
-        import secrets
-        import string
-        temp_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
+        # Check if manual password provided
+        manual_password = request.data.get('manual_password')
+        temp_password = None
         
-        # Set new password
-        user.set_password(temp_password)
+        if manual_password:
+            if len(manual_password) < 8:
+                 return Response({"error": "Password must be at least 8 characters."}, status=status.HTTP_400_BAD_REQUEST)
+            user.set_password(manual_password)
+            temp_password = manual_password
+        else:
+            # Generate temporary password
+            import secrets
+            import string
+            temp_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
+            user.set_password(temp_password)
+        
         user.save()
         
         # Log the activity
         ActivityLog.objects.create(
             employee=employee,
             user=request.user,
-            role='Admin',
+            role=requester_employee.role,
             action='reset_password',
-            details=f'Password reset by admin for {employee.full_name}.',
+            details=f"Password {'manually set' if manual_password else 'reset'} by {requester_employee.role} for {employee.full_name}.",
             ip_address=_client_ip(request),
             user_agent=request.META.get('HTTP_USER_AGENT', '')
         )
@@ -2306,20 +2326,19 @@ def reset_password(request, employee_id):
             employee=employee,
             alert_type='password_reset',
             severity='medium',
-            message='Your password has been reset by an administrator',
-            details={'reset_by': request.user.username, 'temporary_password': temp_password}
+            message='Your password has been updated by an administrator',
+            details={'reset_by': request.user.username, 'is_manual': bool(manual_password)}
         )
         
         return Response({
-            "message": "Password reset successfully.",
-            "temporary_password": temp_password,
-            "note": "Share this password with the employee securely. They should change it on first login."
+            "message": "Password updated successfully.",
+            "temporary_password": temp_password if not manual_password else None,
+            "is_manual": bool(manual_password)
         })
     except Employee.DoesNotExist:
-        return Response(
-            {"error": "Employee not found."},
-            status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"error": "Employee not found."}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except Exception as e:
         return Response(
             {"error": str(e)},

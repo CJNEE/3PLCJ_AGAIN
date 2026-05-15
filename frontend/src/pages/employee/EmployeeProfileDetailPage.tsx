@@ -103,8 +103,12 @@ export const EmployeeProfileDetailPage = () => {
   const [hasError, setHasError] = useState(false);
 
   const isOwnProfile = currentEmployee?.id === Number(id);
-  const userRole = (currentEmployee?.role || currentUser?.role || '').toLowerCase();
-  const isHRorAdmin = userRole === 'hr' || userRole === 'admin';
+  const { isAdmin, isHR, canEditEmployeeInfo, canResetPassword } = useAuth();
+  const isHRorAdmin = isAdmin || isHR;
+  
+  // HR can only edit if they have the permission
+  const canEdit = isAdmin || (isHR && canEditEmployeeInfo) || isOwnProfile;
+  const canReset = isAdmin || (isHR && canResetPassword);
 
   useEffect(() => {
     if (id) {
@@ -265,8 +269,8 @@ export const EmployeeProfileDetailPage = () => {
                   </Button>
                 )}
                 
-                {/* Save Changes / Edit button restricted to HR/Admin */}
-                {isHRorAdmin && (
+                {/* Save Changes / Edit button restricted to authorized roles */}
+                {canEdit && (
                   <>
                     {!isEditing ? (
                       <Button variant="primary" onClick={() => setIsEditing(true)}>
