@@ -183,9 +183,17 @@ class EmployeeSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         req = self.context.get('request')
-        pi = data.get('profile_image')
-        if isinstance(pi, str) and pi.startswith('/'):
-            data['profile_image'] = absolute_media_url(req, pi)
+        
+        # Prioritize permanent DB-backed URL for the main profile_image field too
+        from .models import SavedImage
+        saved = instance.saved_images.filter(image_type='profile').first()
+        if saved and saved.image_data:
+            data['profile_image'] = absolute_media_url(req, f"/api/saved-images/{saved.id}/")
+        else:
+            pi = data.get('profile_image')
+            if isinstance(pi, str) and pi.startswith('/'):
+                data['profile_image'] = absolute_media_url(req, pi)
+        
         return data
 
 class EmployeeCreateSerializer(serializers.ModelSerializer):

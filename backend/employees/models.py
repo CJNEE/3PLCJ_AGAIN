@@ -440,8 +440,9 @@ def saved_image_path(instance, filename):
     """Generate permanent path for saved images"""
     ext = filename.split('.')[-1] if '.' in filename else 'jpg'
     emp_id = instance.employee.employee_id or instance.employee.id
-    timestamp = instance.created_at.strftime('%Y%m%d_%H%M%S')
-    return f'saved_images/{emp_id}/{instance.image_type}/{timestamp}.{ext}'
+    import datetime
+    ts = instance.created_at.strftime('%Y%m%d_%H%M%S') if instance.created_at else datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    return f'saved_images/{emp_id}/{instance.image_type}/{ts}.{ext}'
 
 
 class SavedImage(models.Model):

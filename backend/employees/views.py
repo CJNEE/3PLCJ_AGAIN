@@ -1033,35 +1033,63 @@ class EditRequestViewSet(viewsets.ModelViewSet):
         instance.reviewed_at = timezone.now()
         instance.save()
         
-        # If there is an uploaded file attached to this edit request, save it permanently
+        # Mapping for camelCase to snake_case fields (from EmployeeCreateSerializer)
+        FIELD_MAP = {
+            'firstName': 'firstname', 'lastName': 'lastname', 'middleInitial': 'middle_initial',
+            'placeOfBirth': 'place_of_birth', 'dateOfBirth': 'date_of_birth', 'maritalStatus': 'marital_status',
+            'email': 'email_address', 'phone': 'phone_number', 'currentAddress': 'current_address',
+            'permanentAddress': 'permanent_address', 'employmentType': 'employment_type',
+            'hireDate': 'hired_date', 'jtpCode': 'jtp_code', 'employeeId': 'employee_id',
+            'emergencyContactName': 'emergency_contact_name', 'emergencyContactPhone': 'emergency_contact_phone',
+            'canEditInfo': 'can_edit_info', 'isActive': 'is_active',
+        }
+        
         try:
+            # 1. Handle Profile Picture Update
             if instance.uploaded_files:
-                # Save to SavedImage for permanent storage
-                saved_image = SavedImage.objects.create(
+                # Read bytes directly from the file to ensure they land in DB
+                image_bytes = None
+                try:
+                    instance.uploaded_files.seek(0)
+                    image_bytes = instance.uploaded_files.read()
+                    instance.uploaded_files.seek(0)
+                except Exception as e:
+                    print(f"Warning: Could not read bytes for approved edit request image: {e}")
+
+                # Save to SavedImage as 'profile' type for permanent storage
+                saved_image = SavedImage(
                     employee=instance.employee,
                     image=instance.uploaded_files,
-                    image_type='edit_request',
+                    image_type='profile',
                     edit_request=instance,
                     is_approved=True,
-                    description=f'Profile picture update request #{instance.id} - Approved'
+                    description=f'Profile picture update from Request #{instance.id}'
                 )
+                if image_bytes:
+                    saved_image.image_data = image_bytes
+                saved_image.save()
                 
-                # Update employee's profile image to reference the permanent saved image
-                instance.employee.profile_image = saved_image.image
+                # Update employee's profile image to point to this new file
+                instance.employee.profile_image = instance.uploaded_files
             
-            # Apply other requested_data fields
+            # 2. Apply requested_data fields (handling mapping)
             requested_data = instance.requested_data or {}
             for field, value in requested_data.items():
-                # Skip profile_image key if present (we handled uploaded_files)
                 if field == 'profile_image':
                     continue
-                if hasattr(instance.employee, field):
-                    setattr(instance.employee, field, value)
+                
+                # Map camelCase to snake_case if necessary
+                target_field = FIELD_MAP.get(field, field)
+                
+                if hasattr(instance.employee, target_field):
+                    # Handle empty strings for dates/emails
+                    if value in ('', 'null', None):
+                        value = None
+                    setattr(instance.employee, target_field, value)
             
             instance.employee.save()
         except Exception as e:
-            # Log error but don't fail the approval
-            print(f"Error saving approved image: {str(e)}")
+            print(f"Error applying approved edit request: {str(e)}")
             pass
         
         ActivityLog.objects.create(
