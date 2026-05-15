@@ -543,6 +543,7 @@ def compute_payroll_summary(employee: Employee, start_date, end_date, basic_sala
         'total_hours': total_hours,
         'overtime_hours': overtime_hours,
         'lates': late_count,
+        'jtp_code': getattr(employee, 'jtp_code', 'N/A'),
         'absences': absences,
         'basic_salary': float(basic_salary or 0),
         'allowances': float(allowances or 0),

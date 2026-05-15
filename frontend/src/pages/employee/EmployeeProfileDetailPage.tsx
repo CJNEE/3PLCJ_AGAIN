@@ -87,8 +87,8 @@ export const EmployeeProfileDetailPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { success, error } = useToast();
-  const { employee: currentEmployee } = useAuth();
-
+  const { employee: currentEmployee, user: currentUser } = useAuth();
+  
   const showAdminSidebar = location.pathname.startsWith('/admin') || location.pathname.startsWith('/hr');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -103,7 +103,8 @@ export const EmployeeProfileDetailPage = () => {
   const [hasError, setHasError] = useState(false);
 
   const isOwnProfile = currentEmployee?.id === Number(id);
-  const isHRorAdmin = currentEmployee?.role?.toLowerCase() === 'hr' || currentEmployee?.role?.toLowerCase() === 'admin';
+  const userRole = (currentEmployee?.role || currentUser?.role || '').toLowerCase();
+  const isHRorAdmin = userRole === 'hr' || userRole === 'admin';
 
   useEffect(() => {
     if (id) {
