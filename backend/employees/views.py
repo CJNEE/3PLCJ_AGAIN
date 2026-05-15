@@ -920,6 +920,22 @@ class LeaveRequestViewSet(viewsets.ModelViewSet):
         )
         return Response(self.get_serializer(instance).data)
 
+    @action(detail=False, methods=['delete'])
+    def clear_all(self, request):
+        """Delete all records in the current queryset (filtered by permissions)"""
+        queryset = self.get_queryset()
+        count = queryset.count()
+        queryset.delete()
+        
+        # Log this destructive action
+        ActivityLog.objects.create(
+            user=request.user,
+            action='clear_all_leave_requests',
+            details=f'Cleared {count} leave requests',
+            ip_address=_client_ip(request)
+        )
+        return Response({'message': f'Successfully cleared {count} leave requests'}, status=status.HTTP_200_OK)
+
 
 class EditRequestViewSet(viewsets.ModelViewSet):
     """ViewSet for edit requests with approval logic"""
@@ -1145,6 +1161,22 @@ class EditRequestViewSet(viewsets.ModelViewSet):
         )
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['delete'])
+    def clear_all(self, request):
+        """Delete all records in the current queryset (filtered by permissions)"""
+        queryset = self.get_queryset()
+        count = queryset.count()
+        queryset.delete()
+        
+        # Log this destructive action
+        ActivityLog.objects.create(
+            user=request.user,
+            action='clear_all_edit_requests',
+            details=f'Cleared {count} edit requests',
+            ip_address=_client_ip(request)
+        )
+        return Response({'message': f'Successfully cleared {count} edit requests'}, status=status.HTTP_200_OK)
 
 class EmployeeDocumentViewSet(viewsets.ModelViewSet):
     """ViewSet for employee documents/attachments"""
@@ -2073,30 +2105,13 @@ class ActivityLogViewSet(viewsets.ModelViewSet):
         """Auto-log activity on creation"""
         serializer.save()
 
-    @action(detail=False, methods=['post'])
-    def log_activity(self, request):
-        """Manual endpoint to log an activity"""
-        employee_id = request.data.get('employee_id')
-        role = request.data.get('role', 'Employee')
-        action = request.data.get('action')
-        details = request.data.get('details', '')
-        
-        employee = None
-        if employee_id:
-            try:
-                employee = Employee.objects.get(id=employee_id)
-            except Employee.DoesNotExist:
-                pass
-        
-        activity_log = ActivityLog.objects.create(
-            user=request.user if request.user.is_authenticated else None,
-            employee=employee,
-            role=role,
-            action=action,
-            details=details,
-            ip_address=self.get_client_ip(request)
-        )
-        return Response(ActivityLogSerializer(activity_log).data, status=status.HTTP_201_CREATED)
+    @action(detail=False, methods=['delete'])
+    def clear_all(self, request):
+        """Delete all logs visible to the user"""
+        queryset = self.get_queryset()
+        count = queryset.count()
+        queryset.delete()
+        return Response({'message': f'Successfully cleared {count} logs'}, status=status.HTTP_200_OK)
     
     def get_client_ip(self, request):
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
@@ -2172,30 +2187,13 @@ class SecurityAlertViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
-    @action(detail=False, methods=['post'])
-    def create_alert(self, request):
-        """Manual endpoint to create an alert"""
-        employee_id = request.data.get('employee_id')
-        alert_type = request.data.get('alert_type', 'login_attempt')
-        severity = request.data.get('severity', 'low')
-        message = request.data.get('message', '')
-        details = request.data.get('details', {})
-        
-        employee = None
-        if employee_id:
-            try:
-                employee = Employee.objects.get(id=employee_id)
-            except Employee.DoesNotExist:
-                return Response({"error": "Employee not found."}, status=status.HTTP_404_NOT_FOUND)
-        
-        alert = SecurityAlert.objects.create(
-            employee=employee,
-            alert_type=alert_type,
-            severity=severity,
-            message=message,
-            details=details)
-        
-        return Response(SecurityAlertSerializer(alert).data, status=status.HTTP_201_CREATED)
+    @action(detail=False, methods=['delete'])
+    def clear_all(self, request):
+        """Delete all alerts visible to the user"""
+        queryset = self.get_queryset()
+        count = queryset.count()
+        queryset.delete()
+        return Response({'message': f'Successfully cleared {count} alerts'}, status=status.HTTP_200_OK)
 
 
 # ===================== HR PERMISSIONS VIEWSET =====================

@@ -92,6 +92,15 @@ function formatTravelTime(seconds: number): string {
   return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
 }
 
+/**
+ * Formats distance in meters to a human-readable km string
+ */
+function formatDistance(meters: number): string {
+  if (!meters || meters < 0) return '0 km';
+  const km = meters / 1000;
+  return `${km.toFixed(1)} km`;
+}
+
   interface HubState {
     selectedHub: any | null;
   }
@@ -419,19 +428,37 @@ function formatTravelTime(seconds: number): string {
 
           {/* Transport Modes Info (Floating above map if hub selected) */}
           {showDirections && routeData && (
-            <div className="flex justify-center -mb-4 relative z-10">
-              <div className="bg-white dark:bg-gray-800 rounded-full px-6 py-2 shadow-xl border border-gray-100 dark:border-gray-700 flex items-center gap-8">
+            <div className="flex flex-col items-center gap-3 relative z-20">
+              <div className="bg-white dark:bg-gray-800 rounded-full px-8 py-3 shadow-2xl border border-red-100 dark:border-gray-700 flex items-center gap-10">
                 <div className="flex flex-col items-center">
-                  <Car className="text-gray-900 dark:text-white" size={20} />
-                  <span className="text-[10px] font-bold mt-0.5">{formatTravelTime(routeData.car.durationSec)}</span>
+                  <Car className="text-red-600" size={24} />
+                  <span className="text-xs font-black mt-1 text-gray-900 dark:text-white uppercase">{formatDistance(routeData.car.distanceM)}</span>
                 </div>
                 <div className="flex flex-col items-center">
-                  <Bike className="text-gray-900 dark:text-white" size={20} />
-                  <span className="text-[10px] font-bold mt-0.5">{formatTravelTime(routeData.riding.durationSec)}</span>
+                  <Bike className="text-red-600" size={24} />
+                  <span className="text-xs font-black mt-1 text-gray-900 dark:text-white uppercase">{formatDistance(routeData.riding.distanceM)}</span>
                 </div>
                 <div className="flex flex-col items-center">
-                  <Footprints className="text-gray-900 dark:text-white" size={20} />
-                  <span className="text-[10px] font-bold mt-0.5">{formatTravelTime(routeData.walking.durationSec)}</span>
+                  <Footprints className="text-red-600" size={24} />
+                  <span className="text-xs font-black mt-1 text-gray-900 dark:text-white uppercase">{formatDistance(routeData.walking.distanceM)}</span>
+                </div>
+              </div>
+
+              {/* Turns Info */}
+              <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl p-3 shadow-lg border border-gray-100 dark:border-gray-700 max-w-sm w-full max-h-40 overflow-y-auto">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-red-600 mb-2 px-1">Turns & Directions</h4>
+                <div className="space-y-2">
+                  {routeData.car.turns.map((turn, idx) => (
+                    <div key={idx} className="flex items-start gap-2 text-[11px] border-b border-gray-50 dark:border-gray-800 pb-1.5 last:border-0">
+                      <div className="w-4 h-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0 text-[9px] font-bold">
+                        {idx + 1}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-800 dark:text-gray-200">{turn.instruction}</p>
+                        <p className="text-[9px] text-gray-400 mt-0.5">{formatDistance(turn.distance)} • {formatTravelTime(turn.duration)}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

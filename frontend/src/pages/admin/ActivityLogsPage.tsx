@@ -1,10 +1,11 @@
 import { useState, useMemo } from 'react';
 import { Card, Badge, LoadingSpinner, EmptyState } from '@/components/common';
-import { useGetActivityLogs } from '@/hooks/useQueries';
-import { Activity, Filter, Search, Clock, User, FileText } from 'lucide-react';
+import { Activity, Filter, Search, Clock, User, FileText, Trash2 } from 'lucide-react';
+import { useGetActivityLogs, useClearAllActivityLogs } from '@/hooks/useQueries';
 import { normalizeApiResponse } from '@/utils/apiResponseHandler';
 import { formatDistanceToNow } from 'date-fns';
 import { Sidebar } from '@/components/Sidebar';
+import { useToast } from '@/hooks/useToast';
 
 export const ActivityLogsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -14,7 +15,20 @@ export const ActivityLogsPage = () => {
   const itemsPerPage = 20;
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { data, isLoading } = useGetActivityLogs();
+  const clearAllMutation = useClearAllActivityLogs();
+  const { success, error: toastError } = useToast();
   const activityLogs = normalizeApiResponse(data) || [];
+
+  const handleClearAll = async () => {
+    if (window.confirm('Are you sure you want to clear all activity logs? This action cannot be undone.')) {
+      try {
+        await clearAllMutation.mutateAsync();
+        success('All activity logs cleared successfully.');
+      } catch (err) {
+        toastError('Failed to clear activity logs.');
+      }
+    }
+  };
 
   // Filter activities
   const filteredLogs = useMemo(() => {
@@ -115,6 +129,23 @@ export const ActivityLogsPage = () => {
             Track all user activities and system events
           </p>
         </div>
+        
+        {activityLogs.length > 0 && (
+          <button
+            onClick={handleClearAll}
+            disabled={clearAllMutation.isPending}
+            className="ml-auto flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-bold shadow-lg shadow-red-600/20 transition-all disabled:opacity-50"
+          >
+            {clearAllMutation.isPending ? (
+              <LoadingSpinner size="sm" />
+            ) : (
+              <>
+                <Trash2 size={16} />
+                Clear All Logs
+              </>
+            )}
+          </button>
+        )}
       </div>
 
       {/* Stats */}

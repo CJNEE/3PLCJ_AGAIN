@@ -131,4 +131,5 @@ export const QUERY_KEYS = {
   CURRENT_USER: ['current-user'],
   DOCUMENTS: ['documents'],
   DOCUMENT: (id: number) => ['documents', id],
+  LEAVE_REQUESTS: ['leave-requests'],
 } as const;

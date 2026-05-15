@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
 import { Card, Badge, LoadingSpinner, EmptyState } from '@/components/common';
-import { useGetSecurityAlerts } from '@/hooks/useQueries';
-import { AlertTriangle, Search, Filter, Clock, Shield, CheckCircle, X } from 'lucide-react';
+import { AlertTriangle, Search, Filter, Clock, Shield, CheckCircle, X, Trash2 } from 'lucide-react';
+import { useGetSecurityAlerts, useClearAllSecurityAlerts } from '@/hooks/useQueries';
+import { useToast } from '@/hooks/useToast';
 import { normalizeApiResponse } from '@/utils/apiResponseHandler';
 import { formatDistanceToNow } from 'date-fns';
 import { Sidebar } from '@/components/Sidebar';
@@ -16,7 +17,20 @@ export const SecurityAlertsPage = () => {
   const itemsPerPage = 15;
 
   const { data, isLoading } = useGetSecurityAlerts();
+  const clearAllMutation = useClearAllSecurityAlerts();
+  const { success, error: toastError } = useToast();
   const alerts = normalizeApiResponse(data) || [];
+
+  const handleClearAll = async () => {
+    if (window.confirm('Are you sure you want to clear all security alerts? This action cannot be undone.')) {
+      try {
+        await clearAllMutation.mutateAsync();
+        success('All security alerts cleared successfully.');
+      } catch (err) {
+        toastError('Failed to clear security alerts.');
+      }
+    }
+  };
 
   // Filter alerts
   const filteredAlerts = useMemo(() => {
@@ -131,6 +145,23 @@ export const SecurityAlertsPage = () => {
             Monitor and manage security events and suspicious activities
           </p>
         </div>
+        
+        {alerts.length > 0 && (
+          <button
+            onClick={handleClearAll}
+            disabled={clearAllMutation.isPending}
+            className="ml-auto flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-bold shadow-lg shadow-red-600/20 transition-all disabled:opacity-50"
+          >
+            {clearAllMutation.isPending ? (
+              <LoadingSpinner size="sm" />
+            ) : (
+              <>
+                <Trash2 size={16} />
+                Clear All Alerts
+              </>
+            )}
+          </button>
+        )}
       </div>
 
       {/* Stats */}

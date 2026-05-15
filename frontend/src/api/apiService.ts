@@ -15,7 +15,11 @@ apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('access_token');
 
-    if (token) {
+    // Check if this is a login request
+    const reqUrl = String(config.url ?? '');
+    const isLoginCall = /\/login\/?$/i.test(reqUrl) || reqUrl.includes('/login/');
+
+    if (token && !isLoginCall) {
       (config.headers as any) = config.headers || {};
       (config.headers as any).Authorization = `Bearer ${token}`;
     }
@@ -209,6 +213,28 @@ export const payrollAPI = {
 };
 
 /* =========================
+   LEAVE REQUEST API
+========================= */
+export const leaveRequestAPI = {
+  getLeaveRequests: async (params?: Record<string, any>) => {
+    const response = await apiClient.get('/api/leave-requests/', { params });
+    return response.data;
+  },
+  approveRequest: async (id: number, data?: any) => {
+    const response = await apiClient.patch(`/api/leave-requests/${id}/approve/`, data || {});
+    return response.data;
+  },
+  rejectRequest: async (id: number, data?: any) => {
+    const response = await apiClient.patch(`/api/leave-requests/${id}/reject/`, data || {});
+    return response.data;
+  },
+  clearAll: async () => {
+    const response = await apiClient.delete('/api/leave-requests/clear_all/');
+    return response.data;
+  },
+};
+
+/* =========================
    EDIT REQUEST API
 ========================= */
 export const editRequestAPI = {
@@ -234,6 +260,11 @@ export const editRequestAPI = {
   
   createEditRequest: async (formData: FormData) => {
     const response = await apiClient.post(API_ENDPOINTS.EDIT_REQUESTS, formData);
+    return response.data;
+  },
+
+  clearAll: async () => {
+    const response = await apiClient.delete(`${API_ENDPOINTS.EDIT_REQUESTS}clear_all/`);
     return response.data;
   },
 };
@@ -266,6 +297,11 @@ export const activityLogAPI = {
     const response = await apiClient.get(API_ENDPOINTS.ACTIVITY_LOGS, { params });
     return response.data;
   },
+
+  clearAll: async () => {
+    const response = await apiClient.delete(`${API_ENDPOINTS.ACTIVITY_LOGS}clear_all/`);
+    return response.data;
+  },
 };
 
 /* =========================
@@ -274,6 +310,11 @@ export const activityLogAPI = {
 export const securityAlertAPI = {
   getSecurityAlerts: async (params?: Record<string, any>) => {
     const response = await apiClient.get(API_ENDPOINTS.SECURITY_ALERTS, { params });
+    return response.data;
+  },
+
+  clearAll: async () => {
+    const response = await apiClient.delete(`${API_ENDPOINTS.SECURITY_ALERTS}clear_all/`);
     return response.data;
   },
 };

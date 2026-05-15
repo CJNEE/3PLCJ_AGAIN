@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { authAPI, employeeAPI, hubAPI, attendanceAPI, payrollAPI, editRequestAPI, activityLogAPI, securityAlertAPI, documentAPI } from '@/api/apiService';
+import { authAPI, employeeAPI, hubAPI, attendanceAPI, payrollAPI, editRequestAPI, leaveRequestAPI, activityLogAPI, securityAlertAPI, documentAPI } from '@/api/apiService';
 import { QUERY_KEYS } from '@/constants/api';
 
 // Auth hooks
@@ -186,6 +186,47 @@ export const useCreatePayroll = () => {
   });
 };
 
+// Leave Request hooks
+export const useGetLeaveRequests = (params?: Record<string, any>) => {
+  return useQuery({
+    queryKey: [QUERY_KEYS.LEAVE_REQUESTS, params],
+    queryFn: () => leaveRequestAPI.getLeaveRequests(params),
+    staleTime: 1 * 60 * 1000,
+  });
+};
+
+export const useApproveLeaveRequest = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, notes }: { id: number; notes?: string }) =>
+      leaveRequestAPI.approveRequest(id, { notes }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.LEAVE_REQUESTS });
+    },
+  });
+};
+
+export const useRejectLeaveRequest = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, notes }: { id: number; notes?: string }) =>
+      leaveRequestAPI.rejectRequest(id, { notes }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.LEAVE_REQUESTS });
+    },
+  });
+};
+
+export const useClearAllLeaveRequests = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => leaveRequestAPI.clearAll(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.LEAVE_REQUESTS });
+    },
+  });
+};
+
 // Edit Request hooks
 export const useGetEditRequests = (params?: Record<string, any>) => {
   return useQuery({
@@ -228,6 +269,16 @@ export const useRejectEditRequest = () => {
   });
 };
 
+export const useClearAllEditRequests = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => editRequestAPI.clearAll(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.EDIT_REQUESTS });
+    },
+  });
+};
+
 // Activity Log hooks
 export const useGetActivityLogs = (params?: Record<string, any>) => {
   return useQuery({
@@ -238,6 +289,16 @@ export const useGetActivityLogs = (params?: Record<string, any>) => {
   });
 };
 
+export const useClearAllActivityLogs = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => activityLogAPI.clearAll(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ACTIVITY_LOGS });
+    },
+  });
+};
+
 // Security Alert hooks
 export const useGetSecurityAlerts = (params?: Record<string, any>) => {
   return useQuery({
@@ -245,6 +306,16 @@ export const useGetSecurityAlerts = (params?: Record<string, any>) => {
     queryFn: () => securityAlertAPI.getSecurityAlerts(params),
     staleTime: 1 * 60 * 1000,
     refetchInterval: 5 * 1000, // Refetch every 5 seconds for real-time updates
+  });
+};
+
+export const useClearAllSecurityAlerts = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => securityAlertAPI.clearAll(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SECURITY_ALERTS });
+    },
   });
 };
 
