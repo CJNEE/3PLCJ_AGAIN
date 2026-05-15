@@ -69,11 +69,25 @@ class AttendanceSerializer(serializers.ModelSerializer):
         return None
     
     def get_clock_in_image(self, obj):
+        # 1. Try permanent DB-backed URL first
+        from .models import SavedImage
+        saved = SavedImage.objects.filter(attendance=obj, image_type='clock_in').first()
+        if saved and saved.image_data:
+            return absolute_media_url(self.context.get('request'), f"/api/saved-images/{saved.id}/")
+            
+        # 2. Fallback to filesystem URL
         if obj.clock_in_image:
             return absolute_media_url(self.context.get('request'), obj.clock_in_image.url)
         return None
 
     def get_clock_out_image(self, obj):
+        # 1. Try permanent DB-backed URL first
+        from .models import SavedImage
+        saved = SavedImage.objects.filter(attendance=obj, image_type='clock_out').first()
+        if saved and saved.image_data:
+            return absolute_media_url(self.context.get('request'), f"/api/saved-images/{saved.id}/")
+            
+        # 2. Fallback to filesystem URL
         if obj.clock_out_image:
             return absolute_media_url(self.context.get('request'), obj.clock_out_image.url)
         return None
@@ -148,6 +162,13 @@ class EmployeeSerializer(serializers.ModelSerializer):
         return f"{obj.firstname} {obj.middle_initial} {obj.lastname}".strip()
 
     def get_profile_image_url(self, obj):
+        # 1. Try permanent DB-backed URL first
+        from .models import SavedImage
+        saved = obj.saved_images.filter(image_type='profile').first()
+        if saved and saved.image_data:
+            return absolute_media_url(self.context.get('request'), f"/api/saved-images/{saved.id}/")
+            
+        # 2. Fallback to filesystem URL
         if obj.profile_image:
             return absolute_media_url(self.context.get('request'), obj.profile_image.url)
         return None
@@ -471,6 +492,13 @@ class PayrollSerializer(serializers.ModelSerializer):
         )
 
     def get_payslip_image_url(self, obj):
+        # 1. Try permanent DB-backed URL first
+        from .models import SavedImage
+        saved = SavedImage.objects.filter(employee=obj.employee, image_type='payslip', description__contains=str(obj.period_start)).first()
+        if saved and saved.image_data:
+            return absolute_media_url(self.context.get('request'), f"/api/saved-images/{saved.id}/")
+            
+        # 2. Fallback to filesystem URL
         if obj.payslip_image:
             return absolute_media_url(self.context.get('request'), obj.payslip_image.url)
         return None
@@ -612,6 +640,16 @@ class LeaveRequestSerializer(serializers.ModelSerializer):
         try:
             request = self.context.get('request')
             items = []
+            from .models import SavedImage
+            
+            # Prefer SavedImage (DB-persistent) URLs
+            saved_images = SavedImage.objects.filter(leave_attachment__leave_request=obj, image_type='leave_attachment')
+            if saved_images.exists():
+                for si in saved_images:
+                    items.append(absolute_media_url(request, f"/api/saved-images/{si.id}/"))
+                return items
+            
+            # Fallback to filesystem URLs
             for att in getattr(obj, 'attachments').all():
                 items.append(absolute_media_url(request, att.file.url))
             return items
@@ -667,9 +705,17 @@ class EditRequestSerializer(serializers.ModelSerializer):
 
     def get_image_url(self, obj):
         try:
+            request = self.context.get('request')
+            # 1. Try permanent DB-backed URL first
+            from .models import SavedImage
+            saved = SavedImage.objects.filter(edit_request=obj, image_type='edit_request').first()
+            if saved and saved.image_data:
+                return absolute_media_url(request, f"/api/saved-images/{saved.id}/")
+                
+            # 2. Fallback to filesystem URL
             if obj.uploaded_files:
-                return absolute_media_url(self.context.get('request'), obj.uploaded_files.url)
-        except AttributeError:
+                return absolute_media_url(request, obj.uploaded_files.url)
+        except Exception:
             pass
         return None
 

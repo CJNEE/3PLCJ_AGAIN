@@ -494,30 +494,58 @@ class SavedImage(models.Model):
         return f"{self.employee.full_name} - {self.image_type} - {self.created_at.strftime('%Y-%m-%d')}"
     
     def save(self, *args, **kwargs):
-        # If image is provided but image_data is not yet populated
+        """
+        Persist image bytes into PostgreSQL image_data field so images survive
+        Render's ephemeral filesystem wipes on redeploy/restart.
+        """
         if self.image and not self.image_data:
             try:
-                # Open the image file safely
-                self.image.open()
-                self.image_data = self.image.read()
-                
-                # Store metadata if available
-                if hasattr(self.image.file, 'content_type'):
-                    self.content_type = self.image.file.content_type
-                
-                self.original_filename = os.path.basename(self.image.name)
-                
-                # Close after reading
-                self.image.close()
+                # Try reading from the in-memory file object first (fastest, works
+                # before Django writes to disk). Then fall back to opening by name.
+                raw_file = getattr(self.image, 'file', None)
+                data = None
+
+                if raw_file is not None:
+                    # InMemoryUploadedFile / TemporaryUploadedFile: seek to start
+                    try:
+                        raw_file.seek(0)
+                        data = raw_file.read()
+                    except Exception:
+                        data = None
+
+                if not data:
+                    # Fall back: open the stored file by name
+                    try:
+                        self.image.open('rb')
+                        data = self.image.read()
+                        self.image.close()
+                    except Exception:
+                        data = None
+
+                if data:
+                    self.image_data = data
+
+                # Capture content_type from the upload if available
+                if not self.content_type:
+                    ct = getattr(raw_file, 'content_type', None)
+                    if ct:
+                        self.content_type = ct
+
+                if not self.original_filename:
+                    self.original_filename = os.path.basename(self.image.name)
+
             except Exception as e:
-                print(f"Error reading image data for DB storage: {e}")
-                
+                print(f"[SavedImage] Error reading image bytes for DB storage: {e}")
+
         super().save(*args, **kwargs)
-    
+
     def delete(self, *args, **kwargs):
         """Delete the image file when deleting the record"""
         if self.image:
-            self.image.delete(save=False)
+            try:
+                self.image.delete(save=False)
+            except Exception:
+                pass
         super().delete(*args, **kwargs)
 
 
@@ -528,90 +556,219 @@ from django.dispatch import receiver
 
 @receiver(post_save, sender=Employee)
 def backup_employee_profile_image(sender, instance, created, **kwargs):
-    """Backup employee profile image to SavedImage whenever it's updated"""
-    if instance.profile_image:
-        # Check if this image is already backed up
-        existing = SavedImage.objects.filter(
-            employee=instance,
-            image_type='profile',
-            original_filename=os.path.basename(instance.profile_image.name)
-        ).exists()
-        
-        if not existing:
+    """Backup employee profile image to SavedImage whenever it's updated.
+    Reads bytes directly from the image field so they persist in PostgreSQL.
+    """
+    if not instance.profile_image:
+        return
+
+    fname = os.path.basename(instance.profile_image.name)
+    existing = SavedImage.objects.filter(
+        employee=instance,
+        image_type='profile',
+        original_filename=fname,
+    ).exists()
+
+    if not existing:
+        try:
+            # Read bytes so they land in image_data (DB-persistent)
+            data = None
             try:
-                SavedImage.objects.create(
-                    employee=instance,
-                    image=instance.profile_image,
-                    image_type='profile',
-                    description=f"Auto-backup of profile image for {instance.full_name}"
-                )
-            except Exception as e:
-                print(f"Error auto-backing up profile image: {e}")
+                raw = getattr(instance.profile_image, 'file', None)
+                if raw is not None:
+                    raw.seek(0)
+                    data = raw.read()
+            except Exception:
+                data = None
+
+            if not data:
+                try:
+                    instance.profile_image.open('rb')
+                    data = instance.profile_image.read()
+                    instance.profile_image.close()
+                except Exception:
+                    data = None
+
+            saved = SavedImage(
+                employee=instance,
+                image=instance.profile_image,
+                image_type='profile',
+                original_filename=fname,
+                description=f"Auto-backup of profile image for {instance.full_name}",
+            )
+            if data:
+                saved.image_data = data
+            saved.save()
+        except Exception as e:
+            print(f"[signal] Error auto-backing up profile image: {e}")
+
+def _read_image_bytes(image_field):
+    """Try to read bytes from an ImageField; returns bytes or None."""
+    if not image_field:
+        return None
+    data = None
+    try:
+        raw = getattr(image_field, 'file', None)
+        if raw is not None:
+            raw.seek(0)
+            data = raw.read()
+    except Exception:
+        data = None
+    if not data:
+        try:
+            image_field.open('rb')
+            data = image_field.read()
+            image_field.close()
+        except Exception:
+            data = None
+    return data or None
+
 
 @receiver(post_save, sender=Attendance)
 def backup_attendance_images(sender, instance, created, **kwargs):
-    """Backup clock in/out images to SavedImage"""
-    # Backup clock in image
+    """Backup clock in/out images to SavedImage with binary data in PostgreSQL."""
+
+    # --- Clock-in ---
     if instance.clock_in_image:
+        fname_in = os.path.basename(instance.clock_in_image.name)
         existing_in = SavedImage.objects.filter(
             employee=instance.employee,
             image_type='clock_in',
             attendance=instance,
-            original_filename=os.path.basename(instance.clock_in_image.name)
+            original_filename=fname_in,
         ).exists()
-        
+
         if not existing_in:
             try:
-                SavedImage.objects.create(
+                data_in = _read_image_bytes(instance.clock_in_image)
+                saved_in = SavedImage(
                     employee=instance.employee,
                     image=instance.clock_in_image,
                     image_type='clock_in',
                     attendance=instance,
-                    description=f"Auto-backup of clock-in image for {instance.employee.full_name} on {instance.date}"
+                    original_filename=fname_in,
+                    description=f"Clock-in image for {instance.employee.full_name} on {instance.date}",
                 )
+                if data_in:
+                    saved_in.image_data = data_in
+                saved_in.save()
             except Exception as e:
-                print(f"Error auto-backing up clock-in image: {e}")
+                print(f"[signal] Error backing up clock-in image: {e}")
 
-    # Backup clock out image
+    # --- Clock-out ---
     if instance.clock_out_image:
+        fname_out = os.path.basename(instance.clock_out_image.name)
         existing_out = SavedImage.objects.filter(
             employee=instance.employee,
             image_type='clock_out',
             attendance=instance,
-            original_filename=os.path.basename(instance.clock_out_image.name)
+            original_filename=fname_out,
         ).exists()
-        
+
         if not existing_out:
             try:
-                SavedImage.objects.create(
+                data_out = _read_image_bytes(instance.clock_out_image)
+                saved_out = SavedImage(
                     employee=instance.employee,
                     image=instance.clock_out_image,
                     image_type='clock_out',
                     attendance=instance,
-                    description=f"Auto-backup of clock-out image for {instance.employee.full_name} on {instance.date}"
+                    original_filename=fname_out,
+                    description=f"Clock-out image for {instance.employee.full_name} on {instance.date}",
                 )
+                if data_out:
+                    saved_out.image_data = data_out
+                saved_out.save()
             except Exception as e:
-                print(f"Error auto-backing up clock-out image: {e}")
+                print(f"[signal] Error backing up clock-out image: {e}")
 
 @receiver(post_save, sender=LeaveAttachment)
 def backup_leave_attachment(sender, instance, created, **kwargs):
-    """Backup leave attachments to SavedImage"""
-    if instance.file:
-        existing = SavedImage.objects.filter(
-            employee=instance.leave_request.employee,
-            image_type='leave_attachment',
-            leave_attachment=instance,
-            original_filename=os.path.basename(instance.file.name)
-        ).exists()
-        
-        if not existing:
-            try:
-                SavedImage.objects.create(
-                    employee=instance.leave_request.employee,
-                    image=instance.file,
-                    image_type='leave_attachment',
-                    leave_attachment=instance,
-                    description=f"Auto-backup of leave attachment for {instance.leave_request.employee.full_name} (Request #{instance.leave_request.id})"
-                )
-            except Exception as e:
-                print(f"Error auto-backing up leave attachment: {e}")
+    """Backup leave attachments to SavedImage with binary data in PostgreSQL."""
+    if not instance.file:
+        return
+
+    fname = os.path.basename(instance.file.name)
+    existing = SavedImage.objects.filter(
+        employee=instance.leave_request.employee,
+        image_type='leave_attachment',
+        leave_attachment=instance,
+        original_filename=fname,
+    ).exists()
+
+    if not existing:
+        try:
+            data = _read_image_bytes(instance.file)
+            saved = SavedImage(
+                employee=instance.leave_request.employee,
+                image=instance.file,
+                image_type='leave_attachment',
+                leave_attachment=instance,
+                original_filename=fname,
+                description=f"Leave attachment for {instance.leave_request.employee.full_name} (Request #{instance.leave_request.id})",
+            )
+            if data:
+                saved.image_data = data
+            saved.save()
+        except Exception as e:
+            print(f"[signal] Error backing up leave attachment: {e}")
+
+@receiver(post_save, sender=EditRequest)
+def backup_edit_request_image(sender, instance, created, **kwargs):
+    """Backup edit request images to SavedImage with binary data in PostgreSQL."""
+    if not instance.uploaded_files:
+        return
+
+    fname = os.path.basename(instance.uploaded_files.name)
+    existing = SavedImage.objects.filter(
+        employee=instance.employee,
+        image_type='edit_request',
+        edit_request=instance,
+        original_filename=fname,
+    ).exists()
+
+    if not existing:
+        try:
+            data = _read_image_bytes(instance.uploaded_files)
+            saved = SavedImage(
+                employee=instance.employee,
+                image=instance.uploaded_files,
+                image_type='edit_request',
+                edit_request=instance,
+                original_filename=fname,
+                description=f"Edit request attachment for {instance.employee.full_name}",
+            )
+            if data:
+                saved.image_data = data
+            saved.save()
+        except Exception as e:
+            print(f"[signal] Error backing up edit request image: {e}")
+
+@receiver(post_save, sender=Payroll)
+def backup_payroll_payslip(sender, instance, created, **kwargs):
+    """Backup payroll payslip images to SavedImage with binary data in PostgreSQL."""
+    if not instance.payslip_image:
+        return
+
+    fname = os.path.basename(instance.payslip_image.name)
+    existing = SavedImage.objects.filter(
+        employee=instance.employee,
+        image_type='payslip',
+        original_filename=fname,
+    ).exists()
+
+    if not existing:
+        try:
+            data = _read_image_bytes(instance.payslip_image)
+            saved = SavedImage(
+                employee=instance.employee,
+                image=instance.payslip_image,
+                image_type='payslip',
+                original_filename=fname,
+                description=f"Payslip for {instance.employee.full_name} (Period: {instance.period_start} to {instance.period_end})",
+            )
+            if data:
+                saved.image_data = data
+            saved.save()
+        except Exception as e:
+            print(f"[signal] Error backing up payslip image: {e}")

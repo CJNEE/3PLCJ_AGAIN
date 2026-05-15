@@ -597,24 +597,37 @@ class AttendanceViewSet(viewsets.ModelViewSet):
             )
             if not created and attendance.clock_in_time:
                 return Response({'error': 'Already clocked in today'}, status=400)
-                
+
             if image:
-                # Save image to both Attendance and SavedImage (for permanent storage)
+                # Read raw bytes BEFORE saving to disk so we can persist in PostgreSQL
+                image_bytes = None
+                try:
+                    image.seek(0)
+                    image_bytes = image.read()
+                    image.seek(0)  # reset so Django can also write to disk
+                except Exception as e:
+                    print(f"[clock_in] Warning: could not read image bytes: {e}")
+
                 ext = image.name.split('.')[-1] if '.' in image.name else 'jpg'
                 filename = f'clock_in_{employee_id}_{today}.{ext}'
                 attendance.clock_in_image.save(filename, image, save=True)
-                
-                # Also save to SavedImage for permanent archival
+
+                # Persist in SavedImage with binary data in PostgreSQL
                 try:
-                    SavedImage.objects.create(
+                    saved = SavedImage(
                         employee_id=employee_id,
                         image=attendance.clock_in_image,
                         image_type='clock_in',
                         attendance=attendance,
-                        description=f'Clock in for {today}'
+                        original_filename=filename,
+                        content_type=getattr(image, 'content_type', 'image/jpeg'),
+                        description=f'Clock in for {today}',
                     )
+                    if image_bytes:
+                        saved.image_data = image_bytes
+                    saved.save()
                 except Exception as e:
-                    print(f"Error saving clock in image to SavedImage: {str(e)}")
+                    print(f"[clock_in] Error saving to SavedImage: {e}")
             
             attendance.clock_in_time = timezone.now()
             attendance.status = 'Present'
@@ -660,22 +673,35 @@ class AttendanceViewSet(viewsets.ModelViewSet):
                 return Response({'error': 'Already clocked out today'}, status=400)
                 
             if image:
-                # Save image to both Attendance and SavedImage (for permanent storage)
+                # Read raw bytes BEFORE saving to disk so we can persist in PostgreSQL
+                image_bytes = None
+                try:
+                    image.seek(0)
+                    image_bytes = image.read()
+                    image.seek(0)  # reset so Django can also write to disk
+                except Exception as e:
+                    print(f"[clock_out] Warning: could not read image bytes: {e}")
+
                 ext = image.name.split('.')[-1] if '.' in image.name else 'jpg'
                 filename = f'clock_out_{employee_id}_{today}.{ext}'
                 attendance.clock_out_image.save(filename, image, save=True)
-                
-                # Also save to SavedImage for permanent archival
+
+                # Persist in SavedImage with binary data in PostgreSQL
                 try:
-                    SavedImage.objects.create(
+                    saved = SavedImage(
                         employee_id=employee_id,
                         image=attendance.clock_out_image,
                         image_type='clock_out',
                         attendance=attendance,
-                        description=f'Clock out for {today}'
+                        original_filename=filename,
+                        content_type=getattr(image, 'content_type', 'image/jpeg'),
+                        description=f'Clock out for {today}',
                     )
+                    if image_bytes:
+                        saved.image_data = image_bytes
+                    saved.save()
                 except Exception as e:
-                    print(f"Error saving clock out image to SavedImage: {str(e)}")
+                    print(f"[clock_out] Error saving to SavedImage: {e}")
             
             attendance.clock_out_time = timezone.now()
             attendance.save()
@@ -2251,3 +2277,48 @@ def reset_password(request, employee_id):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
+# ===================== SERVE SAVED IMAGE FROM DATABASE =====================
+
+class ServeSavedImageView(APIView):
+    """
+    Serve a SavedImage record's binary content directly from PostgreSQL.
+
+    This bypasses the filesystem entirely, so images remain accessible even
+    after Render restarts or redeploys (ephemeral disk is wiped on every deploy).
+
+    URL: /api/saved-images/<pk>/
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        try:
+            saved = SavedImage.objects.get(pk=pk, is_active=True)
+        except SavedImage.DoesNotExist:
+            raise Http404("Image not found")
+
+        # --- 1. Prefer binary data stored in PostgreSQL ---
+        if saved.image_data:
+            content_type = saved.content_type or 'image/jpeg'
+            data = bytes(saved.image_data)  # memoryview → bytes
+            response = HttpResponse(data, content_type=content_type)
+            fname = saved.original_filename or f'image_{pk}.jpg'
+            response['Content-Disposition'] = f'inline; filename="{fname}"'
+            response['Cache-Control'] = 'private, max-age=86400'
+            return response
+
+        # --- 2. Fallback: try to read from filesystem (works in local dev) ---
+        if saved.image:
+            try:
+                saved.image.open('rb')
+                data = saved.image.read()
+                saved.image.close()
+                content_type = saved.content_type or 'image/jpeg'
+                response = HttpResponse(data, content_type=content_type)
+                fname = saved.original_filename or f'image_{pk}.jpg'
+                response['Content-Disposition'] = f'inline; filename="{fname}"'
+                response['Cache-Control'] = 'private, max-age=86400'
+                return response
+            except Exception:
+                pass
+
+        raise Http404("Image data not available")
