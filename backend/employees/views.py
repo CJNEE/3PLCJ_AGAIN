@@ -2325,6 +2325,41 @@ def reset_password(request, employee_id):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def change_password(request):
+    """Allow a user to change their own password"""
+    old_password = request.data.get('old_password')
+    new_password = request.data.get('new_password')
+    
+    if not old_password or not new_password:
+        return Response({'error': 'Both current and new passwords are required.'}, status=400)
+    
+    user = request.user
+    if not user.check_password(old_password):
+        return Response({'error': 'Incorrect current password.'}, status=400)
+    
+    try:
+        user.set_password(new_password)
+        user.save()
+        
+        # Log this security action
+        try:
+            employee = Employee.objects.filter(user=user).first()
+            ActivityLog.objects.create(
+                user=user,
+                employee=employee,
+                action='change_password',
+                details='User changed their own password',
+                ip_address=_client_ip(request)
+            )
+        except Exception:
+            pass
+            
+        return Response({'message': 'Password changed successfully.'})
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
 # ===================== SERVE SAVED IMAGE FROM DATABASE =====================
 
 class ServeSavedImageView(APIView):

@@ -3,8 +3,9 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Card, Button, Badge, LoadingSpinner } from '@/components/common';
 import { useToast } from '@/hooks/useToast';
 import { useAuth } from '@/hooks/useAuth';
-import { Upload, Edit2, Save, X, Clock, Send, ArrowLeft } from 'lucide-react';
+import { Upload, Edit2, Save, X, Clock, Send, ArrowLeft, Key } from 'lucide-react';
 import { EditInfoRequestModal } from '@/components/EditInfoRequestModal';
+import { ChangePasswordModal } from '../../components/ChangePasswordModal';
 import apiClient from '@/api/apiService';
 import Sidebar from '@/components/Sidebar';
 import { ThemeToggle } from '@/context/ThemeContext';
@@ -51,7 +52,6 @@ interface EmployeeData {
 }
 
 const FIELD_CONFIG = {
-  // Text inputs
   firstname: { label: 'First Name', type: 'text' },
   lastname: { label: 'Last Name', type: 'text' },
   middle_initial: { label: 'Middle Initial', type: 'text' },
@@ -70,8 +70,6 @@ const FIELD_CONFIG = {
   sss: { label: 'SSS', type: 'text' },
   philhealth: { label: 'Philhealth', type: 'text' },
   pagibig: { label: 'Pagibig', type: 'text' },
-
-  // Dropdowns
   gender: { label: 'Gender', type: 'select', options: ['Male', 'Female', 'Other'] },
   nationality: { label: 'Nationality', type: 'select', options: ['Filipino', 'Foreign'] },
   marital_status: { label: 'Marital Status', type: 'select', options: ['Single', 'Married', 'Divorced', 'Widowed'] },
@@ -91,8 +89,7 @@ export const EmployeeProfileDetailPage = () => {
   const { success, error } = useToast();
   const { employee: currentEmployee } = useAuth();
 
-  const showAdminSidebar =
-    location.pathname.startsWith('/admin') || location.pathname.startsWith('/hr');
+  const showAdminSidebar = location.pathname.startsWith('/admin') || location.pathname.startsWith('/hr');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [isEditing, setIsEditing] = useState(false);
@@ -101,23 +98,21 @@ export const EmployeeProfileDetailPage = () => {
   const [attachments, setAttachments] = useState<File[]>([]);
   const [latestAttendance, setLatestAttendance] = useState<any>(null);
   const [showEditRequestModal, setShowEditRequestModal] = useState(false);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
-  // Check if current user is viewing their own profile
   const isOwnProfile = currentEmployee?.id === Number(id);
+  const isHRorAdmin = currentEmployee?.role?.toLowerCase() === 'hr' || currentEmployee?.role?.toLowerCase() === 'admin';
 
-  // Fetch employee data
   useEffect(() => {
     if (id) {
       const fetchEmployee = async () => {
         try {
           setIsLoading(true);
           setHasError(false);
-          
-          const data = await apiClient.get(`/employees/${id}/`);
-          console.log('Employee data:', data.data);
-          setFormData(data.data);
+          const res = await apiClient.get(`/employees/${id}/`);
+          setFormData(res.data);
         } catch (err) {
           console.error('Error fetching employee:', err);
           error('Failed to fetch employee details');
@@ -130,7 +125,6 @@ export const EmployeeProfileDetailPage = () => {
       const fetchLatestAttendance = async () => {
         try {
           const response = await apiClient.get(`/attendance/?employee_id=${id}&limit=1`);
-          
           if (response.data?.results && response.data.results.length > 0) {
             setLatestAttendance(response.data.results[0]);
           }
@@ -144,13 +138,8 @@ export const EmployeeProfileDetailPage = () => {
     }
   }, [id, error]);
 
-
-
   const handleFieldChange = (field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -167,7 +156,6 @@ export const EmployeeProfileDetailPage = () => {
 
   const handleSave = async () => {
     try {
-      // Prepare update data - only include fields that are editable
       const updateData: any = {};
       const editableFields = [
         'firstname', 'lastname', 'middle_initial', 'place_of_birth', 'date_of_birth',
@@ -178,7 +166,6 @@ export const EmployeeProfileDetailPage = () => {
         'philhealth', 'pagibig', 'can_login', 'can_edit_info'
       ];
 
-      // Build update object with only editable fields
       editableFields.forEach(key => {
         const value = (formData as any)[key];
         if (value !== null && value !== undefined && value !== '') {
@@ -186,33 +173,25 @@ export const EmployeeProfileDetailPage = () => {
         }
       });
 
-      // If profile image was changed, use FormData
       if (profileImage) {
         const formDataObj = new FormData();
-        // Add all fields to FormData
         Object.entries(updateData).forEach(([key, value]) => {
           if (value !== null && value !== undefined) {
             formDataObj.append(key, String(value));
           }
         });
-        // Add profile image
         formDataObj.append('profile_image', profileImage);
-
-        const response = await apiClient.patch(`/employees/${id}/`, formDataObj);
+        await apiClient.patch(`/employees/${id}/`, formDataObj);
       } else {
-        // Use JSON for regular updates (no image)
-        const response = await apiClient.patch(`/employees/${id}/`, updateData);
+        await apiClient.patch(`/employees/${id}/`, updateData);
       }
 
-      // Upload attachments separately
       if (attachments.length > 0) {
         for (const file of attachments) {
           const attachFormData = new FormData();
           attachFormData.append('file', file);
           attachFormData.append('employee', id || '');
-
           await apiClient.post('/employee-documents/', attachFormData);
-
         }
       }
 
@@ -221,18 +200,11 @@ export const EmployeeProfileDetailPage = () => {
       setProfileImage(null);
       setAttachments([]);
 
-      // Refresh data
       const updatedData = await apiClient.get(`/employees/${id}/`);
       setFormData(updatedData.data);
     } catch (err: any) {
-      // Log detailed error info for debugging
-      if (err.response?.data) {
-        console.error('Validation errors:', err.response.data);
-        error(`Failed to save: ${JSON.stringify(err.response.data)}`);
-      } else {
-        error('Failed to save employee details');
-        console.error(err);
-      }
+      error(err.response?.data?.message || 'Failed to save employee details');
+      console.error(err);
     }
   };
 
@@ -245,317 +217,196 @@ export const EmployeeProfileDetailPage = () => {
         />
       )}
       <div className={`p-4 lg:p-6 space-y-6 ${showAdminSidebar ? 'lg:ml-64' : ''}`}>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Button
-          variant="secondary"
-          onClick={() => navigate(-1)}
-        >
-          <ArrowLeft size={18} className="mr-2" />
-          Back
-        </Button>
-        {showAdminSidebar && <ThemeToggle />}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Button variant="secondary" onClick={() => navigate(-1)}>
+            <ArrowLeft size={18} className="mr-2" /> Back
+          </Button>
+          {showAdminSidebar && <ThemeToggle />}
+        </div>
+
+        {isLoading && (
+          <div className="flex justify-center items-center py-12">
+            <LoadingSpinner size="lg" />
+          </div>
+        )}
+
+        {hasError && (
+          <Card>
+            <div className="text-center text-red-600 dark:text-red-400">
+              <p>Failed to load employee details. Please try again.</p>
+              <Button variant="secondary" onClick={() => window.location.reload()} className="mt-4">
+                Reload Page
+              </Button>
+            </div>
+          </Card>
+        )}
+
+        {!isLoading && !hasError && (
+          <>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <h1 className="text-4xl font-black text-gray-900 dark:text-white uppercase tracking-tighter mb-1">
+                  {formData.full_name || 'Employee Profile'}
+                </h1>
+                <p className="text-xs font-black uppercase tracking-widest text-red-600">{formData.position}</p>
+              </div>
+              
+              <div className="flex flex-wrap gap-2">
+                {isOwnProfile && (
+                  <Button variant="secondary" onClick={() => setShowChangePasswordModal(true)}>
+                    <Key size={18} className="mr-2" /> Password
+                  </Button>
+                )}
+                
+                {isOwnProfile && !isEditing && (
+                  <Button variant="secondary" onClick={() => setShowEditRequestModal(true)}>
+                    <Send size={18} className="mr-2" /> Request Changes
+                  </Button>
+                )}
+                
+                {/* Save Changes / Edit button restricted to HR/Admin */}
+                {isHRorAdmin && (
+                  <>
+                    {!isEditing ? (
+                      <Button variant="primary" onClick={() => setIsEditing(true)}>
+                        <Edit2 size={18} className="mr-2" /> Edit
+                      </Button>
+                    ) : (
+                      <>
+                        <Button variant="primary" onClick={handleSave}>
+                          <Save size={18} className="mr-2" /> Save
+                        </Button>
+                        <Button variant="secondary" onClick={() => setIsEditing(false)}>
+                          <X size={18} className="mr-2" /> Cancel
+                        </Button>
+                      </>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-1 space-y-6">
+                <Card className="overflow-hidden border-none shadow-2xl shadow-gray-200/50 dark:shadow-none">
+                  <div className="relative group aspect-square">
+                    {formData.profile_image_url ? (
+                      <img src={formData.profile_image_url} alt={formData.full_name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    ) : (
+                      <div className="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                        <span className="text-gray-400 font-black uppercase tracking-widest text-[10px]">No Image</span>
+                      </div>
+                    )}
+                    {isEditing && (
+                      <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center cursor-pointer text-white">
+                        <Upload size={32} className="mb-2" />
+                        <span className="text-[10px] font-black uppercase tracking-widest">Update Photo</span>
+                        <input type="file" accept="image/*" onChange={handleProfileImageChange} className="hidden" />
+                      </label>
+                    )}
+                  </div>
+                  <div className="p-6 bg-white dark:bg-gray-900 border-t dark:border-gray-800">
+                    <div className="flex items-center justify-between mb-4">
+                      <Badge variant={formData.status === 'Active' ? 'success' : 'error'} className="font-black tracking-widest uppercase text-[9px] px-3">
+                        {formData.status}
+                      </Badge>
+                      <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">#{formData.employee_id}</span>
+                    </div>
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Company Role</p>
+                    <p className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight">{formData.role}</p>
+                  </div>
+                </Card>
+
+                {latestAttendance && (
+                  <Card className="border-l-4 border-red-600">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Clock size={18} className="text-red-600" />
+                      <h3 className="text-xs font-black uppercase tracking-widest">Latest Session</h3>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-gray-500 font-bold uppercase">Status</span>
+                        <Badge variant={latestAttendance.status === 'Present' ? 'success' : 'warning'} className="text-[10px]">{latestAttendance.status}</Badge>
+                      </div>
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-gray-500 font-bold uppercase">Date</span>
+                        <span className="font-black dark:text-white">{latestAttendance.date}</span>
+                      </div>
+                      <div className="pt-2 grid grid-cols-2 gap-4 border-t dark:border-gray-800">
+                        <div>
+                          <p className="text-[9px] text-gray-400 font-bold uppercase mb-1">Clock In</p>
+                          <p className="text-xs font-black text-green-600">{latestAttendance.clock_in_time || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-[9px] text-gray-400 font-bold uppercase mb-1">Clock Out</p>
+                          <p className="text-xs font-black text-red-600">{latestAttendance.clock_out_time || 'N/A'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                )}
+              </div>
+
+              <div className="lg:col-span-2 space-y-6">
+                <Card>
+                  <h2 className="text-xs font-black uppercase tracking-[0.2em] text-red-600 mb-6 flex items-center gap-2">
+                    <span className="w-6 h-0.5 bg-red-600"></span> Personal Records
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {['firstname', 'lastname', 'middle_initial', 'place_of_birth', 'date_of_birth', 'gender', 'nationality', 'marital_status'].map(field => (
+                      <FormField key={field} field={field} value={(formData as any)[field] || ''} config={(FIELD_CONFIG as any)[field]} isEditing={isEditing} onChange={handleFieldChange} />
+                    ))}
+                  </div>
+                </Card>
+
+                <Card>
+                  <h2 className="text-xs font-black uppercase tracking-[0.2em] text-red-600 mb-6 flex items-center gap-2">
+                    <span className="w-6 h-0.5 bg-red-600"></span> Contact Detail
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {['email_address', 'phone_number', 'current_address', 'permanent_address'].map(field => (
+                      <FormField key={field} field={field} value={(formData as any)[field] || ''} config={(FIELD_CONFIG as any)[field]} isEditing={isEditing} onChange={handleFieldChange} />
+                    ))}
+                  </div>
+                </Card>
+
+                <Card>
+                  <h2 className="text-xs font-black uppercase tracking-[0.2em] text-red-600 mb-6 flex items-center gap-2">
+                    <span className="w-6 h-0.5 bg-red-600"></span> Employment Scope
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {['position', 'employment_type', 'status', 'role', 'hired_date', 'jtp_code', 'employee_id'].map(field => (
+                      <FormField key={field} field={field} value={(formData as any)[field] || ''} config={(FIELD_CONFIG as any)[field]} isEditing={isEditing} onChange={handleFieldChange} />
+                    ))}
+                  </div>
+                </Card>
+
+                <Card>
+                  <h2 className="text-xs font-black uppercase tracking-[0.2em] text-red-600 mb-6 flex items-center gap-2">
+                    <span className="w-6 h-0.5 bg-red-600"></span> Statutory IDs
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {['tin', 'sss', 'philhealth', 'pagibig'].map(field => (
+                      <FormField key={field} field={field} value={(formData as any)[field] || ''} config={(FIELD_CONFIG as any)[field]} isEditing={isEditing} onChange={handleFieldChange} />
+                    ))}
+                  </div>
+                </Card>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
-      {/* Loading State */}
-      {isLoading && (
-        <div className="flex justify-center items-center py-12">
-          <LoadingSpinner size="lg" />
-        </div>
-      )}
-
-      {/* Error State */}
-      {hasError && (
-        <Card>
-          <div className="text-center text-red-600 dark:text-red-400">
-            <p>Failed to load employee details. Please try again.</p>
-            <Button
-              variant="secondary"
-              onClick={() => window.location.reload()}
-              className="mt-4"
-            >
-              Reload Page
-            </Button>
-          </div>
-        </Card>
-      )}
-
-      {/* Content */}
-      {!isLoading && !hasError && (
-        <>
-          {/* Header */}
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">{formData.full_name || 'Employee Profile'}</h1>
-              <p className="text-gray-600 dark:text-gray-400">{formData.position}</p>
-            </div>
-            <div className="flex gap-2">
-              {isOwnProfile && !isEditing && (
-                <Button
-                  variant="secondary"
-                  onClick={() => setShowEditRequestModal(true)}
-                >
-                  <Send size={18} className="mr-2" />
-                  Request Changes
-                </Button>
-              )}
-              {!isEditing ? (
-                <Button
-                  variant="primary"
-                  onClick={() => setIsEditing(true)}
-                >
-                  <Edit2 size={18} className="mr-2" />
-                  Edit
-                </Button>
-              ) : (
-                <>
-                  <Button
-                    variant="primary"
-                    onClick={handleSave}
-                  >
-                    <Save size={18} className="mr-2" />
-                    Save
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={() => setIsEditing(false)}
-                  >
-                    <X size={18} className="mr-2" />
-                    Cancel
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-
-      {/* Profile Image Section */}
-      <Card>
-        <div className="flex flex-col items-center">
-          {formData.profile_image_url ? (
-            <img
-              src={formData.profile_image_url}
-              alt={formData.full_name}
-              className="w-40 h-40 rounded-lg object-cover mb-4"
-            />
-          ) : (
-            <div className="w-40 h-40 bg-gray-300 dark:bg-gray-700 rounded-lg flex items-center justify-center mb-4">
-              <span className="text-gray-500">No Image</span>
-            </div>
-          )}
-          {isEditing && (
-            <div className="w-full">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <Upload size={18} />
-                <span>Change Profile Image</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleProfileImageChange}
-                  className="hidden"
-                />
-              </label>
-            </div>
-          )}
-        </div>
-      </Card>
-
-      {/* Latest Clock In/Out */}
-      {latestAttendance && (
-        <Card>
-          <div className="flex items-center gap-2 mb-4">
-            <Clock size={20} className="text-primary" />
-            <h3 className="text-lg font-semibold">Latest Clock In/Out</h3>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-gray-500">Clock In Time</p>
-              <p className="font-semibold">{latestAttendance.clock_in_time || 'Not clocked in'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Clock Out Time</p>
-              <p className="font-semibold">{latestAttendance.clock_out_time || 'Not clocked out'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Date</p>
-              <p className="font-semibold">{latestAttendance.date}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Status</p>
-              <Badge variant={latestAttendance.status === 'Present' ? 'success' : 'warning'}>
-                {latestAttendance.status}
-              </Badge>
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {/* Personal Information Section */}
-      <Card>
-        <h2 className="text-2xl font-bold mb-4">Personal Information</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {['firstname', 'lastname', 'middle_initial', 'place_of_birth', 'date_of_birth', 'gender', 'nationality', 'marital_status'].map(field => (
-            <FormField
-              key={field}
-              field={field}
-              value={(formData as any)[field] || ''}
-              config={(FIELD_CONFIG as any)[field]}
-              isEditing={isEditing}
-              onChange={handleFieldChange}
-            />
-          ))}
-        </div>
-      </Card>
-
-      {/* Contact Information */}
-      <Card>
-        <h2 className="text-2xl font-bold mb-4">Contact Information</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {['email_address', 'phone_number', 'current_address', 'permanent_address'].map(field => (
-            <FormField
-              key={field}
-              field={field}
-              value={(formData as any)[field] || ''}
-              config={(FIELD_CONFIG as any)[field]}
-              isEditing={isEditing}
-              onChange={handleFieldChange}
-            />
-          ))}
-        </div>
-      </Card>
-
-      {/* Employment Information */}
-      <Card>
-        <h2 className="text-2xl font-bold mb-4">Employment Information</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {['position', 'employment_type', 'status', 'role', 'hired_date', 'jtp_code', 'employee_id'].map(field => (
-            <FormField
-              key={field}
-              field={field}
-              value={(formData as any)[field] || ''}
-              config={(FIELD_CONFIG as any)[field]}
-              isEditing={isEditing}
-              onChange={handleFieldChange}
-            />
-          ))}
-        </div>
-      </Card>
-
-      {/* Emergency Contact */}
-      <Card>
-        <h2 className="text-2xl font-bold mb-4">Emergency Contact</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {['emergency_contact_name', 'emergency_contact_phone'].map(field => (
-            <FormField
-              key={field}
-              field={field}
-              value={(formData as any)[field] || ''}
-              config={(FIELD_CONFIG as any)[field]}
-              isEditing={isEditing}
-              onChange={handleFieldChange}
-            />
-          ))}
-        </div>
-      </Card>
-
-      {/* Government IDs */}
-      <Card>
-        <h2 className="text-2xl font-bold mb-4">Government IDs</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {['tin', 'sss', 'philhealth', 'pagibig'].map(field => (
-            <FormField
-              key={field}
-              field={field}
-              value={(formData as any)[field] || ''}
-              config={(FIELD_CONFIG as any)[field]}
-              isEditing={isEditing}
-              onChange={handleFieldChange}
-            />
-          ))}
-        </div>
-      </Card>
-
-      {/* Settings */}
-      <Card>
-        <h2 className="text-2xl font-bold mb-4">Settings</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {['can_login', 'can_edit_info', 'is_active'].map(field => (
-            <FormField
-              key={field}
-              field={field}
-              value={(formData as any)[field] || false}
-              config={(FIELD_CONFIG as any)[field]}
-              isEditing={isEditing}
-              onChange={handleFieldChange}
-            />
-          ))}
-        </div>
-      </Card>
-
-      {/* Timestamps */}
-      <Card>
-        <h2 className="text-2xl font-bold mb-4">Record Information</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm text-gray-500">Created At</p>
-            <p className="font-semibold">{formData.created_at}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Updated At</p>
-            <p className="font-semibold">{formData.updated_at}</p>
-          </div>
-        </div>
-      </Card>
-
-      {/* Attachments Section */}
-      <Card>
-        <h2 className="text-2xl font-bold mb-4">Attachments</h2>
-        {formData.documents && formData.documents.length > 0 && (
-          <div className="mb-4">
-            <h3 className="font-semibold mb-2">Existing Attachments</h3>
-            <div className="space-y-2">
-              {formData.documents.map((doc: any) => (
-                <a
-                  key={doc.id}
-                  href={doc.file_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block p-2 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
-                >
-                  {doc.file_name}
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
-        {isEditing && (
-          <div>
-            <label className="flex items-center gap-2 cursor-pointer p-2 border border-dashed rounded">
-              <Upload size={18} />
-              <span>Add Attachments</span>
-              <input
-                type="file"
-                multiple
-                onChange={handleAttachmentChange}
-                className="hidden"
-              />
-            </label>
-            {attachments.length > 0 && (
-              <div className="mt-2 text-sm text-gray-600">
-                {attachments.length} file(s) selected
-              </div>
-            )}
-          </div>
-        )}
-      </Card>
-
-      {/* Edit Request Modal */}
       <EditInfoRequestModal
         employeeId={Number(id)}
         isOpen={showEditRequestModal}
         onClose={() => setShowEditRequestModal(false)}
       />
-        </>
-      )}
-      </div>
+
+      <ChangePasswordModal
+        isOpen={showChangePasswordModal}
+        onClose={() => setShowChangePasswordModal(false)}
+      />
     </div>
   );
 };
@@ -570,89 +421,57 @@ interface FormFieldProps {
 
 const FormField = ({ field, value, config, isEditing, onChange }: FormFieldProps) => {
   if (!config) return null;
-
   const { label, type, options, disabled } = config;
 
   return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+    <div className="space-y-1.5">
+      <label className="block text-[9px] font-black uppercase tracking-widest text-gray-400">
         {label}
       </label>
-      {!isEditing || (disabled && !isEditing) ? (
-        <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded">
+      {!isEditing || (disabled && isEditing) ? (
+        <div className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-800">
           {type === 'checkbox' ? (
-            <input type="checkbox" checked={value} disabled className="rounded" />
-          ) : type === 'select' ? (
-            <p>{value}</p>
-          ) : type === 'textarea' ? (
-            <p className="whitespace-pre-wrap">{value}</p>
+            <div className={`w-4 h-4 rounded border flex items-center justify-center ${value ? 'bg-red-600 border-red-600' : 'bg-gray-100 border-gray-300'}`}>
+              {value && <X size={10} className="text-white" />}
+            </div>
           ) : (
-            <p>{value}</p>
+            <p className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">{value || '---'}</p>
           )}
         </div>
       ) : (
-        <>
-          {type === 'text' && (
+        <div className="relative group">
+          {type === 'text' || type === 'email' || type === 'tel' || type === 'date' ? (
             <input
-              type="text"
+              type={type}
               value={value || ''}
               onChange={e => onChange(field, e.target.value)}
-              className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+              className="w-full px-4 py-2.5 text-xs font-bold border rounded-xl dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-red-600 outline-none transition-all"
             />
-          )}
-          {type === 'email' && (
-            <input
-              type="email"
-              value={value || ''}
-              onChange={e => onChange(field, e.target.value)}
-              className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600"
-            />
-          )}
-          {type === 'tel' && (
-            <input
-              type="tel"
-              value={value || ''}
-              onChange={e => onChange(field, e.target.value)}
-              className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600"
-            />
-          )}
-          {type === 'date' && (
-            <input
-              type="date"
-              value={value || ''}
-              onChange={e => onChange(field, e.target.value)}
-              className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600"
-            />
-          )}
-          {type === 'textarea' && (
+          ) : type === 'textarea' ? (
             <textarea
               value={value || ''}
               onChange={e => onChange(field, e.target.value)}
-              className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600"
-              rows={3}
+              className="w-full px-4 py-2.5 text-xs font-bold border rounded-xl dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-red-600 outline-none transition-all"
+              rows={2}
             />
-          )}
-          {type === 'select' && (
+          ) : type === 'select' ? (
             <select
               value={value || ''}
               onChange={e => onChange(field, e.target.value)}
-              className="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+              className="w-full px-4 py-2.5 text-xs font-bold border rounded-xl dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-red-600 outline-none appearance-none transition-all"
             >
-              <option value="">Select {label}</option>
-              {options.map((opt: string) => (
-                <option key={opt} value={opt}>{opt}</option>
-              ))}
+              <option value="">{label}</option>
+              {options.map((opt: string) => <option key={opt} value={opt}>{opt}</option>)}
             </select>
-          )}
-          {type === 'checkbox' && (
+          ) : type === 'checkbox' ? (
             <input
               type="checkbox"
               checked={value || false}
               onChange={e => onChange(field, e.target.checked)}
-              className="rounded"
+              className="w-5 h-5 rounded border-gray-300 text-red-600 focus:ring-red-600"
             />
-          )}
-        </>
+          ) : null}
+        </div>
       )}
     </div>
   );
