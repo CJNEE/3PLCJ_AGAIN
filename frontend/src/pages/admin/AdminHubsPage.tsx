@@ -194,7 +194,10 @@ async function fetchOsrmProfile(
           [endLat, endLon],
         ];
         
-        // Different speed profiles for fallback (more realistic)
+        // Accurate fallback speed profiles
+        // Walking: 5 km/h
+        // Cycling: 15 km/h (standard urban)
+        // Car: 35 km/h (assuming urban traffic in PH)
         const makeEstimate = (speedKmh: number, label: string, turns: number = 0): ParsedOsrmRoute => {
           const durationSec = Math.max(60, Math.round((km / speedKmh) * 3600));
           return {
@@ -218,13 +221,9 @@ async function fetchOsrmProfile(
           fetchOsrmProfile('driving', startLat, startLon, endLat, endLon).catch(() => null),
         ]);
 
-        // Use OSRM data if available, otherwise use realistic estimates
-        // Walking: 4.5 km/h average on flat terrain
-        // Riding (cycling): 20-25 km/h average depending on terrain
-        // Car: 35-45 km/h average in urban/suburban areas
-        const walking = walkRes ?? makeEstimate(4.5, 'Walking', 0);
-        const riding = rideRes ?? makeEstimate(20, 'Riding', Math.round(km / 2)); // Estimate ~1 turn per 2km
-        const car = carRes ?? makeEstimate(40, 'Car', Math.round(km / 1.5)); // Estimate ~1 turn per 1.5km
+        const walking = walkRes ?? makeEstimate(5, 'Walking', 0);
+        const riding = rideRes ?? makeEstimate(15, 'Riding', Math.round(km / 2));
+        const car = carRes ?? makeEstimate(35, 'Car', Math.round(km / 1.5));
 
         setRouteData({ walking, riding, car });
         setShowDirections(true);
@@ -375,32 +374,54 @@ async function fetchOsrmProfile(
         <Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
 
         <div className="p-4 lg:p-6 lg:ml-64 space-y-6">
-          {/* Header + theme (top-right) */}
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          {/* Header and Controls */}
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">Hubs</h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">{filteredHubs.length} hub locations</p>
+              <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Hubs</h1>
+              <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                {filteredHubs.length} hub locations
+              </p>
             </div>
-            
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-lg font-bold shadow-lg shadow-red-600/20 transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2"
+            >
+              <Plus size={20} />
+              Add Hub
+            </button>
           </div>
 
-          {/* Search and Add Hub */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          {/* Search Bar */}
+          <div className="relative max-w-lg">
+            <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               placeholder="Search locations..."
               value={searchTerm}
               onChange={(e: any) => setSearchTerm(e.target.value)}
-              className="input-field w-full max-w-md"
+              className="input-field w-full pl-11 py-3 text-sm bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-xl shadow-sm focus:ring-2 focus:ring-red-500/20"
             />
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
-            >
-              <Plus size={18} />
-              Add Hub
-            </button>
           </div>
+
+          {/* Transport Modes Info (Floating above map if hub selected) */}
+          {showDirections && routeData && (
+            <div className="flex justify-center -mb-4 relative z-10">
+              <div className="bg-white dark:bg-gray-800 rounded-full px-6 py-2 shadow-xl border border-gray-100 dark:border-gray-700 flex items-center gap-8">
+                <div className="flex flex-col items-center">
+                  <Car className="text-gray-900 dark:text-white" size={20} />
+                  <span className="text-[10px] font-bold mt-0.5">{formatTravelTime(routeData.car.durationSec)}</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <Bike className="text-gray-900 dark:text-white" size={20} />
+                  <span className="text-[10px] font-bold mt-0.5">{formatTravelTime(routeData.riding.durationSec)}</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <Footprints className="text-gray-900 dark:text-white" size={20} />
+                  <span className="text-[10px] font-bold mt-0.5">{formatTravelTime(routeData.walking.durationSec)}</span>
+                </div>
+              </div>
+            </div>
+          )}
 
         {/* Map and Hub Details Container */}
         {filteredHubs.length > 0 ? (
@@ -460,247 +481,118 @@ async function fetchOsrmProfile(
               </div>
             </Card>
 
-            {/* Right Side Panel - Hub Details */}
+            {/* Right Side Panel - Hub Details (Overhauled) */}
             {hubState.selectedHub && (
-              <Card className="lg:col-span-2 p-0 overflow-hidden flex flex-col bg-white dark:bg-gray-900 border-2 border-red-600">
-                {/* Header with close button */}
-                <div className="bg-gradient-to-r from-red-600 to-red-700 p-4 text-white flex items-center justify-between flex-shrink-0 shadow-md">
-                  <div className="flex items-center gap-2">
-                    <MapPin size={20} className="flex-shrink-0" />
-                    <h3 className="font-bold text-base">{hubState.selectedHub.name}</h3>
-                  </div>
+              <Card className="lg:col-span-2 p-0 overflow-hidden flex flex-col bg-white dark:bg-gray-900 border border-red-200 dark:border-gray-800 rounded-2xl shadow-2xl relative">
+                {/* Header with Title and Close Button */}
+                <div className="p-4 flex items-center justify-between border-b border-gray-100 dark:border-gray-800">
+                  <h3 className="font-extrabold text-lg text-gray-900 dark:text-white">
+                    {hubState.selectedHub.name} Employees
+                  </h3>
                   <button
                     onClick={handleCloseHub}
-                    className="p-1 hover:bg-red-800 rounded transition-colors"
-                    aria-label="Close hub details"
+                    className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors text-gray-500"
                   >
-                    <X size={20} />
+                    <X size={22} className="font-bold" />
                   </button>
                 </div>
 
-                {/* Scrollable content */}
+                {/* Content Container */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                  {/* Directions Info - Show when directions are enabled */}
-                  {showDirections && routeData && (
-                    <div className="rounded-xl border border-slate-200/90 dark:border-slate-600/90 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900/60 dark:to-slate-900/30 p-4 space-y-4 shadow-sm">
-                      <div className="flex items-start gap-2">
-                        <Navigation className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-                        <div>
-                          <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 tracking-tight">
-                            Route information
-                          </h4>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
-                            Distances and times from OSRM (OpenStreetMap). Map line follows driving route.
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-3">
-                        {(
-                          [
-                            { label: 'Walking', Icon: Footprints, r: routeData.walking, bar: 'from-emerald-600 to-teal-600' },
-                            { label: 'Riding', Icon: Bike, r: routeData.riding, bar: 'from-amber-500 to-orange-600' },
-                            { label: 'Car', Icon: Car, r: routeData.car, bar: 'from-red-600 to-rose-700' },
-                          ] as const
-                        ).map(({ label, Icon, r, bar }) => (
-                          <div
-                            key={label}
-                            className="rounded-lg border border-slate-200/80 dark:border-slate-600 bg-white/90 dark:bg-slate-800/90 overflow-hidden shadow-sm"
-                          >
-                            <div className={`h-1 bg-gradient-to-r ${bar}`} />
-                            <div className="p-3.5">
-                              <div className="flex items-center gap-2 mb-3">
-                                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700/80 text-slate-700 dark:text-slate-200">
-                                  <Icon size={16} strokeWidth={2} />
-                                </span>
-                                <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">{label}</span>
-                              </div>
-                              <div className="grid grid-cols-3 gap-2">
-                                <div className="rounded-md bg-slate-50 dark:bg-slate-900/50 px-2 py-2.5 text-center border border-slate-100 dark:border-slate-700">
-                                  <div className="text-lg font-bold tabular-nums text-slate-900 dark:text-white leading-none">
-                                    {(r.distanceM / 1000).toFixed(2)}
-                                  </div>
-                                  <div className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400 mt-1">
-                                    km
-                                  </div>
-                                </div>
-                                <div className="rounded-md bg-slate-50 dark:bg-slate-900/50 px-2 py-2.5 text-center border border-slate-100 dark:border-slate-700">
-                                  <div className="text-lg font-bold tabular-nums text-slate-900 dark:text-white leading-none">
-                                    {Math.max(1, Math.round(r.durationSec / 60))}
-                                  </div>
-                                  <div className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400 mt-1">
-                                    min
-                                  </div>
-                                </div>
-                                <div className="rounded-md bg-slate-50 dark:bg-slate-900/50 px-2 py-2.5 text-center border border-slate-100 dark:border-slate-700">
-                                  <div className="text-lg font-bold tabular-nums text-slate-900 dark:text-white leading-none">
-                                    {r.turnCount}
-                                  </div>
-                                  <div className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400 mt-1">
-                                    turns
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="rounded-lg border border-slate-200 dark:border-slate-600 bg-white/80 dark:bg-slate-800/60 p-3 max-h-44 overflow-y-auto">
-                        <h5 className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-2">
-                          Driving directions
-                        </h5>
-                        <div className="space-y-2">
-                          {routeData.car.turns.map((turn: any, idx: number) => (
-                            <div
-                              key={idx}
-                              className="flex gap-2 text-xs text-slate-700 dark:text-slate-300 pb-2 border-b border-slate-100 dark:border-slate-700 last:border-0 last:pb-0"
-                            >
-                              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-50 dark:bg-red-950/50 text-[11px] font-semibold text-red-700 dark:text-red-300">
-                                {idx + 1}
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="font-medium text-slate-900 dark:text-white leading-snug">{turn.instruction}</p>
-                                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                                  {(turn.distance / 1000).toFixed(2)} km · {Math.max(0, Math.round(turn.duration / 60))} min
-                                </p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Loading State */}
-                  {loadingRoute && (
-                    <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-lg p-4 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <div className="animate-spin">⚙️</div>
-                        <span className="text-yellow-900 dark:text-yellow-200 font-semibold">Calculating route...</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Hub stats */}
-                  <div className="rounded-xl border border-red-200/80 dark:border-red-900/50 bg-gradient-to-br from-red-50/90 to-white dark:from-red-950/30 dark:to-slate-900/40 p-4 text-center shadow-sm">
-                    <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/40">
-                      <Users size={20} className="text-red-700 dark:text-red-300" />
-                    </div>
-                    <p className="text-3xl font-bold tabular-nums text-red-700 dark:text-red-300">{hubEmployeesData.length}</p>
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-600 dark:text-slate-400 mt-1">
-                      Employees at this hub
-                    </p>
-                  </div>
-
-                  {/* Search Box */}
+                  {/* Internal Search */}
                   <div className="relative">
-                    <Search size={16} className="absolute left-3 top-3 text-gray-400" />
+                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
                       type="text"
-                      placeholder="Search employee..."
+                      placeholder="Search Name"
                       value={employeeSearch}
                       onChange={(e: any) => {
                         setEmployeeSearch(e.target.value);
                         setCurrentPage(1);
                       }}
-                      className="input-field w-full pl-9 py-2 text-sm"
+                      className="input-field w-full pl-9 py-2 text-sm bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 rounded-full"
                     />
                   </div>
 
-                  {/* Employment Types Chart - Compact */}
-                  {employmentTypeData.length > 0 && (
-                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-                      <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Employment Distribution</h4>
-                      <ResponsiveContainer width="100%" height={60}>
-                        <BarChart data={employmentTypeData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                          <XAxis dataKey="name" tick={{ fontSize: 9 }} />
-                          <YAxis tick={{ fontSize: 9 }} />
-                          <Tooltip contentStyle={{ fontSize: 11 }} />
-                          <Bar dataKey="value" fill="#EF4444" />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  )}
-
-                  {/* Employees List */}
-                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                    <div className="bg-gray-900 dark:bg-gray-950 text-white px-3 py-2 sticky top-0">
-                      <div className="grid grid-cols-12 gap-2 text-xs font-semibold">
-                        <div className="col-span-5">Name</div>
-                        <div className="col-span-4">Position</div>
-                        <div className="col-span-3">Status</div>
+                  {/* Summary Row */}
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Employment Types */}
+                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-2.5 border border-gray-100 dark:border-gray-700 text-center">
+                      <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Employment Types</p>
+                      <div className="flex flex-wrap justify-center gap-1.5">
+                        {employmentTypeData.map((type) => (
+                          <div key={type.name} className="flex items-center bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 rounded-full">
+                            <span className="text-[9px] font-bold text-blue-700 dark:text-blue-300 mr-1.5">{type.name}</span>
+                            <div className="h-1.5 w-10 bg-blue-600 rounded-full" style={{ width: `${Math.min(100, (type.value / hubEmployeesData.length) * 100)}px` }} />
+                          </div>
+                        ))}
                       </div>
                     </div>
+
+                    {/* Total Employees */}
+                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-2.5 border border-gray-100 dark:border-gray-700 text-center flex flex-col justify-center">
+                      <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Employees</p>
+                      <p className="text-2xl font-black text-gray-900 dark:text-white mt-1">{hubEmployeesData.length}</p>
+                    </div>
+                  </div>
+
+                  {/* Employee Table */}
+                  <div className="border border-gray-100 dark:border-gray-800 rounded-xl overflow-hidden">
+                    <div className="bg-black text-white px-3 py-2 flex text-[10px] font-black uppercase tracking-widest">
+                      <div className="w-[45%]">Name</div>
+                      <div className="w-[30%]">Position</div>
+                      <div className="w-[25%] text-center">Status</div>
+                    </div>
                     
-                    <div className="max-h-48 overflow-y-auto">
+                    <div className="max-h-[250px] overflow-y-auto">
                       {paginatedEmployees.length > 0 ? (
                         paginatedEmployees.map((emp: any) => (
-                          <div key={emp.id} className="grid grid-cols-12 gap-2 text-xs p-3 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
-                            <div className="col-span-5 font-medium text-gray-900 dark:text-white truncate">{emp.full_name}</div>
-                            <div className="col-span-4 text-gray-600 dark:text-gray-400 truncate">{emp.position || 'N/A'}</div>
-                            <div className="col-span-3">
-                              <Badge variant={emp.status?.toLowerCase() === 'active' ? 'success' : 'warning'} className="text-xs">
-                                {emp.status || 'N/A'}
-                              </Badge>
+                          <div key={emp.id} className="flex items-center px-3 py-3 border-b border-gray-50 dark:border-gray-800 text-xs hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                            <div className="w-[45%] font-bold text-gray-900 dark:text-white truncate pr-2">{emp.full_name}</div>
+                            <div className="w-[30%] text-gray-500 dark:text-gray-400 truncate pr-2">{emp.position || 'N/A'}</div>
+                            <div className="w-[25%] flex justify-center">
+                              <div className={`h-2.5 w-full rounded-full ${emp.status?.toLowerCase() === 'active' ? 'bg-green-500' : 'bg-amber-500'}`} />
                             </div>
                           </div>
                         ))
                       ) : (
-                        <div className="text-center text-sm text-gray-500 dark:text-gray-400 py-6">
-                          No employees found
-                        </div>
+                        <div className="py-8 text-center text-gray-400 text-xs italic">No employees found</div>
                       )}
                     </div>
                   </div>
 
-                  {/* Pagination Controls */}
-                  {totalPages > 1 && (
-                    <div className="flex items-center justify-between gap-2 border-t border-gray-200 dark:border-gray-700 pt-3">
+                  {/* Pagination and Get Directions */}
+                  <div className="pt-2 flex flex-col gap-3">
+                    {/* Pagination */}
+                    <div className="flex items-center justify-center gap-4">
                       <button
                         onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                         disabled={currentPage === 1}
-                        className="p-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        aria-label="Previous page"
+                        className="text-gray-400 disabled:opacity-30"
                       >
-                        <ChevronLeft size={16} />
+                        <ChevronLeft size={20} />
                       </button>
-                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400 min-w-16 text-center">
-                        {currentPage} / {totalPages}
+                      <span className="text-[11px] font-bold text-gray-500">
+                        {currentPage} / {totalPages || 1}
                       </span>
                       <button
                         onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                        disabled={currentPage === totalPages}
-                        className="p-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        aria-label="Next page"
+                        disabled={currentPage === totalPages || totalPages === 0}
+                        className="text-gray-400 disabled:opacity-30"
                       >
-                        <ChevronRight size={16} />
+                        <ChevronRight size={20} />
                       </button>
                     </div>
-                  )}
-                </div>
 
-                {/* Get Direction Button - At bottom */}
-                <div className="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-900/20 border-t-2 border-red-200 dark:border-red-800 p-3 flex-shrink-0">
-                  <button 
-                    onClick={handleGetDirections}
-                    disabled={loadingRoute}
-                    className={`w-full font-semibold py-3 rounded-lg flex items-center justify-center gap-2 transition-all transform hover:scale-105 disabled:scale-100 disabled:opacity-75 ${
-                      loadingRoute
-                        ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-lg'
-                        : showDirections
-                        ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg'
-                        : 'bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 shadow-md'
-                    }`}
-                  >
-                    <Navigation size={18} />
-                    {loadingRoute 
-                      ? 'Loading Route...' 
-                      : showDirections 
-                      ? 'Directions Shown' 
-                      : 'Get Directions'}
-                  </button>
+                    {/* Get Direction Button */}
+                    <button 
+                      onClick={handleGetDirections}
+                      disabled={loadingRoute}
+                      className="w-full py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-white font-bold rounded-full text-xs transition-all shadow-sm flex items-center justify-center gap-2"
+                    >
+                      {loadingRoute ? <LoadingSpinner size="sm" /> : 'Get Direction'}
+                    </button>
+                  </div>
                 </div>
               </Card>
             )}

@@ -360,21 +360,24 @@ export const AdminDashboard = () => {
         </Card>
       </div>
 
-      {/* Hub Locations Map & Hub Chart */}
+        {/* Hub Locations Map & Hub Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Hub Locations Map */}
-        <Card className="p-0 overflow-hidden">
-          <div className="flex justify-between items-center p-4 pb-2 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <Card className="p-0 overflow-hidden border border-gray-200 dark:border-gray-700 flex flex-col min-h-[500px]">
+          <div className="flex justify-between items-center p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 z-10">
             <h2 className="text-lg font-semibold">Hub Locations</h2>
-            <input 
-              type="text" 
-              placeholder="Search Locations..." 
-              value={searchLocationTerm}
-              onChange={(e) => setSearchLocationTerm(e.target.value)}
-              className="input-field text-sm flex-1 max-w-md"
-            />
+            <div className="relative flex-1 max-w-md ml-4">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input 
+                type="text" 
+                placeholder="Search Locations..." 
+                value={searchLocationTerm}
+                onChange={(e) => setSearchLocationTerm(e.target.value)}
+                className="input-field text-sm pl-10 w-full"
+              />
+            </div>
           </div>
-          <div className="w-full h-[400px]">
+          <div className="flex-1 w-full relative z-0 min-h-[400px]">
             {hubs.length > 0 ? (
               <MapContainer 
                 center={[12.5797, 124.0758]} 
