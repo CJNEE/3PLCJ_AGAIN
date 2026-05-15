@@ -97,15 +97,43 @@ export const PayslipPage = () => {
     }
 
     // Prepare CSV data
-    const headers = ['Fullname', 'JTP Code', 'Hub', 'Net Pay', 'Status', 'Period'];
-    const rows = hubData.map((record: any) => [
-      record.fullname || 'N/A',
-      record.jtp_code || 'N/A',
-      record.hub || 'N/A',
-      record.net_pay || '0.00',
-      record.status || 'N/A',
-      record.period_start && record.period_end ? `${record.period_start} - ${record.period_end}` : 'N/A',
-    ]);
+    const headers = [
+      'Fullname', 'JTP Code', 'Hub', 'Period',
+      'Total Hours', 'Overtime Hours', 'Lates', 'Absences',
+      'Basic Pay', 'Allowance', 'Overtime Pay', 'Incentives',
+      'Total Earnings', 'SSS Deduction', 'Philhealth Deduction', 'Pagibig Deduction',
+      'Other Deductions', 'Total Deductions', 'Net Pay', 'Status'
+    ];
+
+    const rows = hubData.map((record: any) => {
+      // Calculate total deductions for the CSV (gov + other)
+      const govDeductions = (parseFloat(record.sss_deduction || '0')) + (parseFloat(record.philhealth_deduction || '0')) + (parseFloat(record.pagibig_deduction || '0'));
+      const otherDeductions = parseFloat(record.total_deductions || '0');
+      const totalDed = govDeductions + otherDeductions;
+      
+      return [
+        record.fullname || record.full_name || 'N/A',
+        record.jtp_code || 'N/A',
+        record.hub || record.hub_name || 'N/A',
+        record.payslip_period || (record.period_start && record.period_end ? `${record.period_start} - ${record.period_end}` : 'N/A'),
+        record.total_hours || '0',
+        record.overtime_hours || '0',
+        record.lates || '0',
+        record.absences || '0',
+        record.basic_salary || '0',
+        record.allowances || '0',
+        record.overtime_pay || '0',
+        record.incentives || '0',
+        record.total_earnings || '0',
+        record.sss_deduction || '0',
+        record.philhealth_deduction || '0',
+        record.pagibig_deduction || '0',
+        otherDeductions,
+        totalDed,
+        record.net_pay || '0.00',
+        record.status || 'N/A',
+      ];
+    });
 
     // Create CSV content
     const csvContent = [
@@ -114,12 +142,13 @@ export const PayslipPage = () => {
     ].join('\n');
 
     // Download
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${hubName}-payslip-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `${hubName}-detailed-payroll-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
+    window.URL.revokeObjectURL(url);
   };
 
   const getStatusBadgeVariant = (status: string) => {

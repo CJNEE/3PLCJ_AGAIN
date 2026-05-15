@@ -266,10 +266,60 @@ export const PayslipDetailModal = ({
   }, [formData.basic_salary, formData.allowances, formData.overtime_pay, formData.incentives, govPercents, localPayslip?.total_deductions]);
 
   const handleDownload = () => {
+    if (!localPayslip) return;
     try {
-      // TODO: implement real download
+      const headers = [
+        'Fullname', 'JTP Code', 'Position', 'Hub', 'Period',
+        'Total Hours', 'Overtime Hours', 'Lates', 'Absences',
+        'Basic Pay', 'Allowance', 'Overtime Pay', 'Incentives',
+        'Total Earnings', 'SSS Deduction', 'Philhealth Deduction', 'Pagibig Deduction',
+        'Other Deductions', 'Total Deductions', 'Net Pay', 'Status'
+      ];
+
+      const govDeductions = (toNumber(localPayslip.sss_deduction)) + (toNumber(localPayslip.philhealth_deduction)) + (toNumber(localPayslip.pagibig_deduction));
+      const otherDeductions = toNumber(localPayslip.total_deductions);
+      const totalDed = govDeductions + otherDeductions;
+      const netPay = toNumber(localPayslip.total_earnings) - totalDed;
+
+      const row = [
+        localPayslip.full_name || localPayslip.fullname || 'N/A',
+        localPayslip.jtp_code || 'N/A',
+        localPayslip.position || 'N/A',
+        localPayslip.hub_name || localPayslip.hub || 'N/A',
+        localPayslip.payslip_period || `${localPayslip.period_start} - ${localPayslip.period_end}`,
+        localPayslip.total_hours || '0',
+        localPayslip.overtime_hours || '0',
+        localPayslip.lates || '0',
+        localPayslip.absences || '0',
+        localPayslip.basic_salary || '0',
+        localPayslip.allowances || '0',
+        localPayslip.overtime_pay || '0',
+        localPayslip.incentives || '0',
+        localPayslip.total_earnings || '0',
+        localPayslip.sss_deduction || '0',
+        localPayslip.philhealth_deduction || '0',
+        localPayslip.pagibig_deduction || '0',
+        otherDeductions,
+        totalDed,
+        netPay.toFixed(2),
+        localPayslip.status || 'N/A'
+      ];
+
+      const csvContent = [
+        headers.join(','),
+        row.map(cell => `"${cell}"`).join(',')
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Payslip-${localPayslip.full_name || 'Employee'}-${localPayslip.period_end}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
       success('Payslip downloaded successfully');
-    } catch {
+    } catch (err) {
+      console.error(err);
       error('Failed to download payslip');
     }
   };

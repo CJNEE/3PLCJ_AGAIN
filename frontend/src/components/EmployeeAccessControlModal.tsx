@@ -132,7 +132,7 @@ export const EmployeeAccessControlModal = ({
 
     try {
       setIsLoading(true);
-      const response = await apiClient.post(`reset-password/${employee.id}/`);
+      const response = await apiClient.post(`reset-password/${employee.id}/`, {});
       setTempPassword(response.data.temporary_password);
       toast.success(`Password reset successful.`);
       onUpdate?.();

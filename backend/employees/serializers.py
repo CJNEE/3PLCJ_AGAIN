@@ -370,11 +370,16 @@ class PayrollSerializer(serializers.ModelSerializer):
         return ''
 
     def get_profile_image(self, obj):
-        if obj.employee and getattr(obj.employee, 'profile_image', None):
-            return absolute_media_url(
-                self.context.get('request'),
-                obj.employee.profile_image.url,
-            )
+        if not obj.employee:
+            return None
+        
+        from .models import SavedImage
+        saved = obj.employee.saved_images.filter(image_type='profile').first()
+        if saved and saved.image_data:
+            return absolute_media_url(self.context.get('request'), f"/api/saved-images/{saved.id}/")
+            
+        if obj.employee.profile_image:
+            return absolute_media_url(self.context.get('request'), obj.employee.profile_image.url)
         return None
 
     def get_profile_image_url(self, obj):
