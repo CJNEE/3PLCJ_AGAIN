@@ -362,7 +362,7 @@ export const AdminHubsPage = () => {
     <>
       <Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
 
-      <div className="p-4 lg:p-6 lg:ml-64 space-y-6">
+      <div className="p-4 lg:p-6 lg:ml-64 space-y-4">
         {/* Header and Controls */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -381,76 +381,82 @@ export const AdminHubsPage = () => {
         </div>
 
         {/* Top Controls Row */}
-        <div className="flex flex-wrap items-end justify-between gap-6">
-          <div className="relative max-w-lg w-full">
-            <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search locations..."
-              value={searchTerm}
-              onChange={(e: any) => setSearchTerm(e.target.value)}
-              className="input-field w-full pl-11 py-3 text-sm bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-xl shadow-sm focus:ring-2 focus:ring-red-500/20"
-            />
-          </div>
-
-          {/* New Route & Weather Info Box (The "Red Box" in screenshot) */}
-          <Card className="flex-1 max-w-md min-w-[320px] p-0 overflow-hidden bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 border-red-100 dark:border-gray-700 shadow-xl border-l-4 border-l-red-600">
-            <div className="p-4 flex items-center justify-between border-b border-gray-100 dark:border-gray-700">
-              <div className="flex items-center gap-2">
-                <Route size={18} className="text-red-600" />
-                <h4 className="text-[11px] font-black uppercase tracking-widest text-gray-900 dark:text-white">Live Route Insights</h4>
-              </div>
-              {weatherData && (
-                <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-3 py-1 rounded-full shadow-sm border border-gray-100 dark:border-gray-700">
-                  <span className="text-lg">{weatherData.icon}</span>
-                  <span className="text-xs font-bold">{weatherData.temp}°C • {weatherData.label}</span>
-                </div>
-              )}
-            </div>
-            <div className="p-4 grid grid-cols-3 gap-2">
-              {routeData ? (
-                <>
-                  <div className="p-2 rounded-xl text-center border bg-gray-50 dark:bg-gray-800/50 border-transparent transition-all">
-                    <Car size={20} className="mx-auto mb-1 text-red-600" />
-                    <p className="text-[10px] font-black text-gray-900 dark:text-white uppercase">{formatDistance(routeData.car.distanceM)}</p>
-                    <p className="text-[9px] text-gray-500 font-bold uppercase tracking-tighter mt-1">{routeData.car.turnCount} Turns</p>
-                  </div>
-                  <div className="p-2 rounded-xl text-center border bg-gray-50 dark:bg-gray-800/50 border-transparent transition-all">
-                    <Bike size={20} className="mx-auto mb-1 text-red-600" />
-                    <p className="text-[10px] font-black text-gray-900 dark:text-white uppercase">{formatDistance(routeData.riding.distanceM)}</p>
-                    <p className="text-[9px] text-gray-500 font-bold uppercase tracking-tighter mt-1">{routeData.riding.turnCount} Turns</p>
-                  </div>
-                  <div className="p-2 rounded-xl text-center border bg-gray-50 dark:bg-gray-800/50 border-transparent transition-all">
-                    <Footprints size={20} className="mx-auto mb-1 text-red-600" />
-                    <p className="text-[10px] font-black text-gray-900 dark:text-white uppercase">{formatDistance(routeData.walking.distanceM)}</p>
-                    <p className="text-[9px] text-gray-500 font-bold uppercase tracking-tighter mt-1">{routeData.walking.turnCount} Turns</p>
-                  </div>
-                </>
-              ) : (
-                <div className="col-span-3 py-6 text-center">
-                  <p className="text-xs text-gray-400 italic">Select a hub and click "Get Direction" to view route metrics and weather.</p>
-                </div>
-              )}
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
+          <div className="xl:col-span-5 space-y-4">
+            <div className="relative">
+              <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search locations..."
+                value={searchTerm}
+                onChange={(e: any) => setSearchTerm(e.target.value)}
+                className="input-field w-full pl-11 py-3 text-sm bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-xl shadow-sm focus:ring-2 focus:ring-red-500/20"
+              />
             </div>
             
-            {showDirections && routeData && (
-              <div className="px-4 pb-4 animate-in slide-in-from-top-2">
-                <div className="bg-gray-900/5 dark:bg-gray-950/30 rounded-xl p-3 border border-gray-100 dark:border-gray-800 max-h-[120px] overflow-y-auto custom-scrollbar">
-                  <h5 className="text-[9px] font-black uppercase tracking-widest text-red-600 mb-2">Step-by-Step Guide</h5>
-                  <div className="space-y-2">
-                    {routeData.car.turns.map((turn, idx) => (
-                      <div key={idx} className="flex gap-2 text-[10px] border-b border-gray-100/50 dark:border-gray-800 pb-1.5 last:border-0">
-                        <span className="font-bold text-red-600">{idx + 1}.</span>
-                        <div className="flex-1">
-                          <p className="font-medium text-gray-800 dark:text-gray-200 leading-tight">{turn.instruction}</p>
-                          <p className="text-[8px] text-gray-400 mt-0.5">{formatDistance(turn.distance)}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+            {weatherData && (
+              <div className="flex items-center gap-3 bg-white dark:bg-gray-800 p-3 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm animate-in fade-in">
+                <div className="w-12 h-12 bg-red-50 dark:bg-red-900/20 rounded-xl flex items-center justify-center text-2xl">
+                  {weatherData.icon}
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Current Weather</p>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white">{weatherData.temp}°C • {weatherData.label}</p>
                 </div>
               </div>
             )}
+          </div>
+
+          {/* New Route Info Box (The "Red Box" in screenshot) */}
+          <Card className="xl:col-span-7 p-0 overflow-hidden bg-white dark:bg-gray-900 border-red-100 dark:border-gray-700 shadow-lg border-l-4 border-l-red-600">
+            <div className="flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x dark:divide-gray-800">
+              <div className="p-3 flex-1 flex flex-col justify-center">
+                <div className="flex items-center gap-2 mb-3 px-1">
+                  <Route size={14} className="text-red-600" />
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-500">Route Metrics</h4>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {routeData ? (
+                    <>
+                      <div className="text-center p-1.5 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                        <Car size={14} className="mx-auto text-red-600 mb-1" />
+                        <p className="text-[9px] font-black uppercase">{formatDistance(routeData.car.distanceM)}</p>
+                        <p className="text-[8px] text-gray-400">{routeData.car.turnCount} Turns</p>
+                      </div>
+                      <div className="text-center p-1.5 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                        <Bike size={14} className="mx-auto text-red-600 mb-1" />
+                        <p className="text-[9px] font-black uppercase">{formatDistance(routeData.riding.distanceM)}</p>
+                        <p className="text-[8px] text-gray-400">{routeData.riding.turnCount} Turns</p>
+                      </div>
+                      <div className="text-center p-1.5 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                        <Footprints size={14} className="mx-auto text-red-600 mb-1" />
+                        <p className="text-[9px] font-black uppercase">{formatDistance(routeData.walking.distanceM)}</p>
+                        <p className="text-[8px] text-gray-400">{routeData.walking.turnCount} Turns</p>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="col-span-3 py-2 text-[10px] text-gray-400 italic text-center">Select hub & get direction</div>
+                  )}
+                </div>
+              </div>
+
+              {showDirections && routeData && (
+                <div className="p-3 flex-1 bg-gray-50/50 dark:bg-gray-950/20 max-h-[140px] overflow-y-auto custom-scrollbar">
+                  <h5 className="text-[9px] font-black uppercase tracking-widest text-red-600 mb-2">Step-by-Step Guide</h5>
+                  <div className="space-y-1.5">
+                    {routeData.car.turns.slice(0, 10).map((turn, idx) => (
+                      <div key={idx} className="flex gap-2 text-[10px] items-start">
+                        <span className="font-bold text-red-600 text-[9px]">{idx + 1}.</span>
+                        <p className="text-gray-700 dark:text-gray-300 leading-tight text-[9px]">{turn.instruction}</p>
+                      </div>
+                    ))}
+                    {routeData.car.turns.length > 10 && (
+                      <p className="text-[8px] text-gray-400 italic ml-4">+ {routeData.car.turns.length - 10} more steps</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </Card>
         </div>
 
