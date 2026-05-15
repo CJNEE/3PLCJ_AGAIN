@@ -501,21 +501,24 @@ class SavedImage(models.Model):
         """
         if self.image and not self.image_data:
             try:
-                # Try reading from the in-memory file object first (fastest, works
-                # before Django writes to disk). Then fall back to opening by name.
+                # 1. Try to read from the underlying file object (works before save to disk)
                 raw_file = getattr(self.image, 'file', None)
                 data = None
 
-                if raw_file is not None:
-                    # InMemoryUploadedFile / TemporaryUploadedFile: seek to start
+                if raw_file:
                     try:
-                        raw_file.seek(0)
+                        # Ensure we are at the start
+                        if hasattr(raw_file, 'seek'):
+                            raw_file.seek(0)
                         data = raw_file.read()
+                        # If it's a stream, we might need to seek back for Django's save
+                        if hasattr(raw_file, 'seek'):
+                            raw_file.seek(0)
                     except Exception:
                         data = None
 
+                # 2. Fallback: Open by name (if already on disk)
                 if not data:
-                    # Fall back: open the stored file by name
                     try:
                         self.image.open('rb')
                         data = self.image.read()
@@ -525,12 +528,15 @@ class SavedImage(models.Model):
 
                 if data:
                     self.image_data = data
-
-                # Capture content_type from the upload if available
-                if not self.content_type:
-                    ct = getattr(raw_file, 'content_type', None)
-                    if ct:
-                        self.content_type = ct
+                    # Auto-detect content type if not set
+                    if not self.content_type:
+                        if hasattr(raw_file, 'content_type'):
+                            self.content_type = raw_file.content_type
+                        else:
+                            # Simple extension-based guess
+                            ext = os.path.splitext(self.image.name)[1].lower()
+                            types = {'.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.gif': 'image/gif'}
+                            self.content_type = types.get(ext, 'image/jpeg')
 
                 if not self.original_filename:
                     self.original_filename = os.path.basename(self.image.name)

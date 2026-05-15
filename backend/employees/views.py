@@ -12,8 +12,9 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from django.conf import settings
 from django.db import models
-import json
 from django.http import HttpResponse, Http404
+import os
+import json
 from .models import Hub, Employee, EditRequest, LeaveRequest, Attendance, LiveLocation, Payroll, EmployeeDocument, ActivityLog, SecurityAlert, HRPermission, SavedImage
 from .serializers import (
     HubSerializer, EmployeeSerializer, EmployeeCreateSerializer, EmployeeDocumentSerializer,
@@ -933,23 +934,44 @@ class EditRequestViewSet(viewsets.ModelViewSet):
         status = self.request.query_params.get('status')
         if status:
             queryset = queryset.filter(status=status)
+            
         employee_id = self.request.query_params.get('employee_id')
         hub_id = self.request.query_params.get('hub_id')
         user = self.request.user
-        try:
-            actor = Employee.objects.get(user=user)
-        except Employee.DoesNotExist:
-            actor = None
-        is_plain_employee = actor and getattr(actor, 'role', '').lower() == 'employee'
-        if is_plain_employee:
-            queryset = queryset.filter(employee=actor)
-        else:
-            if actor and getattr(actor, 'role', '').lower() == 'hr':
-                queryset = queryset.exclude(employee__role__iexact='admin')
+
+        # Staff/Superusers see everything
+        if user.is_staff or user.is_superuser:
             if employee_id:
                 queryset = queryset.filter(employee_id=employee_id)
             if hub_id:
                 queryset = queryset.filter(employee__hub_id=hub_id)
+            return queryset
+
+        # For regular employees/HR, filter based on their own profile
+        try:
+            actor = Employee.objects.get(user=user)
+        except Employee.DoesNotExist:
+            # If user is logged in but has no employee profile, and is not staff, show nothing
+            return EditRequest.objects.none()
+
+        is_hr = getattr(actor, 'role', '').lower() == 'hr'
+        is_admin_role = getattr(actor, 'role', '').lower() == 'admin' # Application-level Admin role
+        
+        if is_admin_role:
+            # App-level Admin sees all
+            pass 
+        elif is_hr:
+            # HR sees everyone except Admins
+            queryset = queryset.exclude(employee__role__iexact='admin')
+        else:
+            # Regular employee sees only their own
+            queryset = queryset.filter(employee=actor)
+
+        if employee_id:
+            queryset = queryset.filter(employee_id=employee_id)
+        if hub_id:
+            queryset = queryset.filter(employee__hub_id=hub_id)
+            
         return queryset
     
     def create(self, request, *args, **kwargs):
@@ -2310,43 +2332,54 @@ def reset_password(request, employee_id):
 class ServeSavedImageView(APIView):
     """
     Serve a SavedImage record's binary content directly from PostgreSQL.
-
     This bypasses the filesystem entirely, so images remain accessible even
     after Render restarts or redeploys (ephemeral disk is wiped on every deploy).
-
-    URL: /api/saved-images/<pk>/
     """
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
         try:
-            saved = SavedImage.objects.get(pk=pk, is_active=True)
-        except SavedImage.DoesNotExist:
-            raise Http404("Image not found")
+            # Try to get the record (include is_active check if desired)
+            saved = SavedImage.objects.filter(pk=pk).first()
+            if not saved:
+                raise Http404("Image record not found")
+        except Exception:
+            raise Http404("Invalid request")
 
         # --- 1. Prefer binary data stored in PostgreSQL ---
         if saved.image_data:
-            content_type = saved.content_type or 'image/jpeg'
-            data = bytes(saved.image_data)  # memoryview → bytes
-            response = HttpResponse(data, content_type=content_type)
-            fname = saved.original_filename or f'image_{pk}.jpg'
-            response['Content-Disposition'] = f'inline; filename="{fname}"'
-            response['Cache-Control'] = 'private, max-age=86400'
-            return response
-
-        # --- 2. Fallback: try to read from filesystem (works in local dev) ---
-        if saved.image:
             try:
-                saved.image.open('rb')
-                data = saved.image.read()
-                saved.image.close()
                 content_type = saved.content_type or 'image/jpeg'
+                # Handle memoryview or bytes
+                data = saved.image_data
+                if hasattr(data, 'tobytes'):
+                    data = data.tobytes()
+                elif not isinstance(data, (bytes, bytearray)):
+                    data = bytes(data)
+                
                 response = HttpResponse(data, content_type=content_type)
                 fname = saved.original_filename or f'image_{pk}.jpg'
                 response['Content-Disposition'] = f'inline; filename="{fname}"'
                 response['Cache-Control'] = 'private, max-age=86400'
                 return response
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"[ServeSavedImage] Error serving binary data: {e}")
 
-        raise Http404("Image data not available")
+        # --- 2. Fallback: try to read from filesystem ---
+        if saved.image:
+            try:
+                # check if file exists on disk
+                if os.path.exists(saved.image.path):
+                    saved.image.open('rb')
+                    data = saved.image.read()
+                    saved.image.close()
+                    content_type = saved.content_type or 'image/jpeg'
+                    response = HttpResponse(data, content_type=content_type)
+                    fname = saved.original_filename or f'image_{pk}.jpg'
+                    response['Content-Disposition'] = f'inline; filename="{fname}"'
+                    response['Cache-Control'] = 'private, max-age=86400'
+                    return response
+            except Exception as e:
+                print(f"[ServeSavedImage] FS Fallback failed: {e}")
+
+        raise Http404("Image data not available in DB or on disk")

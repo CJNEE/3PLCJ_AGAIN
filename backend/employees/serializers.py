@@ -658,10 +658,12 @@ class LeaveRequestSerializer(serializers.ModelSerializer):
                 return items
             
             # Fallback to filesystem URLs
-            for att in getattr(obj, 'attachments').all():
-                items.append(absolute_media_url(request, att.file.url))
+            for att in obj.attachments.all():
+                if att.file:
+                    items.append(absolute_media_url(request, att.file.url))
             return items
-        except Exception:
+        except Exception as e:
+            print(f"[LeaveRequestSerializer] Error: {e}")
             return []
 
     def get_employee_name(self, obj):
