@@ -78,6 +78,20 @@ async function fetchOsrmProfile(
   return parseOsrmResponse(data);
 }
 
+/**
+ * Formats duration in seconds to a human-readable string (e.g., "5 min", "1h 15m")
+ */
+function formatTravelTime(seconds: number): string {
+  if (!seconds || seconds < 0) return '0 min';
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) {
+    return `${minutes} min`;
+  }
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
+}
+
   interface HubState {
     selectedHub: any | null;
   }
