@@ -440,22 +440,6 @@ export const AdminHubsPage = () => {
                 </div>
               </div>
 
-              {showDirections && routeData && (
-                <div className="p-3 flex-1 bg-gray-50/50 dark:bg-gray-950/20 max-h-[140px] overflow-y-auto custom-scrollbar">
-                  <h5 className="text-[9px] font-black uppercase tracking-widest text-red-600 mb-2">Step-by-Step Guide</h5>
-                  <div className="space-y-1.5">
-                    {routeData.car.turns.slice(0, 10).map((turn, idx) => (
-                      <div key={idx} className="flex gap-2 text-[10px] items-start">
-                        <span className="font-bold text-red-600 text-[9px]">{idx + 1}.</span>
-                        <p className="text-gray-700 dark:text-gray-300 leading-tight text-[9px]">{turn.instruction}</p>
-                      </div>
-                    ))}
-                    {routeData.car.turns.length > 10 && (
-                      <p className="text-[8px] text-gray-400 italic ml-4">+ {routeData.car.turns.length - 10} more steps</p>
-                    )}
-                  </div>
-                </div>
-              )}
             </div>
           </Card>
         </div>

@@ -217,19 +217,19 @@ export const payrollAPI = {
 ========================= */
 export const leaveRequestAPI = {
   getLeaveRequests: async (params?: Record<string, any>) => {
-    const response = await apiClient.get('/api/leave-requests/', { params });
+    const response = await apiClient.get(API_ENDPOINTS.LEAVE_REQUESTS, { params });
     return response.data;
   },
   approveRequest: async (id: number, data?: any) => {
-    const response = await apiClient.patch(`/api/leave-requests/${id}/approve/`, data || {});
+    const response = await apiClient.patch(`${API_ENDPOINTS.LEAVE_REQUESTS}${id}/approve/`, data || {});
     return response.data;
   },
   rejectRequest: async (id: number, data?: any) => {
-    const response = await apiClient.patch(`/api/leave-requests/${id}/reject/`, data || {});
+    const response = await apiClient.patch(`${API_ENDPOINTS.LEAVE_REQUESTS}${id}/reject/`, data || {});
     return response.data;
   },
   clearAll: async () => {
-    const response = await apiClient.delete('/api/leave-requests/clear_all/');
+    const response = await apiClient.delete(`${API_ENDPOINTS.LEAVE_REQUESTS}clear_all/`);
     return response.data;
   },
 };

@@ -114,6 +114,9 @@ export const API_ENDPOINTS = {
   // Security
   LOCK_UNLOCK_ACCOUNT: (employeeId: number) => `/lock-unlock-account/${employeeId}/`,
   RESET_PASSWORD: (employeeId: number) => `/reset-password/${employeeId}/`,
+
+  // Leave Requests
+  LEAVE_REQUESTS: '/leave-requests/',
 } as const;
 
 export const QUERY_KEYS = {
