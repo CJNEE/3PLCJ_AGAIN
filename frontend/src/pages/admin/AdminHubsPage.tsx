@@ -410,23 +410,20 @@ export const AdminHubsPage = () => {
             <div className="p-4 grid grid-cols-3 gap-2">
               {routeData ? (
                 <>
-                  <div className={`p-2 rounded-xl text-center border transition-all ${bestRoute === 'car' ? 'bg-red-50 dark:bg-red-900/20 border-red-200' : 'bg-gray-50 dark:bg-gray-800/50 border-transparent'}`}>
-                    <Car size={20} className={`mx-auto mb-1 ${bestRoute === 'car' ? 'text-red-600' : 'text-gray-400'}`} />
+                  <div className="p-2 rounded-xl text-center border bg-gray-50 dark:bg-gray-800/50 border-transparent transition-all">
+                    <Car size={20} className="mx-auto mb-1 text-red-600" />
                     <p className="text-[10px] font-black text-gray-900 dark:text-white uppercase">{formatDistance(routeData.car.distanceM)}</p>
-                    <p className="text-[9px] text-gray-500">{formatTravelTime(routeData.car.durationSec)}</p>
-                    {bestRoute === 'car' && <Badge variant="success" size="sm" className="mt-1 text-[8px] px-1.5 py-0">BEST</Badge>}
+                    <p className="text-[9px] text-gray-500 font-bold uppercase tracking-tighter mt-1">{routeData.car.turnCount} Turns</p>
                   </div>
-                  <div className={`p-2 rounded-xl text-center border transition-all ${bestRoute === 'riding' ? 'bg-red-50 dark:bg-red-900/20 border-red-200' : 'bg-gray-50 dark:bg-gray-800/50 border-transparent'}`}>
-                    <Bike size={20} className={`mx-auto mb-1 ${bestRoute === 'riding' ? 'text-red-600' : 'text-gray-400'}`} />
+                  <div className="p-2 rounded-xl text-center border bg-gray-50 dark:bg-gray-800/50 border-transparent transition-all">
+                    <Bike size={20} className="mx-auto mb-1 text-red-600" />
                     <p className="text-[10px] font-black text-gray-900 dark:text-white uppercase">{formatDistance(routeData.riding.distanceM)}</p>
-                    <p className="text-[9px] text-gray-500">{formatTravelTime(routeData.riding.durationSec)}</p>
-                    {bestRoute === 'riding' && <Badge variant="success" size="sm" className="mt-1 text-[8px] px-1.5 py-0">BEST</Badge>}
+                    <p className="text-[9px] text-gray-500 font-bold uppercase tracking-tighter mt-1">{routeData.riding.turnCount} Turns</p>
                   </div>
-                  <div className={`p-2 rounded-xl text-center border transition-all ${bestRoute === 'walking' ? 'bg-red-50 dark:bg-red-900/20 border-red-200' : 'bg-gray-50 dark:bg-gray-800/50 border-transparent'}`}>
-                    <Footprints size={20} className={`mx-auto mb-1 ${bestRoute === 'walking' ? 'text-red-600' : 'text-gray-400'}`} />
+                  <div className="p-2 rounded-xl text-center border bg-gray-50 dark:bg-gray-800/50 border-transparent transition-all">
+                    <Footprints size={20} className="mx-auto mb-1 text-red-600" />
                     <p className="text-[10px] font-black text-gray-900 dark:text-white uppercase">{formatDistance(routeData.walking.distanceM)}</p>
-                    <p className="text-[9px] text-gray-500">{formatTravelTime(routeData.walking.durationSec)}</p>
-                    {bestRoute === 'walking' && <Badge variant="success" size="sm" className="mt-1 text-[8px] px-1.5 py-0">BEST</Badge>}
+                    <p className="text-[9px] text-gray-500 font-bold uppercase tracking-tighter mt-1">{routeData.walking.turnCount} Turns</p>
                   </div>
                 </>
               ) : (
@@ -446,7 +443,7 @@ export const AdminHubsPage = () => {
                         <span className="font-bold text-red-600">{idx + 1}.</span>
                         <div className="flex-1">
                           <p className="font-medium text-gray-800 dark:text-gray-200 leading-tight">{turn.instruction}</p>
-                          <p className="text-[8px] text-gray-400 mt-0.5">{formatDistance(turn.distance)} • {formatTravelTime(turn.duration)}</p>
+                          <p className="text-[8px] text-gray-400 mt-0.5">{formatDistance(turn.distance)}</p>
                         </div>
                       </div>
                     ))}
