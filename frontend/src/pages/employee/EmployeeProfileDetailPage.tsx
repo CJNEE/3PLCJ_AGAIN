@@ -246,10 +246,10 @@ export const EmployeeProfileDetailPage = () => {
           <>
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
-                <h1 className="text-4xl font-black text-gray-900 dark:text-white uppercase tracking-tighter mb-1">
+                <h1 className="text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tighter mb-1">
                   {formData.full_name || 'Employee Profile'}
                 </h1>
-                <p className="text-xs font-black uppercase tracking-widest text-red-600">{formData.position}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-red-600">{formData.position}</p>
               </div>
               
               <div className="flex flex-wrap gap-2">
@@ -259,7 +259,7 @@ export const EmployeeProfileDetailPage = () => {
                   </Button>
                 )}
                 
-                {isOwnProfile && !isEditing && (
+                {isOwnProfile && !isEditing && !isHRorAdmin && (
                   <Button variant="secondary" onClick={() => setShowEditRequestModal(true)}>
                     <Send size={18} className="mr-2" /> Request Changes
                   </Button>
@@ -320,11 +320,11 @@ export const EmployeeProfileDetailPage = () => {
 
                 {latestAttendance && (
                   <Card className="border-l-4 border-red-600">
-                    <div className="flex items-center gap-2 mb-4">
+                    <div className="flex items-center gap-4 mb-4">
                       <Clock size={18} className="text-red-600" />
                       <h3 className="text-xs font-black uppercase tracking-widest">Latest Session</h3>
                     </div>
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       <div className="flex justify-between items-center text-xs">
                         <span className="text-gray-500 font-bold uppercase">Status</span>
                         <Badge variant={latestAttendance.status === 'Present' ? 'success' : 'warning'} className="text-[10px]">{latestAttendance.status}</Badge>
@@ -348,9 +348,9 @@ export const EmployeeProfileDetailPage = () => {
                 )}
               </div>
 
-              <div className="lg:col-span-2 space-y-6">
+              <div className="lg:col-span-2 space-y-4">
                 <Card>
-                  <h2 className="text-xs font-black uppercase tracking-[0.2em] text-red-600 mb-6 flex items-center gap-2">
+                  <h2 className="text-xs font-black uppercase tracking-[0.2em] text-red-600 mb-4 flex items-center gap-2">
                     <span className="w-6 h-0.5 bg-red-600"></span> Personal Records
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -361,7 +361,7 @@ export const EmployeeProfileDetailPage = () => {
                 </Card>
 
                 <Card>
-                  <h2 className="text-xs font-black uppercase tracking-[0.2em] text-red-600 mb-6 flex items-center gap-2">
+                  <h2 className="text-xs font-black uppercase tracking-[0.2em] text-red-600 mb-4 flex items-center gap-2">
                     <span className="w-6 h-0.5 bg-red-600"></span> Contact Detail
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -372,7 +372,7 @@ export const EmployeeProfileDetailPage = () => {
                 </Card>
 
                 <Card>
-                  <h2 className="text-xs font-black uppercase tracking-[0.2em] text-red-600 mb-6 flex items-center gap-2">
+                  <h2 className="text-xs font-black uppercase tracking-[0.2em] text-red-600 mb-4 flex items-center gap-2">
                     <span className="w-6 h-0.5 bg-red-600"></span> Employment Scope
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -383,7 +383,7 @@ export const EmployeeProfileDetailPage = () => {
                 </Card>
 
                 <Card>
-                  <h2 className="text-xs font-black uppercase tracking-[0.2em] text-red-600 mb-6 flex items-center gap-2">
+                  <h2 className="text-xs font-black uppercase tracking-[0.2em] text-red-600 mb-4 flex items-center gap-2">
                     <span className="w-6 h-0.5 bg-red-600"></span> Statutory IDs
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
