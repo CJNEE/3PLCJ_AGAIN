@@ -151,7 +151,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
     )
 
     documents = EmployeeDocumentSerializer(many=True, read_only=True)
-    hr_permissions = HRPermissionSerializer(source='hr_permissions', read_only=True)
+    hr_permissions = HRPermissionSerializer(read_only=True)
 
     profile_image_url = serializers.SerializerMethodField()
     permanent_profile_image_url = serializers.SerializerMethodField()
