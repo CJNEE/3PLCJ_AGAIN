@@ -341,7 +341,6 @@ export const EmployeeAccessControlModal = ({
                   {isLoading ? 'Updating...' : 'Save Manual Password'}
                 </Button>
               </div>
-            )}
           </section>
         </div>
       </div>
