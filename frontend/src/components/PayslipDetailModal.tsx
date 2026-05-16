@@ -44,6 +44,8 @@ type Payslip = {
   payslip_period?: string;
   period_start?: string;
   period_end?: string;
+  employee?: number | string;
+  employee_id?: number | string;
 };
 
 interface PayslipDetailModalProps {
