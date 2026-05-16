@@ -121,16 +121,7 @@ class EmployeeDocumentSerializer(serializers.ModelSerializer):
 
 
 
-class HRPermissionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = HRPermission
-        fields = [
-            'can_view_employees',
-            'can_edit_employee_info',
-            'can_edit_payslip',
-            'can_delete_employees',
-            'can_reset_password',
-        ]
+
 
 class EmployeeSerializer(serializers.ModelSerializer):
     hub_name = serializers.CharField(source='hub.name', read_only=True)
