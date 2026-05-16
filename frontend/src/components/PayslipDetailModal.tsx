@@ -76,9 +76,10 @@ export const PayslipDetailModal = ({
   const [localPayslip, setLocalPayslip] = useState<Payslip | null>(payslip);
 
   const history = (allPayroll || []).filter(p => {
-    const pEmpId = p.employee || (p as any).employee_id;
-    const currentEmpId = payslip?.employee || (payslip as any).employee_id;
-    return pEmpId === currentEmpId && p.id !== localPayslip?.id;
+    if (!payslip) return false;
+    const pEmpId = p.employee || p.employee_id;
+    const currentEmpId = payslip.employee || payslip.employee_id;
+    return pEmpId && currentEmpId && pEmpId === currentEmpId && p.id !== localPayslip?.id;
   }).sort((a, b) => new Date(b.period_end || '').getTime() - new Date(a.period_end || '').getTime());
 
   const [formData, setFormData] = useState({
