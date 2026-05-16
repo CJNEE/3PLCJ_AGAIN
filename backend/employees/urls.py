@@ -29,6 +29,7 @@ urlpatterns = [
     path('reset-password/<int:employee_id>/', views.reset_password, name='reset_password'),
     path('change-password/', views.change_password, name='change_password'),
     path('payroll/download/<int:hub_id>/', views.download_hub_payroll_csv, name='download_hub_payroll_csv'),
+    path('payroll/compute/', views.PayrollSummaryView.as_view(), name='payroll_compute'),
     # Permanent image serving from DB
     path('saved-images/<int:pk>/', ServeSavedImageView.as_view(), name='serve-saved-image'),
 ]

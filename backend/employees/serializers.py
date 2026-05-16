@@ -527,12 +527,17 @@ class PayrollSerializer(serializers.ModelSerializer):
             return absolute_media_url(self.context.get('request'), obj.payslip_image.url)
         return None
 
+    def _get_cumulative_start(self, obj):
+        from datetime import date
+        return date(obj.period_end.year, obj.period_end.month, 1)
+
     # Attendance-derived fields (computed live)
     def get_total_hours(self, obj):
         try:
             from datetime import timedelta
             total_seconds = 0.0
-            qs = obj.employee.attendance_records.filter(date__gte=obj.period_start, date__lte=obj.period_end)
+            cumulative_start = self._get_cumulative_start(obj)
+            qs = obj.employee.attendance_records.filter(date__gte=cumulative_start, date__lte=obj.period_end)
             from django.utils import timezone as djtz
             today = djtz.now().date()
             for a in qs:
@@ -558,7 +563,8 @@ class PayrollSerializer(serializers.ModelSerializer):
             from datetime import timedelta
             overtime_seconds = 0.0
             STANDARD_DAY_HOURS = 8
-            qs = obj.employee.attendance_records.filter(date__gte=obj.period_start, date__lte=obj.period_end)
+            cumulative_start = self._get_cumulative_start(obj)
+            qs = obj.employee.attendance_records.filter(date__gte=cumulative_start, date__lte=obj.period_end)
             from django.utils import timezone as djtz
             today = djtz.now().date()
             for a in qs:
@@ -585,7 +591,8 @@ class PayrollSerializer(serializers.ModelSerializer):
         try:
             LATE_HOUR = 10
             count = 0
-            qs = obj.employee.attendance_records.filter(date__gte=obj.period_start, date__lte=obj.period_end)
+            cumulative_start = self._get_cumulative_start(obj)
+            qs = obj.employee.attendance_records.filter(date__gte=cumulative_start, date__lte=obj.period_end)
             for a in qs:
                 if a.clock_in_time and getattr(a.clock_in_time, 'hour', None) is not None:
                     if a.clock_in_time.hour >= LATE_HOUR:
@@ -606,8 +613,9 @@ class PayrollSerializer(serializers.ModelSerializer):
                     cur += timedelta(days=1)
                 return days
 
-            working_days = count_weekdays(obj.period_start, obj.period_end)
-            qs = obj.employee.attendance_records.filter(date__gte=obj.period_start, date__lte=obj.period_end)
+            cumulative_start = self._get_cumulative_start(obj)
+            working_days = count_weekdays(cumulative_start, obj.period_end)
+            qs = obj.employee.attendance_records.filter(date__gte=cumulative_start, date__lte=obj.period_end)
             present_days = set()
             for a in qs:
                 if a.clock_in_time:
@@ -618,7 +626,7 @@ class PayrollSerializer(serializers.ModelSerializer):
             for lr in approved_leaves:
                 ls = lr.start_date
                 le = lr.end_date
-                overlap_start = max(ls, obj.period_start)
+                overlap_start = max(ls, cumulative_start)
                 overlap_end = min(le, obj.period_end)
                 if overlap_start <= overlap_end:
                     leave_days += count_weekdays(overlap_start, overlap_end)

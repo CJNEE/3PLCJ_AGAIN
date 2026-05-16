@@ -182,7 +182,7 @@ export const AccessControlPage = () => {
             placeholder="Search user here..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="input-field pl-10 w-full"
+            className="input-field !pl-10 w-full"
           />
         </div>
       </div>

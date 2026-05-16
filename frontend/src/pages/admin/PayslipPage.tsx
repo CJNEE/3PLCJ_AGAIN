@@ -13,8 +13,9 @@ export const PayslipPage = () => {
 
   // Sidebar should render even on desktop
 
-  const [payrollPeriod, setPayrollPeriod] = useState('All');
-  const [year, setYear] = useState(new Date().getFullYear().toString());
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [year, setYear] = useState('All');
   const [hubFilter, setHubFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
@@ -50,6 +51,11 @@ export const PayslipPage = () => {
     const uniqueYears = new Set(
       payroll.map((p: any) => new Date(p.period_end || p.created_at).getFullYear().toString())
     );
+    // Always include current and previous year
+    const currentYear = new Date().getFullYear();
+    uniqueYears.add(currentYear.toString());
+    uniqueYears.add((currentYear - 1).toString());
+    
     return ['All', ...Array.from(uniqueYears).sort().reverse()];
   }, [payroll]);
 
@@ -77,19 +83,23 @@ export const PayslipPage = () => {
         record.fullname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         record.jtp_code?.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesHub = hubFilter === 'All' || record.hub === hubFilter;
+      const matchesHub = hubFilter === 'All' || record.hub === hubFilter || record.hub_name === hubFilter;
       const matchesStatus =
         statusFilter === 'All' || record.status === statusFilter;
       const matchesYear =
         year === 'All' || new Date(record.period_end || record.created_at).getFullYear().toString() === year;
+      
+      const matchesDate = 
+        (!startDate || new Date(record.period_start) >= new Date(startDate)) &&
+        (!endDate || new Date(record.period_end) <= new Date(endDate));
 
-      if (matchesSearch && matchesHub && matchesStatus && matchesYear) {
+      if (matchesSearch && matchesHub && matchesStatus && matchesYear && matchesDate) {
         grouped[hubName].push(record);
       }
     });
 
     return grouped;
-  }, [payroll, searchTerm, hubFilter, statusFilter, year]);
+  }, [payroll, searchTerm, hubFilter, statusFilter, year, startDate, endDate]);
 
   const handleDownload = (hubName: string) => {
     const hubData = payrollByHub[hubName];
@@ -234,20 +244,26 @@ export const PayslipPage = () => {
           <div className="flex flex-col lg:flex-row gap-3 items-end">
             <div className="flex-1">
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                Payroll Period
+                Start Date
               </label>
-              <select
-                value={payrollPeriod}
-                onChange={(e) => setPayrollPeriod(e.target.value)}
-                aria-label="Filter by payroll period"
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
                 className="input-field w-full"
-              >
-                {payrollPeriods.map((period) => (
-                  <option key={period} value={period}>
-                    {period}
-                  </option>
-                ))}
-              </select>
+              />
+            </div>
+
+            <div className="flex-1">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                End Date
+              </label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="input-field w-full"
+              />
             </div>
 
             <div className="flex-1">
@@ -316,7 +332,7 @@ export const PayslipPage = () => {
                   placeholder="Search user here..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="input-field pl-10 w-full"
+                  className="input-field !pl-10 w-full"
                 />
               </div>
             </div>
@@ -421,6 +437,7 @@ export const PayslipPage = () => {
             setSelectedPayslip(null);
           }}
           payslip={selectedPayslip}
+          allPayroll={payroll}
           onSave={(updatedPayslip: any) => {
             console.log('Updated Payslip:', updatedPayslip);
             // Add logic to update the payslip in the backend or state

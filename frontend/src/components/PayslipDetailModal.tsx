@@ -50,6 +50,7 @@ interface PayslipDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   payslip: Payslip | null;
+  allPayroll?: Payslip[];
   onApprove?: () => void;
   onSave?: (updatedPayslip: Payslip) => void;
 }
@@ -63,6 +64,7 @@ export const PayslipDetailModal = ({
   isOpen,
   onClose,
   payslip,
+  allPayroll = [],
   onApprove,
   onSave,
 }: PayslipDetailModalProps) => {
@@ -70,6 +72,12 @@ export const PayslipDetailModal = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [localPayslip, setLocalPayslip] = useState<Payslip | null>(payslip);
+
+  const history = (allPayroll || []).filter(p => {
+    const pEmpId = p.employee || (p as any).employee_id;
+    const currentEmpId = payslip?.employee || (payslip as any).employee_id;
+    return pEmpId === currentEmpId && p.id !== localPayslip?.id;
+  }).sort((a, b) => new Date(b.period_end || '').getTime() - new Date(a.period_end || '').getTime());
 
   const [formData, setFormData] = useState({
     basic_salary: toNumber(payslip?.basic_salary ?? 0),
@@ -670,6 +678,29 @@ export const PayslipDetailModal = ({
               Close
             </button>
           </div>
+
+          {/* Past Payslips History */}
+          {history.length > 0 && (
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest mb-4">Past Payslips History</h3>
+              <div className="space-y-3">
+                {history.map((prev) => (
+                  <div key={prev.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-red-200 transition-all">
+                    <div>
+                      <p className="text-xs font-bold text-gray-900">{prev.payslip_period || `${prev.period_start} - ${prev.period_end}`}</p>
+                      <p className="text-[10px] text-gray-500 uppercase font-black mt-0.5">Net Pay: ₱{toNumber(prev.total_earnings || 0).toFixed(2)}</p>
+                    </div>
+                    <button
+                      onClick={() => setLocalPayslip(prev)}
+                      className="text-[10px] font-black uppercase tracking-widest text-red-600 hover:underline"
+                    >
+                      View Record
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </Modal>

@@ -248,39 +248,7 @@ class EmployeeViewSet(viewsets.ModelViewSet):
             'can_login': new_status
         })
 
-    @action(detail=True, methods=['post'])
-    def reset_password(self, request, pk=None):
-        """Reset employee password - returns temporary password"""
-        try:
-            employee = self.get_object()
-            if not employee.user:
-                return Response({'error': 'User account not found'}, status=status.HTTP_404_NOT_FOUND)
-
-            # Generate temporary password
-            import string
-            import random
-            temp_password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
-
-            employee.user.set_password(temp_password)
-            employee.user.save()
-
-            ActivityLog.objects.create(
-                user=request.user,
-                employee=employee,
-                role='Admin',
-                action='reset_password',
-                details=f'Password reset for {employee.full_name}',
-                ip_address=self.get_client_ip(request)
-            )
-
-            return Response({
-                'message': 'Password reset successfully',
-                'temporary_password': temp_password,
-                'employee_id': employee.id,
-                'employee_name': employee.full_name
-            })
-        except Employee.DoesNotExist:
-            return Response({'error': 'Employee not found'}, status=status.HTTP_404_NOT_FOUND)
+    # Removed redundant reset_password action. Standalone reset_password function is used in urls.py.
 
     @action(detail=True, methods=['post'])
     def blacklist_employee(self, request, pk=None):
@@ -450,8 +418,12 @@ def compute_payroll_summary(employee: Employee, start_date, end_date, basic_sala
     from decimal import Decimal, ROUND_HALF_UP
     from datetime import timedelta
 
-    # attendance aggregation
-    qs = Attendance.objects.filter(employee=employee, date__gte=start_date, date__lte=end_date)
+    # Monthly cumulative logic: calculate from the 1st of the month of period_end
+    from datetime import date
+    cumulative_start = date(end_date.year, end_date.month, 1)
+    
+    # attendance aggregation (cumulative from start of month)
+    qs = Attendance.objects.filter(employee=employee, date__gte=cumulative_start, date__lte=end_date)
     total_seconds = 0.0
     overtime_seconds = 0.0
     late_count = 0
@@ -499,8 +471,7 @@ def compute_payroll_summary(employee: Employee, start_date, end_date, basic_sala
                 days += 1
             cur += timedelta(days=1)
         return days
-
-    working_days = count_weekdays(start_date, end_date)
+    working_days = count_weekdays(cumulative_start, end_date)
 
     # approved leave days overlapping
     leave_days = 0
@@ -508,7 +479,7 @@ def compute_payroll_summary(employee: Employee, start_date, end_date, basic_sala
     for lr in approved_leaves:
         ls = lr.start_date
         le = lr.end_date
-        overlap_start = max(ls, start_date)
+        overlap_start = max(ls, cumulative_start)
         overlap_end = min(le, end_date)
         if overlap_start <= overlap_end:
             leave_days += count_weekdays(overlap_start, overlap_end)
@@ -1335,9 +1306,9 @@ class PayrollViewSet(viewsets.ModelViewSet):
 
                 # Compute attendance-based summary for this employee and period
                 try:
-                    from datetime import timedelta
-
-                    qs = Attendance.objects.filter(employee=employee, date__gte=start_date, date__lte=end_date)
+                    from datetime import timedelta, date
+                    cumulative_start = date(end_date.year, end_date.month, 1)
+                    qs = Attendance.objects.filter(employee=employee, date__gte=cumulative_start, date__lte=end_date)
 
                     total_seconds = 0.0
                     overtime_seconds = 0.0
@@ -1381,7 +1352,7 @@ class PayrollViewSet(viewsets.ModelViewSet):
                             cur += timedelta(days=1)
                         return days
 
-                    working_days = count_weekdays(start_date, end_date)
+                    working_days = count_weekdays(cumulative_start, end_date)
 
                     # Count approved leave days overlapping this period for this employee
                     approved_leaves = LeaveRequest.objects.filter(employee=employee, status='approved')
@@ -1391,7 +1362,7 @@ class PayrollViewSet(viewsets.ModelViewSet):
                         ls = lr.start_date
                         le = lr.end_date
                         # Find intersection
-                        overlap_start = max(ls, start_date)
+                        overlap_start = max(ls, cumulative_start)
                         overlap_end = min(le, end_date)
                         if overlap_start <= overlap_end:
                             leave_days += count_weekdays(overlap_start, overlap_end)
@@ -2206,12 +2177,20 @@ class HRPermissionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
-        # Only admins can view all HR permissions
         user_employee = Employee.objects.filter(user=self.request.user).first()
+        queryset = HRPermission.objects.all()
+        
+        # Filter by hr_employee if provided in query params
+        hr_employee_id = self.request.query_params.get('hr_employee')
+        if hr_employee_id:
+            queryset = queryset.filter(hr_employee_id=hr_employee_id)
+
+        # Restrict visibility if not Admin
         if user_employee and user_employee.role == 'Admin':
-            return HRPermission.objects.all()
+            return queryset
+        
         # HR can only view their own permissions
-        return HRPermission.objects.filter(hr_employee__user=self.request.user)
+        return queryset.filter(hr_employee__user=self.request.user)
 
 
 # ===================== ACCOUNT MANAGEMENT ENDPOINTS =====================

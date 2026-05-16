@@ -24,8 +24,8 @@ export const EmployeeAccessControlModal = ({
   const [accountLocked, setAccountLocked] = useState(!employee?.can_login);
   const [tempPassword, setTempPassword] = useState<string | null>(null);
   
-  // Manual Password State
-  const [showManualPassword, setShowManualPassword] = useState(false);
+  // Manual Password State - Default to true as requested
+  const [showManualPassword, setShowManualPassword] = useState(true);
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [manualData, setManualData] = useState({
@@ -134,37 +134,27 @@ export const EmployeeAccessControlModal = ({
     }
   };
 
-  const handleResetPassword = async (isManual = false) => {
-    if (isManual) {
-      if (manualData.password !== manualData.confirm) {
-        toast.error('Passwords do not match');
-        return;
-      }
-      if (manualData.password.length < 8) {
-        toast.error('Password must be at least 8 characters');
-        return;
-      }
-    } else {
-      if (!confirm('Reset password for this employee? A temporary password will be generated.')) return;
+  const handleResetPassword = async () => {
+    if (manualData.password !== manualData.confirm) {
+      toast.error('Passwords do not match');
+      return;
+    }
+    if (manualData.password.length < 8) {
+      toast.error('Password must be at least 8 characters');
+      return;
     }
 
     try {
       setIsLoading(true);
-      const payload = isManual ? { manual_password: manualData.password } : {};
-      const response = await apiClient.post(`reset-password/${employee.id}/`, payload);
+      const payload = { manual_password: manualData.password };
+      await apiClient.post(`reset-password/${employee.id}/`, payload);
       
-      if (!isManual) {
-        setTempPassword(response.data.temporary_password);
-        toast.success(`Temporary password generated.`);
-      } else {
-        toast.success('Password updated successfully');
-        setShowManualPassword(false);
-        setManualData({ password: '', confirm: '' });
-      }
+      toast.success('Password updated successfully');
+      setManualData({ password: '', confirm: '' });
       onUpdate?.();
     } catch (error: any) {
       toast.error(
-        error?.response?.data?.error || 'Failed to reset password'
+        error?.response?.data?.error || 'Failed to update password'
       );
     } finally {
       setIsLoading(false);
@@ -293,51 +283,23 @@ export const EmployeeAccessControlModal = ({
 
           {/* Password Management */}
           <section className="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-800">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Key size={16} className="text-gray-400" />
-                <h4 className="font-black text-[10px] uppercase tracking-widest text-gray-400">Credentials Management</h4>
-              </div>
-              <button 
-                onClick={() => setShowManualPassword(!showManualPassword)}
-                className="text-[9px] font-black uppercase tracking-widest text-red-600 hover:underline"
-              >
-                {showManualPassword ? 'Use Random Generator' : 'Manual Entry'}
-              </button>
+            <div className="flex items-center gap-3">
+              <Key size={16} className="text-gray-400" />
+              <h4 className="font-black text-[10px] uppercase tracking-widest text-gray-400">Credentials Management</h4>
             </div>
 
-            {tempPassword && (
-              <div className="bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 p-5 rounded-2xl animate-in zoom-in-95">
-                <div className="flex items-center gap-2 text-red-600 mb-3">
-                  <Shield size={16} />
-                  <span className="text-[10px] font-black uppercase tracking-widest">New Credentials Generated</span>
+            <div className="p-5 bg-gray-50/50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">System Username</label>
+                  <p className="text-sm font-black text-gray-900 dark:text-white">{employee?.user_info?.username || employee?.employee_id || 'Not Set'}</p>
                 </div>
-                <div className="bg-white dark:bg-gray-900 p-4 rounded-xl border border-red-100 dark:border-red-900/30 text-center shadow-inner">
-                  <code className="text-2xl font-black tracking-[0.4em] text-red-600">{tempPassword}</code>
+                <div className="px-3 py-1 bg-white dark:bg-gray-900 rounded-lg border border-gray-100 dark:border-gray-800 text-[10px] font-bold text-gray-500">
+                  READ ONLY
                 </div>
-                <p className="text-[9px] text-red-700 dark:text-red-400 mt-3 text-center font-bold uppercase tracking-widest">Provide this password to the employee immediately.</p>
               </div>
-            )}
+            </div>
 
-            {!showManualPassword ? (
-              <div className="space-y-4">
-                <Button
-                  onClick={() => handleResetPassword(false)}
-                  disabled={isLoading}
-                  variant="secondary"
-                  className="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-black uppercase tracking-widest text-[10px] py-4 rounded-2xl hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  {isLoading ? 'Generating...' : 'Generate New Password'}
-                </Button>
-                
-                <div className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700">
-                  <AlertCircle size={16} className="text-gray-400 mt-0.5 flex-shrink-0" />
-                  <p className="text-[10px] text-gray-500 font-medium leading-relaxed">
-                    Automated reset creates a cryptographically secure 12-character password. Current credentials will be invalidated immediately.
-                  </p>
-                </div>
-              </div>
-            ) : (
               <div className="space-y-4 p-5 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm animate-in fade-in slide-in-from-top-4">
                 <div className="space-y-3">
                   <div className="space-y-1.5">
@@ -372,7 +334,7 @@ export const EmployeeAccessControlModal = ({
                   </div>
                 </div>
                 <Button
-                  onClick={() => handleResetPassword(true)}
+                  onClick={handleResetPassword}
                   disabled={isLoading}
                   className="w-full bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest text-[10px] py-4 rounded-xl shadow-lg shadow-red-600/20"
                 >
