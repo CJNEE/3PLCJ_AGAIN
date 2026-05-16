@@ -3,22 +3,22 @@
   "name": "3PL Employee Management System",
   "icons": [
     {
-      "src": "/favicon.png",
-      "sizes": "64x64 32x32 24x24 16x16",
+      "src": "/favicon-v2.png",
+      "sizes": "512x512",
       "type": "image/png"
     },
     {
-      "src": "/icon-192.png",
+      "src": "/icon-192-v2.png",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/icon-512-v2.png",
       "type": "image/png",
       "sizes": "512x512"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/icon-512-v2.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "maskable"
