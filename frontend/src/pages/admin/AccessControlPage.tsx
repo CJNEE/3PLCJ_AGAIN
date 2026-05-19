@@ -144,7 +144,7 @@ export const AccessControlPage = () => {
         <select
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
-          className="input-field"
+          className="input-field w-full md:w-56"
         >
           {roles.map((role) => (
             <option key={role} value={role}>
@@ -156,7 +156,7 @@ export const AccessControlPage = () => {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="input-field"
+          className="input-field w-full md:w-56"
         >
           <option value="All">Status: All</option>
           <option value="Active">Status: Active</option>
@@ -166,7 +166,7 @@ export const AccessControlPage = () => {
         <select
           value={hubFilter}
           onChange={(e) => setHubFilter(e.target.value)}
-          className="input-field"
+          className="input-field w-full md:w-56"
         >
           {hubs.map((hub) => (
             <option key={hub} value={hub}>
@@ -175,7 +175,7 @@ export const AccessControlPage = () => {
           ))}
         </select>
 
-        <div className="relative flex-1 w-full lg:w-auto">
+        <div className="relative flex-1 w-full min-w-[240px]">
           <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
           <input
             type="text"
