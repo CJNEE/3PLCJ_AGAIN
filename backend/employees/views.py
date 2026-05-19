@@ -67,11 +67,11 @@ class MetaView(APIView):
             if key not in meta_data:
                 return Response({'detail': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
             if key == 'positions' and not meta_data['positions']:
-                meta_data['positions'] = ['Driver', 'Admin', 'HR', 'Manager', 'Supervisor', 'Warehouse Staff']
+                meta_data['positions'] = ['Sorter', 'Admin', 'HR', 'Rider']
             return Response(meta_data[key])
 
         if not meta_data['positions']:
-            meta_data['positions'] = ['Driver', 'Admin', 'HR', 'Manager', 'Supervisor', 'Warehouse Staff']
+            meta_data['positions'] = ['Sorter', 'Admin', 'HR', 'Rider']
         return Response(meta_data)
 
 class EmployeeViewSet(viewsets.ModelViewSet):

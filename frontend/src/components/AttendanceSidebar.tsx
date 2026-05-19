@@ -8,6 +8,30 @@ interface AttendanceSidebarProps {
   onViewHistory?: () => void;
 }
 
+const formatAttendanceTime = (timeStr: string | undefined | null) => {
+  if (!timeStr) return '--:--';
+  try {
+    if (timeStr.includes(':') && !timeStr.includes('-') && !timeStr.includes('T')) {
+      const parts = timeStr.split(':');
+      if (parts.length >= 2) {
+        const hour = parseInt(parts[0], 10);
+        const minutes = parts[1].padStart(2, '0');
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const displayHour = hour % 12 || 12;
+        const displayHourStr = displayHour.toString().padStart(2, '0');
+        return `${displayHourStr}:${minutes} ${ampm}`;
+      }
+    }
+    const date = new Date(timeStr);
+    if (isNaN(date.getTime())) {
+      return '--:--';
+    }
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  } catch (error) {
+    return '--:--';
+  }
+};
+
 export const AttendanceSidebar = ({ employeeId, onViewHistory }: AttendanceSidebarProps) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [file, setFile] = useState<File | null>(null);
@@ -90,11 +114,11 @@ export const AttendanceSidebar = ({ employeeId, onViewHistory }: AttendanceSideb
         <div className="grid grid-cols-2 gap-4">
           <div className="p-4 bg-gray-50 rounded-lg text-center">
             <p className="text-xs text-gray-500 mb-1">Clock In</p>
-            <p className="text-lg font-semibold text-gray-800">{todayAttendance?.clock_in_time ? new Date(todayAttendance.clock_in_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '--:--'}</p>
+            <p className="text-lg font-semibold text-gray-800">{formatAttendanceTime(todayAttendance?.clock_in_time)}</p>
           </div>
           <div className="p-4 bg-gray-50 rounded-lg text-center">
             <p className="text-xs text-gray-500 mb-1">Clock Out</p>
-            <p className="text-lg font-semibold text-gray-800">{todayAttendance?.clock_out_time ? new Date(todayAttendance.clock_out_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '--:--'}</p>
+            <p className="text-lg font-semibold text-gray-800">{formatAttendanceTime(todayAttendance?.clock_out_time)}</p>
           </div>
         </div>
       </div>
