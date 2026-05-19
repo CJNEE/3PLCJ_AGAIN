@@ -2362,7 +2362,8 @@ class HRPermissionViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(hr_employee_id=hr_employee_id)
 
         # Restrict visibility if not Admin
-        if user_employee and user_employee.role == 'Admin':
+        is_admin = self.request.user.is_superuser or self.request.user.is_staff or (user_employee and user_employee.role == 'Admin')
+        if is_admin:
             return queryset
         
         # HR can only view their own permissions
@@ -2490,9 +2491,9 @@ def reset_password(request, employee_id):
         ActivityLog.objects.create(
             employee=employee,
             user=request.user,
-            role=requester_employee.role,
+            role=requester_employee.role if requester_employee else 'Admin',
             action='reset_password',
-            details=f"Password {'manually set' if manual_password else 'reset'} by {requester_employee.role} for {employee.full_name}.",
+            details=f"Password {'manually set' if manual_password else 'reset'} by {requester_employee.role if requester_employee else 'Admin'} for {employee.full_name}.",
             ip_address=_client_ip(request),
             user_agent=request.META.get('HTTP_USER_AGENT', '')
         )
