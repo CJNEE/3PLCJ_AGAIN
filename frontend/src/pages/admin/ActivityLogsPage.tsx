@@ -200,7 +200,7 @@ export const ActivityLogsPage = () => {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              className="input-field w-full pl-10 py-2"
+              className="input-field !pl-10 w-full py-2"
             />
           </div>
 

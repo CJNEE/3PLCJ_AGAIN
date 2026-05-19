@@ -152,10 +152,13 @@ export const AdminHubsPage = () => {
     if (hubState.selectedHub) {
       const coords = getHubCoordinates(hubState.selectedHub);
       fetchWeather(coords[0], coords[1]).then(setWeatherData);
+    } else if (userLocation) {
+      fetchWeather(userLocation[0], userLocation[1]).then(setWeatherData);
     } else {
-      setWeatherData(null);
+      // Default to Manila coords
+      fetchWeather(14.5995, 120.9842).then(setWeatherData);
     }
-  }, [hubState.selectedHub]);
+  }, [hubState.selectedHub, userLocation]);
 
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
     const R = 6371;
@@ -392,7 +395,7 @@ export const AdminHubsPage = () => {
                 placeholder="Search locations..."
                 value={searchTerm}
                 onChange={(e: any) => setSearchTerm(e.target.value)}
-                className="input-field w-full pl-11 py-3 text-sm bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-xl shadow-sm focus:ring-2 focus:ring-red-500/20"
+                className="input-field w-full !pl-11 py-3 text-sm bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-xl shadow-sm focus:ring-2 focus:ring-red-500/20"
               />
             </div>
             
@@ -402,7 +405,9 @@ export const AdminHubsPage = () => {
                   {weatherData.icon}
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Current Weather</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                    Weather in {hubState.selectedHub ? hubState.selectedHub.name : (userLocation ? 'Your Location' : 'Manila')}
+                  </p>
                   <p className="text-sm font-bold text-gray-900 dark:text-white">{weatherData.temp}°C • {weatherData.label}</p>
                 </div>
               </div>
@@ -471,7 +476,7 @@ export const AdminHubsPage = () => {
               </div>
             </Card>
 
-            {hubState.selectedHub && (
+            {hubState.selectedHub ? (
               <Card className="lg:col-span-2 p-0 overflow-hidden flex flex-col bg-white dark:bg-gray-900 border border-red-200 dark:border-gray-800 rounded-2xl shadow-2xl relative animate-in slide-in-from-right-4">
                 <div className="p-4 flex items-center justify-between border-b border-gray-100 dark:border-gray-800">
                   <h3 className="font-extrabold text-lg text-gray-900 dark:text-white truncate pr-4">{hubState.selectedHub.name}</h3>
@@ -481,7 +486,7 @@ export const AdminHubsPage = () => {
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
                   <div className="relative">
                     <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input type="text" placeholder="Search Name" value={employeeSearch} onChange={(e: any) => { setEmployeeSearch(e.target.value); setCurrentPage(1); }} className="input-field w-full pl-9 py-2 text-sm bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 rounded-full" />
+                    <input type="text" placeholder="Search Name" value={employeeSearch} onChange={(e: any) => { setEmployeeSearch(e.target.value); setCurrentPage(1); }} className="input-field w-full !pl-9 py-2 text-sm bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 rounded-full" />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
@@ -534,6 +539,51 @@ export const AdminHubsPage = () => {
                       {loadingRoute ? <LoadingSpinner size="sm" /> : <><Navigation size={16} /> Get Direction</>}
                     </button>
                   </div>
+                </div>
+              </Card>
+            ) : (
+              <Card className="lg:col-span-2 p-6 flex flex-col justify-between bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-xl animate-in fade-in duration-300">
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-red-50 dark:bg-red-950/30 rounded-xl text-red-600">
+                      <MapPin size={24} />
+                    </div>
+                    <div>
+                      <h3 className="font-extrabold text-base text-gray-900 dark:text-white uppercase tracking-tight">Hub Directory</h3>
+                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Select a hub on the map</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="p-4 bg-gray-50 dark:bg-gray-800/40 rounded-xl border border-gray-100 dark:border-gray-700/50">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-wider text-gray-400">Total Network</p>
+                          <p className="text-xl font-black text-gray-900 dark:text-white mt-0.5">{hubs.length} Hubs</p>
+                        </div>
+                        <Route className="text-red-600" size={24} />
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-gray-50 dark:bg-gray-800/40 rounded-xl border border-gray-100 dark:border-gray-700/50">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-wider text-gray-400">Total Personnel</p>
+                          <p className="text-xl font-black text-gray-900 dark:text-white mt-0.5">{allEmployees.length} Staff</p>
+                        </div>
+                        <Users className="text-red-600" size={24} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-red-50/50 dark:bg-red-950/10 p-4 rounded-xl border border-red-100/30 dark:border-red-950/20 text-center mt-6">
+                  <p className="text-[11px] text-red-600 dark:text-red-400 font-black uppercase tracking-widest leading-relaxed">
+                    💡 Pro-Tip
+                  </p>
+                  <p className="text-[9px] text-gray-550 dark:text-gray-400 mt-1 leading-normal font-semibold">
+                    Click any red marker pins on the map to display real-time route directions, travel time, local weather conditions, and detailed employee rosters.
+                  </p>
                 </div>
               </Card>
             )}
