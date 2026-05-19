@@ -45,24 +45,36 @@ export const AdminDashboard = () => {
   });
 
 
-  // Create custom red icon for Leaflet
-  const hubIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
+  // Create beautiful custom SVG markers for Leaflet (remove ugly black shadows)
+  const hubIcon = L.divIcon({
+    className: 'custom-hub-marker',
+    html: `
+      <div class="relative flex items-center justify-center" style="width: 32px; height: 32px;">
+        <div class="absolute w-8 h-8 bg-red-500/30 rounded-full animate-ping"></div>
+        <div class="relative w-7 h-7 bg-red-600 rounded-full border-2 border-white shadow-md flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+      </div>
+    `,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16]
   });
 
   // Create user location icon
-  const userIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
+  const userIcon = L.divIcon({
+    className: 'custom-user-marker',
+    html: `
+      <div class="relative flex items-center justify-center" style="width: 32px; height: 32px;">
+        <div class="absolute w-8 h-8 bg-blue-500/30 rounded-full animate-pulse"></div>
+        <div class="relative w-7 h-7 bg-blue-600 rounded-full border-2 border-white shadow-md flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+      </div>
+    `,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16]
   });
 
   // Fetch data
@@ -366,14 +378,14 @@ export const AdminDashboard = () => {
         <Card className="p-0 overflow-hidden border border-gray-200 dark:border-gray-700 flex flex-col min-h-[500px]">
           <div className="flex justify-between items-center p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 z-10">
             <h2 className="text-lg font-semibold">Hub Locations</h2>
-            <div className="relative flex-1 max-w-md ml-4">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <div className="relative flex-1 max-w-xs ml-4">
+              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
               <input 
                 type="text" 
                 placeholder="Search Locations..." 
                 value={searchLocationTerm}
                 onChange={(e) => setSearchLocationTerm(e.target.value)}
-                className="input-field text-sm pl-10 w-full"
+                className="input-field text-sm !pl-10 w-full py-2 bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-red-500/20"
               />
             </div>
           </div>
