@@ -2008,7 +2008,6 @@ class EmployeeStatsView(APIView):
     def get(self, request):
         total = Employee.objects.count()
         active = Employee.objects.filter(status='Active').count()
-        inactive = Employee.objects.filter(status='Inactive').count()
         resign = Employee.objects.filter(status='Resign').count()
         awol = Employee.objects.filter(status='AWOL').count()
         blacklist = Employee.objects.filter(status='Blacklist').count()
@@ -2019,7 +2018,6 @@ class EmployeeStatsView(APIView):
         return Response({
             'total': total,
             'active': active,
-            'inactive': inactive,
             'resign': resign,
             'awol': awol,
             'blacklist': blacklist,

@@ -15,7 +15,6 @@ import { Sidebar } from '@/components/Sidebar';
 // Color mappings for status
 const STATUS_COLORS: Record<string, string> = {
   'Active': '#10B981',      // green
-  'Inactive': '#9CA3AF',    // gray
   'AWOL': '#F59E0B',        // yellow
   'Blacklist': '#EF4444',   // red
   'Resign': '#1F2937',      // black
@@ -112,22 +111,23 @@ export const AdminDashboard = () => {
 
   // Hub-specific employee distribution with status breakdown
   const hubEmployeeData = useMemo(() => {
-    const hubMap = {} as Record<string, { Active: number; Inactive: number; AWOL: number; Blacklist: number; Resign: number }>;
+    const hubMap = {} as Record<string, { Active: number; AWOL: number; Blacklist: number; Resign: number }>;
     
     allEmployees.forEach((emp: any) => {
       const hubName = emp.hub_name || 'Unknown Hub';
       if (!hubMap[hubName]) {
-        hubMap[hubName] = { Active: 0, Inactive: 0, AWOL: 0, Blacklist: 0, Resign: 0 };
+        hubMap[hubName] = { Active: 0, AWOL: 0, Blacklist: 0, Resign: 0 };
       }
       const status = emp.status || 'Active';
-      hubMap[hubName][status as keyof typeof hubMap[string]] = (hubMap[hubName][status as keyof typeof hubMap[string]] || 0) + 1;
+      if (status !== 'Inactive') {
+        hubMap[hubName][status as keyof typeof hubMap[string]] = (hubMap[hubName][status as keyof typeof hubMap[string]] || 0) + 1;
+      }
     });
 
     return Object.entries(hubMap)
       .map(([name, statuses]) => ({
         name: name.split(' ').slice(0, 3).join(' '),
         Active: statuses.Active || 0,
-        Inactive: statuses.Inactive || 0,
         AWOL: statuses.AWOL || 0,
         Blacklist: statuses.Blacklist || 0,
         Resign: statuses.Resign || 0,

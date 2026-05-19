@@ -27,7 +27,7 @@ const FIELD_DEFINITIONS: FieldDefinition[] = [
   { name: 'permanent_address', label: 'Permanent Address', type: 'textarea' },
   { name: 'emergency_contact_name', label: 'Emergency Contact Name', type: 'text' },
   { name: 'emergency_contact_phone', label: 'Emergency Contact Phone', type: 'text' },
-  { name: 'status', label: 'Employment Status', type: 'select', options: [{ value: 'Active', label: 'Active' }, { value: 'Inactive', label: 'Inactive' }, { value: 'Resign', label: 'Resign' }, { value: 'AWOL', label: 'AWOL' }, { value: 'Blacklist', label: 'Blacklist' }] },
+  { name: 'status', label: 'Employment Status', type: 'select', options: [{ value: 'Active', label: 'Active' }, { value: 'Resign', label: 'Resign' }, { value: 'AWOL', label: 'AWOL' }, { value: 'Blacklist', label: 'Blacklist' }] },
   { name: 'employment_type', label: 'Employment Type', type: 'select', options: [{ value: 'Full-time', label: 'Full-time' }, { value: 'OCW', label: 'OCW' }] },
   { name: 'position', label: 'Position', type: 'text', required: true },
   { name: 'tin', label: 'TIN', type: 'text' },

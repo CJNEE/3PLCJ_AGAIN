@@ -17,8 +17,6 @@ var EmployeeProfileWithMapModal = function (_a) {
         switch (status === null || status === void 0 ? void 0 : status.toLowerCase()) {
             case 'active':
                 return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-            case 'inactive':
-                return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
             case 'resign':
                 return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
             case 'awol':

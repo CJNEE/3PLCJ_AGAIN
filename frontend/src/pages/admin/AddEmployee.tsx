@@ -126,7 +126,7 @@ export const AddEmployee = ({ onCancel, onClose, onCreated }: AddEmployeeProps) 
   // dynamic options fetched from backend (falls back to defaults)
   const [roles, setRoles] = useState<string[]>(['Employee', 'HR', 'Admin']);
   const [employmentTypes, setEmploymentTypes] = useState<string[]>(['Full-time', 'Full Time', 'Part Time', 'Contract', 'Intern', 'OCW']);
-  const [statuses, setStatuses] = useState<string[]>(['Active', 'Inactive']);
+  const [statuses, setStatuses] = useState<string[]>(['Active', 'Resign', 'AWOL', 'Blacklist']);
   const [genders, setGenders] = useState<string[]>(['Male', 'Female', 'Other']);
   const [maritalStatuses, setMaritalStatuses] = useState<string[]>(['Single', 'Married', 'Divorced', 'Widowed']);
   const [positions, setPositions] = useState<string[]>([]);

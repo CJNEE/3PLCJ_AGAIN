@@ -75,7 +75,7 @@ const FIELD_CONFIG = {
   marital_status: { label: 'Marital Status', type: 'select', options: ['Single', 'Married', 'Divorced', 'Widowed'] },
   position: { label: 'Position', type: 'text' },
   employment_type: { label: 'Employment Type', type: 'select', options: ['Full-time', 'OCW'] },
-  status: { label: 'Status', type: 'select', options: ['Active', 'Inactive', 'Resign', 'AWOL', 'Blacklist'], disabled: true },
+  status: { label: 'Status', type: 'select', options: ['Active', 'Resign', 'AWOL', 'Blacklist'], disabled: true },
   role: { label: 'Role', type: 'select', options: ['Employee', 'HR', 'Admin'] },
   can_login: { label: 'Can Login', type: 'checkbox' },
   can_edit_info: { label: 'Can Edit Info', type: 'checkbox' },

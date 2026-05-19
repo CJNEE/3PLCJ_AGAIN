@@ -55,7 +55,6 @@ class Employee(models.Model):
 
     STATUS_CHOICES = [
         ('Active', 'Active'),
-        ('Inactive', 'Inactive'),
         ('Resign', 'Resign'),
         ('AWOL', 'AWOL'),
         ('Blacklist', 'Blacklist'),

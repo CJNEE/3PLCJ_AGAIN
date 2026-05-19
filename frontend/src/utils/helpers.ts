@@ -71,7 +71,7 @@ export const capitalizeString = (str: string): string => {
 export const getStatusColor = (status: string): string => {
   const colorMap: Record<string, string> = {
     'Active': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-    'Inactive': 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
+    'Resign': 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
     'AWOL': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
     'Blacklist': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
     'Present': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',

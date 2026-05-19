@@ -24,7 +24,6 @@ export default function HubsEmployeeChart({ hubsData = [], employees = [] }: Pro
         product: hub.name,
 
         active: countByStatus('active'),
-        inactive: countByStatus('inactive'),
         awol: countByStatus('awol'),
         resign: countByStatus('resign'),
         blacklist: countByStatus('blacklist'),
@@ -33,7 +32,7 @@ export default function HubsEmployeeChart({ hubsData = [], employees = [] }: Pro
   }, [hubsData, employees]);
 
   const filteredDataset = dataset.filter(
-    d => d.active || d.inactive || d.awol || d.resign || d.blacklist
+    d => d.active || d.awol || d.resign || d.blacklist
   );
 
   if (!filteredDataset.length) {
@@ -59,7 +58,6 @@ export default function HubsEmployeeChart({ hubsData = [], employees = [] }: Pro
 
         series={[
           { dataKey: 'active', label: 'Active', color: '#22C55E' },
-          { dataKey: 'inactive', label: 'Inactive', color: '#9CA3AF' },
           { dataKey: 'awol', label: 'AWOL', color: '#F59E0B' },
           { dataKey: 'resign', label: 'Resigned', color: '#3B82F6' },
           { dataKey: 'blacklist', label: 'Blacklist', color: '#EF4444' },

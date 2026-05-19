@@ -69,7 +69,7 @@ export const AccessControlPage = () => {
       const matchesStatus =
         statusFilter === 'All' ||
         (statusFilter === 'Active' && emp.is_active) ||
-        (statusFilter === 'Inactive' && !emp.is_active);
+        (statusFilter === 'Deactivated' && !emp.is_active);
       const matchesHub = hubFilter === 'All' || emp.hub_name === hubFilter;
 
       return matchesSearch && matchesRole && matchesStatus && matchesHub;
@@ -160,7 +160,7 @@ export const AccessControlPage = () => {
         >
           <option value="All">Status: All</option>
           <option value="Active">Status: Active</option>
-          <option value="Inactive">Status: Inactive</option>
+          <option value="Deactivated">Status: Deactivated</option>
         </select>
 
         <select
@@ -225,7 +225,7 @@ export const AccessControlPage = () => {
                           ? 'Active'
                           : !emp.can_login
                           ? 'Locked'
-                          : 'Inactive'}
+                          : 'Deactivated'}
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-center">
