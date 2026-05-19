@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-
 import { Modal } from './Modal';
 import { useToast } from '@/hooks/useToast';
 import { useUpdatePayroll, useCreatePayroll } from '@/hooks/useQueries';
@@ -9,10 +8,44 @@ type PayslipStatus = 'draft' | 'approved' | 'pending' | string;
 
 type Payslip = {
   id?: number;
+  standard_pay?: number | string;
   basic_salary?: number | string;
-  allowances?: number | string;
   overtime_pay?: number | string;
+  night_differential?: number | string;
+  ndot?: number | string;
+  rest_day?: number | string;
+  rest_day_ot?: number | string;
+  rest_day_nd?: number | string;
+  rest_day_ndot?: number | string;
+  special_holiday?: number | string;
+  special_holiday_ot?: number | string;
+  special_holiday_nd?: number | string;
+  special_holiday_ndot?: number | string;
+  legal_holiday?: number | string;
+  legal_holiday_ot?: number | string;
+  legal_holiday_nd?: number | string;
+  legal_holiday_ndot?: number | string;
+  legal_holiday_rd?: number | string;
+  legal_holiday_rdot?: number | string;
+  legal_holiday_rdnd?: number | string;
+  legal_holiday_rdndot?: number | string;
   incentives?: number | string;
+  adjustment?: number | string;
+  gas?: number | string;
+  load?: number | string;
+  other_allowance?: number | string;
+  rewards_adjustments?: number | string;
+  kpi?: number | string;
+  allowances?: number | string;
+
+  late?: number | string;
+  id_deduction?: number | string;
+  uniform?: number | string;
+  insurance?: number | string;
+  surety_bond?: number | string;
+  convenience_fee?: number | string;
+  general_deduction?: number | string;
+
   sss_deduction?: number | string;
   philhealth_deduction?: number | string;
   pagibig_deduction?: number | string;
@@ -26,7 +59,6 @@ type Payslip = {
   overtime_hours?: number | string;
   lates?: number | string;
   absences?: number | string;
-  // alternate keys sometimes returned by the API
   totalHours?: number | string;
   sss_percent?: number | string;
   philhealth_percent?: number | string;
@@ -117,11 +149,43 @@ export const PayslipDetailModal = ({
   }).sort((a, b) => new Date(b.period_end || '').getTime() - new Date(a.period_end || '').getTime());
 
   const [formData, setFormData] = useState({
+    standard_pay: toNumber(payslip?.standard_pay ?? 0),
     basic_salary: toNumber(payslip?.basic_salary ?? 0),
-    allowances: toNumber(payslip?.allowances ?? 0),
     overtime_pay: toNumber(payslip?.overtime_pay ?? 0),
+    night_differential: toNumber(payslip?.night_differential ?? 0),
+    ndot: toNumber(payslip?.ndot ?? 0),
+    rest_day: toNumber(payslip?.rest_day ?? 0),
+    rest_day_ot: toNumber(payslip?.rest_day_ot ?? 0),
+    rest_day_nd: toNumber(payslip?.rest_day_nd ?? 0),
+    rest_day_ndot: toNumber(payslip?.rest_day_ndot ?? 0),
+    special_holiday: toNumber(payslip?.special_holiday ?? 0),
+    special_holiday_ot: toNumber(payslip?.special_holiday_ot ?? 0),
+    special_holiday_nd: toNumber(payslip?.special_holiday_nd ?? 0),
+    special_holiday_ndot: toNumber(payslip?.special_holiday_ndot ?? 0),
+    legal_holiday: toNumber(payslip?.legal_holiday ?? 0),
+    legal_holiday_ot: toNumber(payslip?.legal_holiday_ot ?? 0),
+    legal_holiday_nd: toNumber(payslip?.legal_holiday_nd ?? 0),
+    legal_holiday_ndot: toNumber(payslip?.legal_holiday_ndot ?? 0),
+    legal_holiday_rd: toNumber(payslip?.legal_holiday_rd ?? 0),
+    legal_holiday_rdot: toNumber(payslip?.legal_holiday_rdot ?? 0),
+    legal_holiday_rdnd: toNumber(payslip?.legal_holiday_rdnd ?? 0),
+    legal_holiday_rdndot: toNumber(payslip?.legal_holiday_rdndot ?? 0),
     incentives: toNumber(payslip?.incentives ?? 0),
-    // government deductions are fixed rates — not editable here
+    adjustment: toNumber(payslip?.adjustment ?? 0),
+    gas: toNumber(payslip?.gas ?? 0),
+    load: toNumber(payslip?.load ?? 0),
+    other_allowance: toNumber(payslip?.other_allowance ?? 0),
+    rewards_adjustments: toNumber(payslip?.rewards_adjustments ?? 0),
+    kpi: toNumber(payslip?.kpi ?? 0),
+    allowances: toNumber(payslip?.allowances ?? 0),
+
+    late: toNumber(payslip?.late ?? 0),
+    id_deduction: toNumber(payslip?.id_deduction ?? 0),
+    uniform: toNumber(payslip?.uniform ?? 0),
+    insurance: toNumber(payslip?.insurance ?? 0),
+    surety_bond: toNumber(payslip?.surety_bond ?? 0),
+    convenience_fee: toNumber(payslip?.convenience_fee ?? 0),
+    general_deduction: toNumber(payslip?.general_deduction ?? 0),
     status: (payslip?.status as PayslipStatus) || 'draft',
   });
 
@@ -137,10 +201,43 @@ export const PayslipDetailModal = ({
   useEffect(() => {
     setLocalPayslip(payslip);
     setFormData({
+      standard_pay: toNumber(payslip?.standard_pay ?? 0),
       basic_salary: toNumber(payslip?.basic_salary ?? 0),
-      allowances: toNumber(payslip?.allowances ?? 0),
       overtime_pay: toNumber(payslip?.overtime_pay ?? 0),
+      night_differential: toNumber(payslip?.night_differential ?? 0),
+      ndot: toNumber(payslip?.ndot ?? 0),
+      rest_day: toNumber(payslip?.rest_day ?? 0),
+      rest_day_ot: toNumber(payslip?.rest_day_ot ?? 0),
+      rest_day_nd: toNumber(payslip?.rest_day_nd ?? 0),
+      rest_day_ndot: toNumber(payslip?.rest_day_ndot ?? 0),
+      special_holiday: toNumber(payslip?.special_holiday ?? 0),
+      special_holiday_ot: toNumber(payslip?.special_holiday_ot ?? 0),
+      special_holiday_nd: toNumber(payslip?.special_holiday_nd ?? 0),
+      special_holiday_ndot: toNumber(payslip?.special_holiday_ndot ?? 0),
+      legal_holiday: toNumber(payslip?.legal_holiday ?? 0),
+      legal_holiday_ot: toNumber(payslip?.legal_holiday_ot ?? 0),
+      legal_holiday_nd: toNumber(payslip?.legal_holiday_nd ?? 0),
+      legal_holiday_ndot: toNumber(payslip?.legal_holiday_ndot ?? 0),
+      legal_holiday_rd: toNumber(payslip?.legal_holiday_rd ?? 0),
+      legal_holiday_rdot: toNumber(payslip?.legal_holiday_rdot ?? 0),
+      legal_holiday_rdnd: toNumber(payslip?.legal_holiday_rdnd ?? 0),
+      legal_holiday_rdndot: toNumber(payslip?.legal_holiday_rdndot ?? 0),
       incentives: toNumber(payslip?.incentives ?? 0),
+      adjustment: toNumber(payslip?.adjustment ?? 0),
+      gas: toNumber(payslip?.gas ?? 0),
+      load: toNumber(payslip?.load ?? 0),
+      other_allowance: toNumber(payslip?.other_allowance ?? 0),
+      rewards_adjustments: toNumber(payslip?.rewards_adjustments ?? 0),
+      kpi: toNumber(payslip?.kpi ?? 0),
+      allowances: toNumber(payslip?.allowances ?? 0),
+
+      late: toNumber(payslip?.late ?? 0),
+      id_deduction: toNumber(payslip?.id_deduction ?? 0),
+      uniform: toNumber(payslip?.uniform ?? 0),
+      insurance: toNumber(payslip?.insurance ?? 0),
+      surety_bond: toNumber(payslip?.surety_bond ?? 0),
+      convenience_fee: toNumber(payslip?.convenience_fee ?? 0),
+      general_deduction: toNumber(payslip?.general_deduction ?? 0),
       status: (payslip?.status as PayslipStatus) || 'draft',
     });
     setIsEditMode(false);
@@ -155,10 +252,8 @@ export const PayslipDetailModal = ({
   useEffect(() => {
     const fetchComputed = async () => {
       if (!isOpen) return;
-      // If payslip exists and has an id, nothing to compute
       if (payslip && payslip.id) return;
 
-      // Determine employee and period from payslip prop
       const employee = (payslip as any)?.employee ?? (payslip as any)?.employee_id ?? (localPayslip as any)?.employee;
       const period_start = (payslip as any)?.period_start || (localPayslip as any)?.period_start;
       const period_end = (payslip as any)?.period_end || (localPayslip as any)?.period_end;
@@ -170,10 +265,44 @@ export const PayslipDetailModal = ({
         params.set('employee_id', String(typeof employee === 'object' ? (employee as any).id : employee));
         params.set('period_start', period_start);
         params.set('period_end', period_end);
+        
+        params.set('standard_pay', String(toNumber(formData.standard_pay)));
         params.set('basic_salary', String(toNumber(formData.basic_salary)));
-        params.set('allowances', String(toNumber(formData.allowances)));
-        params.set('overtime_pay', String(toNumber(formData.overtime_pay)));
+        params.set('overtime_pay', String(toNumber(formData.basic_salary) * 0.25));
+        params.set('night_differential', String(toNumber(formData.night_differential)));
+        params.set('ndot', String(toNumber(formData.ndot)));
+        params.set('rest_day', String(toNumber(formData.rest_day)));
+        params.set('rest_day_ot', String(toNumber(formData.rest_day_ot)));
+        params.set('rest_day_nd', String(toNumber(formData.rest_day_nd)));
+        params.set('rest_day_ndot', String(toNumber(formData.rest_day_ndot)));
+        params.set('special_holiday', String(toNumber(formData.special_holiday)));
+        params.set('special_holiday_ot', String(toNumber(formData.special_holiday_ot)));
+        params.set('special_holiday_nd', String(toNumber(formData.special_holiday_nd)));
+        params.set('special_holiday_ndot', String(toNumber(formData.special_holiday_ndot)));
+        params.set('legal_holiday', String(toNumber(formData.legal_holiday)));
+        params.set('legal_holiday_ot', String(toNumber(formData.legal_holiday_ot)));
+        params.set('legal_holiday_nd', String(toNumber(formData.legal_holiday_nd)));
+        params.set('legal_holiday_ndot', String(toNumber(formData.legal_holiday_ndot)));
+        params.set('legal_holiday_rd', String(toNumber(formData.legal_holiday_rd)));
+        params.set('legal_holiday_rdot', String(toNumber(formData.legal_holiday_rdot)));
+        params.set('legal_holiday_rdnd', String(toNumber(formData.legal_holiday_rdnd)));
+        params.set('legal_holiday_rdndot', String(toNumber(formData.legal_holiday_rdndot)));
         params.set('incentives', String(toNumber(formData.incentives)));
+        params.set('adjustment', String(toNumber(formData.adjustment)));
+        params.set('gas', String(toNumber(formData.gas)));
+        params.set('load', String(toNumber(formData.load)));
+        params.set('other_allowance', String(toNumber(formData.other_allowance)));
+        params.set('rewards_adjustments', String(toNumber(formData.rewards_adjustments)));
+        params.set('kpi', String(toNumber(formData.kpi)));
+        params.set('allowances', String(toNumber(formData.allowances)));
+
+        params.set('late', String(toNumber(formData.late)));
+        params.set('id_deduction', String(toNumber(formData.id_deduction)));
+        params.set('uniform', String(toNumber(formData.uniform)));
+        params.set('insurance', String(toNumber(formData.insurance)));
+        params.set('surety_bond', String(toNumber(formData.surety_bond)));
+        params.set('convenience_fee', String(toNumber(formData.convenience_fee)));
+        params.set('general_deduction', String(toNumber(formData.general_deduction)));
 
         const res = await fetch(`/api/payroll/compute/?${params.toString()}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
@@ -181,11 +310,10 @@ export const PayslipDetailModal = ({
         if (!res.ok) throw new Error('Failed to compute payslip');
         const data = await res.json();
         setLocalPayslip((p) => ({ ...(p as any), ...data } as Payslip));
-        // initialize gov percents from computed result
         setGovPercents({
-          sss: toNumber((data as any).sss_percent ?? (data as any).sss_percent ?? 0),
-          philhealth: toNumber((data as any).philhealth_percent ?? (data as any).philhealth_percent ?? 0),
-          pagibig: toNumber((data as any).pagibig_percent ?? (data as any).pagibig_percent ?? 0),
+          sss: toNumber(data.sss_percent ?? 0),
+          philhealth: toNumber(data.philhealth_percent ?? 0),
+          pagibig: toNumber(data.pagibig_percent ?? 0),
         });
       } catch (e) {
         console.error(e);
@@ -198,16 +326,46 @@ export const PayslipDetailModal = ({
   }, [isOpen, payslip]);
 
   const handleSave = async () => {
-    // Build payload from form and local state
     const payload = {
+      standard_pay: toNumber(formData.standard_pay),
       basic_salary: toNumber(formData.basic_salary),
-      allowances: toNumber(formData.allowances),
-      overtime_pay: toNumber(formData.overtime_pay),
+      overtime_pay: toNumber(formData.basic_salary) * 0.25,
+      night_differential: toNumber(formData.night_differential),
+      ndot: toNumber(formData.ndot),
+      rest_day: toNumber(formData.rest_day),
+      rest_day_ot: toNumber(formData.rest_day_ot),
+      rest_day_nd: toNumber(formData.rest_day_nd),
+      rest_day_ndot: toNumber(formData.rest_day_ndot),
+      special_holiday: toNumber(formData.special_holiday),
+      special_holiday_ot: toNumber(formData.special_holiday_ot),
+      special_holiday_nd: toNumber(formData.special_holiday_nd),
+      special_holiday_ndot: toNumber(formData.special_holiday_ndot),
+      legal_holiday: toNumber(formData.legal_holiday),
+      legal_holiday_ot: toNumber(formData.legal_holiday_ot),
+      legal_holiday_nd: toNumber(formData.legal_holiday_nd),
+      legal_holiday_ndot: toNumber(formData.legal_holiday_ndot),
+      legal_holiday_rd: toNumber(formData.legal_holiday_rd),
+      legal_holiday_rdot: toNumber(formData.legal_holiday_rdot),
+      legal_holiday_rdnd: toNumber(formData.legal_holiday_rdnd),
+      legal_holiday_rdndot: toNumber(formData.legal_holiday_rdndot),
       incentives: toNumber(formData.incentives),
-      // government deductions are computed on the backend from total earnings; do not send
-      // keep JSON safe
+      adjustment: toNumber(formData.adjustment),
+      gas: toNumber(formData.gas),
+      load: toNumber(formData.load),
+      other_allowance: toNumber(formData.other_allowance),
+      rewards_adjustments: toNumber(formData.rewards_adjustments),
+      kpi: toNumber(formData.kpi),
+      allowances: toNumber(formData.allowances),
+
+      late: toNumber(formData.late),
+      id_deduction: toNumber(formData.id_deduction),
+      uniform: toNumber(formData.uniform),
+      insurance: toNumber(formData.insurance),
+      surety_bond: toNumber(formData.surety_bond),
+      convenience_fee: toNumber(formData.convenience_fee),
+      general_deduction: toNumber(formData.general_deduction),
+
       deduction_details: localPayslip?.deduction_details ?? {},
-      // include gov percent overrides so backend can persist and compute based on them
       sss_percent: govPercents.sss,
       philhealth_percent: govPercents.philhealth,
       pagibig_percent: govPercents.pagibig,
@@ -217,7 +375,6 @@ export const PayslipDetailModal = ({
     try {
       setIsLoading(true);
 
-      // If there is an existing payroll id, update. Otherwise create a new payroll record.
       if (payslip?.id) {
         const updated = await updatePayrollMutation.mutateAsync({ id: payslip.id, data: payload });
         setLocalPayslip(updated);
@@ -225,8 +382,6 @@ export const PayslipDetailModal = ({
         success('Payroll updated successfully');
         onSave?.(updated);
       } else {
-        // determine employee id and period info
-        // Resolve employee id from possible shapes (number, {id}, string)
         const maybeEmployee = (localPayslip as any)?.employee ?? (localPayslip as any)?.employee_id ?? (payslip as any)?.employee ?? (payslip as any)?.employee_id;
         let employeeId: number | null = null;
         if (typeof maybeEmployee === 'number') employeeId = maybeEmployee;
@@ -242,12 +397,10 @@ export const PayslipDetailModal = ({
 
         const createPayload = { ...payload, employee: employeeId } as any;
 
-        // Ensure period_start/period_end are provided (backend requires these fields)
         const todayISO = new Date().toISOString().slice(0, 10);
         createPayload.period_start = period_start || todayISO;
         createPayload.period_end = period_end || todayISO;
 
-        // Ensure deduction_details exists
         if (!createPayload.deduction_details) createPayload.deduction_details = {};
 
         const created = await createPayrollMutation.mutateAsync(createPayload);
@@ -269,7 +422,6 @@ export const PayslipDetailModal = ({
 
     try {
       setIsLoading(true);
-      // TODO: Add API call to approve payslip
       success('Payslip approved successfully');
       onApprove?.();
       onClose();
@@ -283,21 +435,100 @@ export const PayslipDetailModal = ({
 
   // Recompute government deductions and totals when earnings or govPercents change
   useEffect(() => {
+    const otCalculated = toNumber(formData.basic_salary) * 0.25;
+
     const totalEarnings =
+      toNumber(formData.standard_pay) +
       toNumber(formData.basic_salary) +
-      toNumber(formData.allowances) +
-      toNumber(formData.overtime_pay) +
-      toNumber(formData.incentives) || toNumber(localPayslip?.total_earnings);
+      otCalculated +
+      toNumber(formData.night_differential) +
+      toNumber(formData.ndot) +
+      toNumber(formData.rest_day) +
+      toNumber(formData.rest_day_ot) +
+      toNumber(formData.rest_day_nd) +
+      toNumber(formData.rest_day_ndot) +
+      toNumber(formData.special_holiday) +
+      toNumber(formData.special_holiday_ot) +
+      toNumber(formData.special_holiday_nd) +
+      toNumber(formData.special_holiday_ndot) +
+      toNumber(formData.legal_holiday) +
+      toNumber(formData.legal_holiday_ot) +
+      toNumber(formData.legal_holiday_nd) +
+      toNumber(formData.legal_holiday_ndot) +
+      toNumber(formData.legal_holiday_rd) +
+      toNumber(formData.legal_holiday_rdot) +
+      toNumber(formData.legal_holiday_rdnd) +
+      toNumber(formData.legal_holiday_rdndot) +
+      toNumber(formData.incentives) +
+      toNumber(formData.adjustment) +
+      toNumber(formData.gas) +
+      toNumber(formData.load) +
+      toNumber(formData.other_allowance) +
+      toNumber(formData.rewards_adjustments) +
+      toNumber(formData.kpi) +
+      toNumber(formData.allowances);
 
     const sssDed = (govPercents.sss / 100) * totalEarnings;
     const philDed = (govPercents.philhealth / 100) * totalEarnings;
     const pagibigDed = (govPercents.pagibig / 100) * totalEarnings;
 
     const govTotal = sssDed + philDed + pagibigDed;
-    const otherDeductions = toNumber(localPayslip?.total_deductions ?? 0);
+    
+    const otherItemizedDeductions =
+      toNumber(formData.late) +
+      toNumber(formData.id_deduction) +
+      toNumber(formData.uniform) +
+      toNumber(formData.insurance) +
+      toNumber(formData.surety_bond) +
+      toNumber(formData.convenience_fee) +
+      toNumber(formData.general_deduction);
+
+    const customDeductionsSum = localPayslip?.deduction_details
+      ? Object.values(localPayslip.deduction_details).reduce((sum, v) => sum + toNumber(v), 0)
+      : 0;
+
+    const totalDeductions = otherItemizedDeductions + customDeductionsSum;
 
     setLocalPayslip((p) => ({
       ...(p as any),
+      standard_pay: formData.standard_pay,
+      basic_salary: formData.basic_salary,
+      overtime_pay: otCalculated,
+      night_differential: formData.night_differential,
+      ndot: formData.ndot,
+      rest_day: formData.rest_day,
+      rest_day_ot: formData.rest_day_ot,
+      rest_day_nd: formData.rest_day_nd,
+      rest_day_ndot: formData.rest_day_ndot,
+      special_holiday: formData.special_holiday,
+      special_holiday_ot: formData.special_holiday_ot,
+      special_holiday_nd: formData.special_holiday_nd,
+      special_holiday_ndot: formData.special_holiday_ndot,
+      legal_holiday: formData.legal_holiday,
+      legal_holiday_ot: formData.legal_holiday_ot,
+      legal_holiday_nd: formData.legal_holiday_nd,
+      legal_holiday_ndot: formData.legal_holiday_ndot,
+      legal_holiday_rd: formData.legal_holiday_rd,
+      legal_holiday_rdot: formData.legal_holiday_rdot,
+      legal_holiday_rdnd: formData.legal_holiday_rdnd,
+      legal_holiday_rdndot: formData.legal_holiday_rdndot,
+      incentives: formData.incentives,
+      adjustment: formData.adjustment,
+      gas: formData.gas,
+      load: formData.load,
+      other_allowance: formData.other_allowance,
+      rewards_adjustments: formData.rewards_adjustments,
+      kpi: formData.kpi,
+      allowances: formData.allowances,
+
+      late: formData.late,
+      id_deduction: formData.id_deduction,
+      uniform: formData.uniform,
+      insurance: formData.insurance,
+      surety_bond: formData.surety_bond,
+      convenience_fee: formData.convenience_fee,
+      general_deduction: formData.general_deduction,
+
       sss_percent: govPercents.sss,
       philhealth_percent: govPercents.philhealth,
       pagibig_percent: govPercents.pagibig,
@@ -305,10 +536,51 @@ export const PayslipDetailModal = ({
       philhealth_deduction: philDed,
       pagibig_deduction: pagibigDed,
       total_government_deductions: govTotal,
-      total_deductions: otherDeductions,
+      total_deductions: totalDeductions,
       total_earnings: totalEarnings,
+      net_pay: totalEarnings - (totalDeductions + govTotal),
     } as Payslip));
-  }, [formData.basic_salary, formData.allowances, formData.overtime_pay, formData.incentives, govPercents, localPayslip?.total_deductions]);
+  }, [
+    formData.standard_pay,
+    formData.basic_salary,
+    formData.night_differential,
+    formData.ndot,
+    formData.rest_day,
+    formData.rest_day_ot,
+    formData.rest_day_nd,
+    formData.rest_day_ndot,
+    formData.special_holiday,
+    formData.special_holiday_ot,
+    formData.special_holiday_nd,
+    formData.special_holiday_ndot,
+    formData.legal_holiday,
+    formData.legal_holiday_ot,
+    formData.legal_holiday_nd,
+    formData.legal_holiday_ndot,
+    formData.legal_holiday_rd,
+    formData.legal_holiday_rdot,
+    formData.legal_holiday_rdnd,
+    formData.legal_holiday_rdndot,
+    formData.incentives,
+    formData.adjustment,
+    formData.gas,
+    formData.load,
+    formData.other_allowance,
+    formData.rewards_adjustments,
+    formData.kpi,
+    formData.allowances,
+
+    formData.late,
+    formData.id_deduction,
+    formData.uniform,
+    formData.insurance,
+    formData.surety_bond,
+    formData.convenience_fee,
+    formData.general_deduction,
+
+    govPercents,
+    localPayslip?.deduction_details
+  ]);
 
   const handleDownload = () => {
     if (!localPayslip) return;
@@ -316,12 +588,11 @@ export const PayslipDetailModal = ({
       const headers = [
         'Fullname', 'JTP Code', 'Position', 'Hub', 'Period',
         'Total Hours', 'Overtime Hours', 'Lates', 'Absences',
-        'Basic Pay', 'Allowance', 'Overtime Pay', 'Incentives',
-        'Total Earnings', 'SSS Deduction', 'Philhealth Deduction', 'Pagibig Deduction',
-        'Other Deductions', 'Total Deductions', 'Net Pay', 'Status'
+        'Basic Pay', 'Overtime Pay', 'Total Earnings', 'SSS Deduction',
+        'Philhealth Deduction', 'Pagibig Deduction', 'Total Deductions', 'Net Pay', 'Status'
       ];
 
-      const govDeductions = (toNumber(localPayslip.sss_deduction)) + (toNumber(localPayslip.philhealth_deduction)) + (toNumber(localPayslip.pagibig_deduction));
+      const govDeductions = toNumber(localPayslip.sss_deduction) + toNumber(localPayslip.philhealth_deduction) + toNumber(localPayslip.pagibig_deduction);
       const otherDeductions = toNumber(localPayslip.total_deductions);
       const totalDed = govDeductions + otherDeductions;
       const netPay = toNumber(localPayslip.total_earnings) - totalDed;
@@ -337,9 +608,7 @@ export const PayslipDetailModal = ({
         localPayslip.lates || '0',
         localPayslip.absences || '0',
         localPayslip.basic_salary || '0',
-        localPayslip.allowances || '0',
         localPayslip.overtime_pay || '0',
-        localPayslip.incentives || '0',
         localPayslip.total_earnings || '0',
         localPayslip.sss_deduction || '0',
         localPayslip.philhealth_deduction || '0',
@@ -369,14 +638,84 @@ export const PayslipDetailModal = ({
     }
   };
 
+  const renderField = (
+    label: string,
+    key: keyof typeof formData,
+    isReadOnly: boolean = false,
+    computedVal?: number
+  ) => {
+    const val = computedVal !== undefined ? computedVal : toNumber(formData[key]);
+    return (
+      <div className="flex flex-col gap-1 border-b border-gray-100 dark:border-slate-800/40 pb-2">
+        <label className="text-gray-500 dark:text-gray-400 text-xs font-semibold">{label}</label>
+        {isEditMode && !isReadOnly ? (
+          <input
+            title={label}
+            placeholder={`Enter ${label.toLowerCase()}`}
+            type="number"
+            value={formData[key] as number}
+            onChange={(e) => setFormData((p) => ({ ...p, [key]: toNumber(e.target.value) }))}
+            className="input-field w-full px-3 py-1.5 border border-gray-200 dark:border-slate-700 dark:bg-slate-900 dark:text-white rounded-xl text-xs focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all"
+          />
+        ) : (
+          <p className="text-gray-800 dark:text-gray-200 font-bold text-xs mt-0.5 flex items-center justify-between">
+            <span>₱{val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            {isReadOnly && <span className="text-[10px] text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 px-2 py-0.5 rounded font-medium">25% Fixed</span>}
+          </p>
+        )}
+      </div>
+    );
+  };
+
+  const earningsFields: { label: string; key: keyof typeof formData; isReadOnly?: boolean; computed?: number }[] = [
+    { label: 'Standard Pay', key: 'standard_pay' },
+    { label: 'Basic Salary/Pay', key: 'basic_salary' },
+    { label: 'Overtime Pay', key: 'overtime_pay', isReadOnly: true, computed: toNumber(formData.basic_salary) * 0.25 },
+    { label: 'Night Differential', key: 'night_differential' },
+    { label: 'NDOT', key: 'ndot' },
+    { label: 'Rest Day Pay', key: 'rest_day' },
+    { label: 'Rest Day OT', key: 'rest_day_ot' },
+    { label: 'Rest Day ND', key: 'rest_day_nd' },
+    { label: 'Rest Day NDOT', key: 'rest_day_ndot' },
+    { label: 'Special Holiday Pay', key: 'special_holiday' },
+    { label: 'Special Holiday OT', key: 'special_holiday_ot' },
+    { label: 'Special Holiday ND', key: 'special_holiday_nd' },
+    { label: 'Special Holiday NDOT', key: 'special_holiday_ndot' },
+    { label: 'Legal Holiday Pay', key: 'legal_holiday' },
+    { label: 'Legal Holiday OT', key: 'legal_holiday_ot' },
+    { label: 'Legal Holiday ND', key: 'legal_holiday_nd' },
+    { label: 'Legal Holiday NDOT', key: 'legal_holiday_ndot' },
+    { label: 'Legal Holiday RD', key: 'legal_holiday_rd' },
+    { label: 'Legal Holiday RDOT', key: 'legal_holiday_rdot' },
+    { label: 'Legal Holiday RDND', key: 'legal_holiday_rdnd' },
+    { label: 'Legal Holiday RDNDOT', key: 'legal_holiday_rdndot' },
+    { label: 'Incentives', key: 'incentives' },
+    { label: 'Adjustment', key: 'adjustment' },
+    { label: 'Gas Allowance', key: 'gas' },
+    { label: 'Load Allowance', key: 'load' },
+    { label: 'Other Allowance', key: 'other_allowance' },
+    { label: 'Rewards/Adjustments', key: 'rewards_adjustments' },
+    { label: 'KPI', key: 'kpi' },
+    { label: 'Legacy Allowances', key: 'allowances' },
+  ];
+
+  const deductionsFields: { label: string; key: keyof typeof formData }[] = [
+    { label: 'Late Deduction', key: 'late' },
+    { label: 'ID Card Fee', key: 'id_deduction' },
+    { label: 'Uniform Fee', key: 'uniform' },
+    { label: 'Insurance Premium', key: 'insurance' },
+    { label: 'Surety Bond', key: 'surety_bond' },
+    { label: 'Convenience Fee', key: 'convenience_fee' },
+    { label: 'General Deduction', key: 'general_deduction' },
+  ];
+
   if (!payslip && !localPayslip) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="" size="2xl">
-      <div className="max-h-[90vh] overflow-y-auto bg-gray-50 dark:bg-slate-950">
+    <Modal isOpen={isOpen} onClose={onClose} title="" size="3xl">
+      <div className="max-h-[85vh] overflow-y-auto bg-gray-50 dark:bg-slate-950 rounded-2xl">
         {/* HEADER AREA */}
-        <div className="bg-gradient-to-r from-red-800 via-red-900 to-red-950 p-6 text-white relative shadow-lg">
-          {/* Action Header Actions */}
+        <div className="bg-gradient-to-r from-red-800 via-red-900 to-red-950 p-6 text-white relative shadow-lg rounded-t-2xl">
           <div className="flex justify-between items-center mb-6">
             <div>
               {!isEditMode && (
@@ -398,7 +737,6 @@ export const PayslipDetailModal = ({
           </div>
 
           <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
-            {/* Profile Picture */}
             <div className="shrink-0">
               {localPayslip?.profile_image_url || localPayslip?.profile_image ? (
                 <img
@@ -413,7 +751,6 @@ export const PayslipDetailModal = ({
               )}
             </div>
 
-            {/* Employee Info & Grid */}
             <div className="flex-1 min-w-0">
               <h2 className="text-2xl font-bold tracking-tight truncate">
                 {localPayslip?.full_name || localPayslip?.fullname || 'N/A'}
@@ -441,7 +778,6 @@ export const PayslipDetailModal = ({
             </div>
           </div>
 
-          {/* Payslip Period Banner */}
           <div className="mt-5 bg-white/10 backdrop-blur border border-white/10 px-4 py-2 rounded-2xl text-xs flex items-center justify-between">
             <span className="text-red-100 font-medium">Payslip Period:</span>
             <span className="font-bold text-white text-right">
@@ -476,94 +812,36 @@ export const PayslipDetailModal = ({
         </div>
 
         {/* TWO COLUMN CONTENT PANEL */}
-        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-          
-          {/* LEFT COLUMN: EARNINGS */}
-          <div className="space-y-6">
+        <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+          {/* LEFT COLUMN: EARNINGS BREAKDOWN (7 cols) */}
+          <div className="lg:col-span-7 space-y-6">
             <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm">
               <h3 className="text-gray-800 dark:text-gray-100 font-bold text-sm border-b pb-3 mb-4 flex justify-between items-center">
                 <span>Earnings Breakdown</span>
                 <span className="text-xs text-green-600 font-medium">In PHP</span>
               </h3>
 
-              <div className="space-y-4">
-                <div>
-                  <p className="text-gray-500 text-xs font-semibold">Basic Salary</p>
-                  {isEditMode ? (
-                    <input
-                      title="Basic Salary"
-                      placeholder="Enter basic salary"
-                      type="number"
-                      value={formData.basic_salary}
-                      onChange={(e) => setFormData((p) => ({ ...p, basic_salary: toNumber(e.target.value) }))}
-                      className="input-field w-full mt-1"
-                    />
-                  ) : (
-                    <p className="text-gray-800 dark:text-gray-200 font-bold mt-0.5">₱{toNumber(localPayslip?.basic_salary).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                  )}
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 max-h-[480px] overflow-y-auto pr-2">
+                {earningsFields.map((field) => (
+                  <div key={field.key} className="sm:col-span-1">
+                    {renderField(field.label, field.key, field.isReadOnly, field.computed)}
+                  </div>
+                ))}
+              </div>
 
-                <div>
-                  <p className="text-gray-500 text-xs font-semibold">Allowances</p>
-                  {isEditMode ? (
-                    <input
-                      title="Allowances"
-                      placeholder="Enter allowances"
-                      type="number"
-                      value={formData.allowances}
-                      onChange={(e) => setFormData((p) => ({ ...p, allowances: toNumber(e.target.value) }))}
-                      className="input-field w-full mt-1"
-                    />
-                  ) : (
-                    <p className="text-gray-800 dark:text-gray-200 font-semibold mt-0.5">₱{toNumber(localPayslip?.allowances).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                  )}
-                </div>
-
-                <div>
-                  <p className="text-gray-500 text-xs font-semibold">Overtime Pay</p>
-                  {isEditMode ? (
-                    <input
-                      title="Overtime Pay"
-                      placeholder="Enter overtime pay"
-                      type="number"
-                      value={formData.overtime_pay}
-                      onChange={(e) => setFormData((p) => ({ ...p, overtime_pay: toNumber(e.target.value) }))}
-                      className="input-field w-full mt-1"
-                    />
-                  ) : (
-                    <p className="text-gray-800 dark:text-gray-200 font-semibold mt-0.5">₱{toNumber(localPayslip?.overtime_pay).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                  )}
-                </div>
-
-                <div>
-                  <p className="text-gray-500 text-xs font-semibold">Incentives</p>
-                  {isEditMode ? (
-                    <input
-                      title="Incentives"
-                      placeholder="Enter incentives"
-                      type="number"
-                      value={formData.incentives}
-                      onChange={(e) => setFormData((p) => ({ ...p, incentives: toNumber(e.target.value) }))}
-                      className="input-field w-full mt-1"
-                    />
-                  ) : (
-                    <p className="text-gray-800 dark:text-gray-200 font-semibold mt-0.5">₱{toNumber(localPayslip?.incentives).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                  )}
-                </div>
-
-                <div className="bg-green-50 dark:bg-green-950/20 border border-green-100 dark:border-green-900/30 p-4 rounded-2xl flex justify-between items-center mt-6">
-                  <span className="text-green-700 dark:text-green-400 font-bold text-xs">Total Earnings</span>
-                  <span className="text-green-700 dark:text-green-400 font-extrabold text-sm">
-                    ₱{toNumber(localPayslip?.total_earnings).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </span>
-                </div>
+              <div className="bg-green-50 dark:bg-green-950/20 border border-green-100 dark:border-green-900/30 p-4 rounded-2xl flex justify-between items-center mt-6">
+                <span className="text-green-700 dark:text-green-400 font-bold text-xs">Total Earnings</span>
+                <span className="text-green-700 dark:text-green-400 font-extrabold text-sm">
+                  ₱{toNumber(localPayslip?.total_earnings).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
               </div>
             </div>
           </div>
 
-          {/* RIGHT COLUMN: DEDUCTIONS & ATTENDANCE */}
-          <div className="space-y-6">
-            {/* ATTENDANCE PANEL */}
+          {/* RIGHT COLUMN: DEDUCTIONS & ATTENDANCE (5 cols) */}
+          <div className="lg:col-span-5 space-y-6">
+            {/* ATTENDANCE SUMMARY */}
             <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm">
               <h3 className="text-gray-800 dark:text-gray-100 font-bold text-xs border-b pb-3 mb-4">Attendance Summary</h3>
               <div className="grid grid-cols-2 gap-4 text-xs">
@@ -594,20 +872,20 @@ export const PayslipDetailModal = ({
               </div>
             </div>
 
-            {/* DEDUCTIONS PANEL */}
+            {/* DEDUCTIONS BREAKDOWN */}
             <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm">
               <h3 className="text-gray-800 dark:text-gray-100 font-bold text-sm border-b pb-3 mb-4 flex justify-between items-center">
                 <span>Deductions</span>
                 <span className="text-xs text-red-600 font-medium">In PHP</span>
               </h3>
 
-              {/* Government Deductions */}
               <div className="space-y-4">
-                <div className="border-b pb-3 border-gray-100 dark:border-slate-800">
-                  <p className="text-gray-500 text-xs font-semibold mb-2">Government Mandated Deductions</p>
-                  <div className="grid grid-cols-1 gap-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600 dark:text-gray-400 text-xs font-medium">SSS</span>
+                {/* Government Mandated */}
+                <div className="border-b pb-3 border-gray-100 dark:border-slate-800/40">
+                  <p className="text-gray-400 dark:text-gray-500 font-bold text-[10px] uppercase tracking-wider mb-3">Government Mandated</p>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-600 dark:text-gray-400 font-medium">SSS</span>
                       {isEditMode ? (
                         <div className="flex items-center gap-2">
                           <input
@@ -615,19 +893,19 @@ export const PayslipDetailModal = ({
                             step="0.01"
                             value={govPercents.sss}
                             onChange={(e) => setGovPercents((p) => ({ ...p, sss: toNumber(e.target.value) }))}
-                            className="input-field w-16 text-right py-0.5"
+                            className="input-field w-16 text-right py-0.5 px-2 border border-gray-200 dark:border-slate-700 dark:bg-slate-900 rounded-xl"
                           />
                           <span className="text-gray-500 text-[10px]">% (₱{toNumber(localPayslip?.sss_deduction).toFixed(2)})</span>
                         </div>
                       ) : (
-                        <span className="text-gray-800 dark:text-gray-200 text-xs font-bold">
+                        <span className="text-gray-800 dark:text-gray-200 font-bold">
                           ₱{toNumber(localPayslip?.sss_deduction).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({localPayslip?.sss_percent || '0'}%)
                         </span>
                       )}
                     </div>
 
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600 dark:text-gray-400 text-xs font-medium">PhilHealth</span>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-600 dark:text-gray-400 font-medium">PhilHealth</span>
                       {isEditMode ? (
                         <div className="flex items-center gap-2">
                           <input
@@ -635,19 +913,19 @@ export const PayslipDetailModal = ({
                             step="0.01"
                             value={govPercents.philhealth}
                             onChange={(e) => setGovPercents((p) => ({ ...p, philhealth: toNumber(e.target.value) }))}
-                            className="input-field w-16 text-right py-0.5"
+                            className="input-field w-16 text-right py-0.5 px-2 border border-gray-200 dark:border-slate-700 dark:bg-slate-900 rounded-xl"
                           />
                           <span className="text-gray-500 text-[10px]">% (₱{toNumber(localPayslip?.philhealth_deduction).toFixed(2)})</span>
                         </div>
                       ) : (
-                        <span className="text-gray-800 dark:text-gray-200 text-xs font-bold">
+                        <span className="text-gray-800 dark:text-gray-200 font-bold">
                           ₱{toNumber(localPayslip?.philhealth_deduction).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({localPayslip?.philhealth_percent || '0'}%)
                         </span>
                       )}
                     </div>
 
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600 dark:text-gray-400 text-xs font-medium">Pag-IBIG</span>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-600 dark:text-gray-400 font-medium">Pag-IBIG</span>
                       {isEditMode ? (
                         <div className="flex items-center gap-2">
                           <input
@@ -655,12 +933,12 @@ export const PayslipDetailModal = ({
                             step="0.01"
                             value={govPercents.pagibig}
                             onChange={(e) => setGovPercents((p) => ({ ...p, pagibig: toNumber(e.target.value) }))}
-                            className="input-field w-16 text-right py-0.5"
+                            className="input-field w-16 text-right py-0.5 px-2 border border-gray-200 dark:border-slate-700 dark:bg-slate-900 rounded-xl"
                           />
                           <span className="text-gray-500 text-[10px]">% (₱{toNumber(localPayslip?.pagibig_deduction).toFixed(2)})</span>
                         </div>
                       ) : (
-                        <span className="text-gray-800 dark:text-gray-200 text-xs font-bold">
+                        <span className="text-gray-800 dark:text-gray-200 font-bold">
                           ₱{toNumber(localPayslip?.pagibig_deduction).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({localPayslip?.pagibig_percent || '0'}%)
                         </span>
                       )}
@@ -668,15 +946,27 @@ export const PayslipDetailModal = ({
                   </div>
                 </div>
 
-                {/* Other Deductions */}
+                {/* Itemized Deductions */}
+                <div className="border-b pb-3 border-gray-100 dark:border-slate-800/40">
+                  <p className="text-gray-400 dark:text-gray-500 font-bold text-[10px] uppercase tracking-wider mb-3">Itemized Deductions</p>
+                  <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1">
+                    {deductionsFields.map((field) => (
+                      <div key={field.key}>
+                        {renderField(field.label, field.key)}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Other Custom Deductions */}
                 <div>
-                  <p className="text-gray-500 text-xs font-semibold mb-2">Other Itemized Deductions</p>
+                  <p className="text-gray-400 dark:text-gray-500 font-bold text-[10px] uppercase tracking-wider mb-2">Other Deductions</p>
                   {localPayslip?.deduction_details && Object.keys(localPayslip.deduction_details).length > 0 ? (
-                    <div className="space-y-2 max-h-[120px] overflow-y-auto">
+                    <div className="space-y-2 max-h-[100px] overflow-y-auto">
                       {Object.entries(localPayslip.deduction_details).map(([label, amount]) => (
-                        <div key={label} className="flex justify-between items-center">
-                          <span className="text-gray-600 dark:text-gray-400 text-xs font-medium">{label}</span>
-                          <span className="text-gray-800 dark:text-gray-200 text-xs font-bold">
+                        <div key={label} className="flex justify-between items-center text-xs">
+                          <span className="text-gray-600 dark:text-gray-400 font-medium">{label}</span>
+                          <span className="text-gray-800 dark:text-gray-200 font-bold">
                             ₱{toNumber(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
                         </div>
@@ -705,11 +995,11 @@ export const PayslipDetailModal = ({
           <div className="bg-gradient-to-r from-blue-700 via-indigo-850 to-blue-900 rounded-3xl p-6 text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
               <p className="text-blue-200 text-xs font-bold uppercase tracking-wider">Net Salary Payday</p>
-              <h3 className="text-3xl font-extrabold tracking-tight mt-1">
-                ₱{(toNumber(localPayslip?.total_earnings ?? 0) - (toNumber(localPayslip?.total_deductions ?? 0) + toNumber(localPayslip?.total_government_deductions ?? 0))).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              <h3 className="text-3xl font-extrabold tracking-tight mt-1 animate-pulse">
+                ₱{toNumber(localPayslip?.net_pay ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </h3>
             </div>
-            
+
             <div className="flex gap-4 items-center">
               <div>
                 <span className="text-[10px] text-blue-200 uppercase font-black block text-right">Status</span>
@@ -718,18 +1008,17 @@ export const PayslipDetailModal = ({
                     title="Status"
                     value={formData.status}
                     onChange={(e) => setFormData((p) => ({ ...p, status: e.target.value }))}
-                    className="input-field py-1 px-3 text-xs bg-white text-gray-800 rounded-xl mt-1"
+                    className="input-field py-1 px-3 text-xs bg-white text-gray-800 rounded-xl mt-1 border-0 focus:ring-2 focus:ring-blue-500 outline-none"
                   >
                     <option value="draft">Draft</option>
                     <option value="approved">Approved</option>
                     <option value="pending">Pending</option>
                   </select>
                 ) : (
-                  <span className={`inline-block px-3 py-1 text-xs font-bold rounded-full mt-1 uppercase tracking-wider border shadow-sm ${
-                    localPayslip?.status === 'approved'
+                  <span className={`inline-block px-3 py-1 text-xs font-bold rounded-full mt-1 uppercase tracking-wider border shadow-sm ${localPayslip?.status === 'approved'
                       ? 'bg-green-500 border-green-400 text-white'
                       : 'bg-yellow-500 border-yellow-400 text-white'
-                  }`}>
+                    }`}>
                     {localPayslip?.status || 'Draft'}
                   </span>
                 )}
@@ -739,7 +1028,7 @@ export const PayslipDetailModal = ({
         </div>
 
         {/* FOOTER ACTIONS */}
-        <div className="p-6 border-t border-gray-200 dark:border-slate-800 bg-gray-100/50 dark:bg-slate-900/50 rounded-b-lg flex flex-col sm:flex-row gap-3 justify-end">
+        <div className="p-6 border-t border-gray-200 dark:border-slate-800 bg-gray-100/50 dark:bg-slate-900/50 rounded-b-2xl flex flex-col sm:flex-row gap-3 justify-end">
           {isEditMode ? (
             <button
               onClick={handleSave}
@@ -771,7 +1060,7 @@ export const PayslipDetailModal = ({
 
         {/* HISTORY SECTION */}
         {history.length > 0 && (
-          <div className="px-6 py-6 border-t border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900/40">
+          <div className="px-6 py-6 border-t border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 rounded-b-2xl">
             <h3 className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4">Past Payslips History</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {history.map((prev) => (
@@ -797,4 +1086,3 @@ export const PayslipDetailModal = ({
     </Modal>
   );
 };
-

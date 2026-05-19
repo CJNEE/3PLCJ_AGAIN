@@ -238,13 +238,45 @@ class Payroll(models.Model):
     lates = models.IntegerField(default=0)
     absences = models.IntegerField(default=0)
 
-    # Earnings
+    # Earnings (Expanded)
+    standard_pay = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
     basic_salary = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
-    allowances = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
-    overtime_pay = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    overtime_pay = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0')) # Fixed at 25% of basic pay
+    night_differential = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    ndot = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    rest_day = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    rest_day_ot = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    rest_day_nd = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    rest_day_ndot = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    special_holiday = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    special_holiday_ot = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    special_holiday_nd = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    special_holiday_ndot = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    legal_holiday = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    legal_holiday_ot = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    legal_holiday_nd = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    legal_holiday_ndot = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    legal_holiday_rd = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    legal_holiday_rdot = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    legal_holiday_rdnd = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    legal_holiday_rdndot = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
     incentives = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    adjustment = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    gas = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    load = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    other_allowance = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    rewards_adjustments = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    kpi = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    allowances = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0')) # legacy support
     
-    # Deductions (itemized)
+    # Deductions (itemized & expanded)
+    late = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    id_deduction = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    uniform = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    insurance = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    surety_bond = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    convenience_fee = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0'))
+    general_deduction = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0')) # general "deduction" input
     deduction_details = models.JSONField(default=dict)  # e.g., {"RCBC Loan": 500, "Union Dues": 200}
     
     # Government Deductions
@@ -265,30 +297,77 @@ class Payroll(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
+        # Calculate overtime pay automatically as 25% of basic pay
+        self.overtime_pay = Decimal(float(self.basic_salary or 0) * 0.25).quantize(Decimal('0.01'))
+
         # Calculate totals
-        total_deductions = 0
+        total_earnings = (
+            float(self.standard_pay or 0) +
+            float(self.basic_salary or 0) +
+            float(self.overtime_pay or 0) +
+            float(self.night_differential or 0) +
+            float(self.ndot or 0) +
+            float(self.rest_day or 0) +
+            float(self.rest_day_ot or 0) +
+            float(self.rest_day_nd or 0) +
+            float(self.rest_day_ndot or 0) +
+            float(self.special_holiday or 0) +
+            float(self.special_holiday_ot or 0) +
+            float(self.special_holiday_nd or 0) +
+            float(self.special_holiday_ndot or 0) +
+            float(self.legal_holiday or 0) +
+            float(self.legal_holiday_ot or 0) +
+            float(self.legal_holiday_nd or 0) +
+            float(self.legal_holiday_ndot or 0) +
+            float(self.legal_holiday_rd or 0) +
+            float(self.legal_holiday_rdot or 0) +
+            float(self.legal_holiday_rdnd or 0) +
+            float(self.legal_holiday_rdndot or 0) +
+            float(self.incentives or 0) +
+            float(self.adjustment or 0) +
+            float(self.gas or 0) +
+            float(self.load or 0) +
+            float(self.other_allowance or 0) +
+            float(self.rewards_adjustments or 0) +
+            float(self.kpi or 0) +
+            float(self.allowances or 0)
+        )
+
+        total_deductions_list = [
+            float(self.late or 0),
+            float(self.sss_deduction or 0),
+            float(self.philhealth_deduction or 0),
+            float(self.pagibig_deduction or 0),
+            float(self.id_deduction or 0),
+            float(self.uniform or 0),
+            float(self.insurance or 0),
+            float(self.surety_bond or 0),
+            float(self.convenience_fee or 0),
+            float(self.general_deduction or 0),
+        ]
+
         deduction_data = self.deduction_details
         if isinstance(deduction_data, dict):
-            total_deductions = sum(float(value or 0) for value in deduction_data.values())
+            total_deductions_list.append(sum(float(value or 0) for value in deduction_data.values()))
         elif isinstance(deduction_data, (list, tuple)):
-            total_deductions = sum(float(value or 0) for value in deduction_data)
+            total_deductions_list.append(sum(float(value or 0) for value in deduction_data))
         elif isinstance(deduction_data, (int, float, Decimal)):
-            total_deductions = float(deduction_data)
+            total_deductions_list.append(float(deduction_data))
         elif isinstance(deduction_data, str):
             try:
                 parsed = json.loads(deduction_data)
                 if isinstance(parsed, dict):
-                    total_deductions = sum(float(value or 0) for value in parsed.values())
+                    total_deductions_list.append(sum(float(value or 0) for value in parsed.values()))
                 elif isinstance(parsed, (list, tuple)):
-                    total_deductions = sum(float(value or 0) for value in parsed)
+                    total_deductions_list.append(sum(float(value or 0) for value in parsed))
                 else:
-                    total_deductions = float(parsed)
+                    total_deductions_list.append(float(parsed))
             except (ValueError, TypeError, json.JSONDecodeError):
-                total_deductions = 0
+                pass
 
-        gov_deductions = float(self.sss_deduction or 0) + float(self.philhealth_deduction or 0) + float(self.pagibig_deduction or 0)
-        total_earnings = float(self.basic_salary or 0) + float(self.allowances or 0) + float(self.overtime_pay or 0) + float(self.incentives or 0)
-        self.net_pay = Decimal(total_earnings - total_deductions - gov_deductions).quantize(Decimal('0.01'))
+        total_deductions = sum(total_deductions_list)
+
+        self.net_pay = Decimal(total_earnings - total_deductions).quantize(Decimal('0.01'))
         super().save(*args, **kwargs)
 
 

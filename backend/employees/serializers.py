@@ -353,7 +353,16 @@ class PayrollSerializer(serializers.ModelSerializer):
             'net_pay', 'status',
             'employee', 'period_start', 'period_end', 'payslip_period',
             'total_hours', 'overtime_hours', 'lates', 'absences',
-            'basic_salary', 'allowances', 'overtime_pay', 'incentives',
+            # Earnings
+            'standard_pay', 'basic_salary', 'overtime_pay', 'night_differential', 'ndot',
+            'rest_day', 'rest_day_ot', 'rest_day_nd', 'rest_day_ndot',
+            'special_holiday', 'special_holiday_ot', 'special_holiday_nd', 'special_holiday_ndot',
+            'legal_holiday', 'legal_holiday_ot', 'legal_holiday_nd', 'legal_holiday_ndot',
+            'legal_holiday_rd', 'legal_holiday_rdot', 'legal_holiday_rdnd', 'legal_holiday_rdndot',
+            'incentives', 'adjustment', 'gas', 'load', 'other_allowance', 'rewards_adjustments', 'kpi',
+            'allowances',
+            # Deductions
+            'late', 'id_deduction', 'uniform', 'insurance', 'surety_bond', 'convenience_fee', 'general_deduction',
             'total_earnings', 'deduction_details', 'total_deductions',
             # derived government deduction fields (percent + amount)
             'sss_percent', 'sss_deduction',
@@ -399,17 +408,58 @@ class PayrollSerializer(serializers.ModelSerializer):
         return None
 
     def get_total_earnings(self, obj):
-        return float((obj.basic_salary or 0) + (obj.allowances or 0) + (obj.overtime_pay or 0) + (obj.incentives or 0))
+        return float(
+            (obj.standard_pay or 0) +
+            (obj.basic_salary or 0) +
+            (obj.overtime_pay or 0) +
+            (obj.night_differential or 0) +
+            (obj.ndot or 0) +
+            (obj.rest_day or 0) +
+            (obj.rest_day_ot or 0) +
+            (obj.rest_day_nd or 0) +
+            (obj.rest_day_ndot or 0) +
+            (obj.special_holiday or 0) +
+            (obj.special_holiday_ot or 0) +
+            (obj.special_holiday_nd or 0) +
+            (obj.special_holiday_ndot or 0) +
+            (obj.legal_holiday or 0) +
+            (obj.legal_holiday_ot or 0) +
+            (obj.legal_holiday_nd or 0) +
+            (obj.legal_holiday_ndot or 0) +
+            (obj.legal_holiday_rd or 0) +
+            (obj.legal_holiday_rdot or 0) +
+            (obj.legal_holiday_rdnd or 0) +
+            (obj.legal_holiday_rdndot or 0) +
+            (obj.incentives or 0) +
+            (obj.adjustment or 0) +
+            (obj.gas or 0) +
+            (obj.load or 0) +
+            (obj.other_allowance or 0) +
+            (obj.rewards_adjustments or 0) +
+            (obj.kpi or 0) +
+            (obj.allowances or 0)
+        )
 
     def get_total_deductions(self, obj):
-        deductions = 0
+        deductions = (
+            float(obj.late or 0) +
+            float(obj.sss_deduction or 0) +
+            float(obj.philhealth_deduction or 0) +
+            float(obj.pagibig_deduction or 0) +
+            float(obj.id_deduction or 0) +
+            float(obj.uniform or 0) +
+            float(obj.insurance or 0) +
+            float(obj.surety_bond or 0) +
+            float(obj.convenience_fee or 0) +
+            float(obj.general_deduction or 0)
+        )
         if isinstance(obj.deduction_details, dict):
-            deductions = sum(float(value or 0) for value in obj.deduction_details.values())
+            deductions += sum(float(value or 0) for value in obj.deduction_details.values())
         return float(deductions)
 
     def _get_total_earnings_decimal(self, obj):
         from decimal import Decimal
-        return Decimal(str(float((obj.basic_salary or 0) + (obj.allowances or 0) + (obj.overtime_pay or 0) + (obj.incentives or 0))))
+        return Decimal(str(self.get_total_earnings(obj)))
 
     def _resolve_gov_rates(self, obj):
         """Return dict of percents for sss/philhealth/pagibig (floats)."""

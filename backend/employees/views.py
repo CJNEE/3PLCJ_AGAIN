@@ -410,7 +410,17 @@ def compute_gov_deductions(employee: Employee, basic_salary):
     return sss, phil, pagibig
 
 
-def compute_payroll_summary(employee: Employee, start_date, end_date, basic_salary=0, allowances=0, overtime_pay=0, incentives=0, deduction_details=None):
+def compute_payroll_summary(employee: Employee, start_date, end_date,
+                            standard_pay=0.0, basic_salary=0.0, overtime_pay=0.0,
+                            night_differential=0.0, ndot=0.0,
+                            rest_day=0.0, rest_day_ot=0.0, rest_day_nd=0.0, rest_day_ndot=0.0,
+                            special_holiday=0.0, special_holiday_ot=0.0, special_holiday_nd=0.0, special_holiday_ndot=0.0,
+                            legal_holiday=0.0, legal_holiday_ot=0.0, legal_holiday_nd=0.0, legal_holiday_ndot=0.0,
+                            legal_holiday_rd=0.0, legal_holiday_rdot=0.0, legal_holiday_rdnd=0.0, legal_holiday_rdndot=0.0,
+                            incentives=0.0, adjustment=0.0, gas=0.0, load=0.0, other_allowance=0.0,
+                            rewards_adjustments=0.0, kpi=0.0, allowances=0.0,
+                            late=0.0, id_deduction=0.0, uniform=0.0, insurance=0.0, surety_bond=0.0, convenience_fee=0.0, general_deduction=0.0,
+                            deduction_details=None):
     """Compute a payroll summary (not persisted) for an employee and period.
 
     Returns a simple dict suitable for JSON response or for serialization.
@@ -486,26 +496,70 @@ def compute_payroll_summary(employee: Employee, start_date, end_date, basic_sala
 
     absences = max(0, working_days - len(present_days) - leave_days)
 
-    # earnings and deductions
-    from decimal import Decimal
-    total_earnings = Decimal(str(float(basic_salary or 0) + float(allowances or 0) + float(overtime_pay or 0) + float(incentives or 0)))
+    # Automatically calculate overtime pay as exactly 25% of basic salary
+    overtime_pay = float(basic_salary or 0) * 0.25
+
+    # sum all itemized earnings
+    total_earnings_val = (
+        float(standard_pay or 0) +
+        float(basic_salary or 0) +
+        float(overtime_pay or 0) +
+        float(night_differential or 0) +
+        float(ndot or 0) +
+        float(rest_day or 0) +
+        float(rest_day_ot or 0) +
+        float(rest_day_nd or 0) +
+        float(rest_day_ndot or 0) +
+        float(special_holiday or 0) +
+        float(special_holiday_ot or 0) +
+        float(special_holiday_nd or 0) +
+        float(special_holiday_ndot or 0) +
+        float(legal_holiday or 0) +
+        float(legal_holiday_ot or 0) +
+        float(legal_holiday_nd or 0) +
+        float(legal_holiday_ndot or 0) +
+        float(legal_holiday_rd or 0) +
+        float(legal_holiday_rdot or 0) +
+        float(legal_holiday_rdnd or 0) +
+        float(legal_holiday_rdndot or 0) +
+        float(incentives or 0) +
+        float(adjustment or 0) +
+        float(gas or 0) +
+        float(load or 0) +
+        float(other_allowance or 0) +
+        float(rewards_adjustments or 0) +
+        float(kpi or 0) +
+        float(allowances or 0)
+    )
+    total_earnings = Decimal(str(total_earnings_val))
+
+    # calculate government deductions
+    sss_amt, phil_amt, pagibig_amt = compute_gov_deductions(employee, float(total_earnings))
+    total_gov = float(sss_amt + phil_amt + pagibig_amt)
 
     # deduction_details may be JSON/dict/number
-    total_deductions = 0.0
+    total_deductions_list = [
+        float(late or 0),
+        float(id_deduction or 0),
+        float(uniform or 0),
+        float(insurance or 0),
+        float(surety_bond or 0),
+        float(convenience_fee or 0),
+        float(general_deduction or 0),
+        total_gov
+    ]
     if deduction_details is None:
         deduction_details = {}
     try:
         if isinstance(deduction_details, dict):
-            total_deductions = sum(float(v or 0) for v in deduction_details.values())
+            total_deductions_list.append(sum(float(v or 0) for v in deduction_details.values()))
         else:
-            total_deductions = float(deduction_details or 0)
+            total_deductions_list.append(float(deduction_details or 0))
     except Exception:
-        total_deductions = 0.0
+        pass
 
-    sss_amt, phil_amt, pagibig_amt = compute_gov_deductions(employee, float(total_earnings))
-    total_gov = float(sss_amt + phil_amt + pagibig_amt)
-
-    net_pay = float((total_earnings - Decimal(str(total_deductions)) - Decimal(str(total_gov))).quantize(Decimal('0.01')))
+    total_deductions = sum(total_deductions_list)
+    net_pay = float((total_earnings - Decimal(str(total_deductions))).quantize(Decimal('0.01')))
 
     return {
         'employee': employee.id,
@@ -520,10 +574,42 @@ def compute_payroll_summary(employee: Employee, start_date, end_date, basic_sala
         'philhealth_no': getattr(employee, 'philhealth', 'N/A'),
         'pagibig_no': getattr(employee, 'pagibig', 'N/A'),
         'absences': absences,
+        'standard_pay': float(standard_pay or 0),
         'basic_salary': float(basic_salary or 0),
-        'allowances': float(allowances or 0),
         'overtime_pay': float(overtime_pay or 0),
+        'night_differential': float(night_differential or 0),
+        'ndot': float(ndot or 0),
+        'rest_day': float(rest_day or 0),
+        'rest_day_ot': float(rest_day_ot or 0),
+        'rest_day_nd': float(rest_day_nd or 0),
+        'rest_day_ndot': float(rest_day_ndot or 0),
+        'special_holiday': float(special_holiday or 0),
+        'special_holiday_ot': float(special_holiday_ot or 0),
+        'special_holiday_nd': float(special_holiday_nd or 0),
+        'special_holiday_ndot': float(special_holiday_ndot or 0),
+        'legal_holiday': float(legal_holiday or 0),
+        'legal_holiday_ot': float(legal_holiday_ot or 0),
+        'legal_holiday_nd': float(legal_holiday_nd or 0),
+        'legal_holiday_ndot': float(legal_holiday_ndot or 0),
+        'legal_holiday_rd': float(legal_holiday_rd or 0),
+        'legal_holiday_rdot': float(legal_holiday_rdot or 0),
+        'legal_holiday_rdnd': float(legal_holiday_rdnd or 0),
+        'legal_holiday_rdndot': float(legal_holiday_rdndot or 0),
         'incentives': float(incentives or 0),
+        'adjustment': float(adjustment or 0),
+        'gas': float(gas or 0),
+        'load': float(load or 0),
+        'other_allowance': float(other_allowance or 0),
+        'rewards_adjustments': float(rewards_adjustments or 0),
+        'kpi': float(kpi or 0),
+        'allowances': float(allowances or 0),
+        'late': float(late or 0),
+        'id_deduction': float(id_deduction or 0),
+        'uniform': float(uniform or 0),
+        'insurance': float(insurance or 0),
+        'surety_bond': float(surety_bond or 0),
+        'convenience_fee': float(convenience_fee or 0),
+        'general_deduction': float(general_deduction or 0),
         'total_earnings': float(total_earnings),
         'deduction_details': deduction_details,
         'total_deductions': float(total_deductions),
@@ -1294,10 +1380,44 @@ class PayrollViewSet(viewsets.ModelViewSet):
                 self.overtime_hours = Decimal('0')
                 self.lates = 0
                 self.absences = 0
+                # Earnings
+                self.standard_pay = Decimal('0')
                 self.basic_salary = Decimal('0')
-                self.allowances = Decimal('0')
                 self.overtime_pay = Decimal('0')
+                self.night_differential = Decimal('0')
+                self.ndot = Decimal('0')
+                self.rest_day = Decimal('0')
+                self.rest_day_ot = Decimal('0')
+                self.rest_day_nd = Decimal('0')
+                self.rest_day_ndot = Decimal('0')
+                self.special_holiday = Decimal('0')
+                self.special_holiday_ot = Decimal('0')
+                self.special_holiday_nd = Decimal('0')
+                self.special_holiday_ndot = Decimal('0')
+                self.legal_holiday = Decimal('0')
+                self.legal_holiday_ot = Decimal('0')
+                self.legal_holiday_nd = Decimal('0')
+                self.legal_holiday_ndot = Decimal('0')
+                self.legal_holiday_rd = Decimal('0')
+                self.legal_holiday_rdot = Decimal('0')
+                self.legal_holiday_rdnd = Decimal('0')
+                self.legal_holiday_rdndot = Decimal('0')
                 self.incentives = Decimal('0')
+                self.adjustment = Decimal('0')
+                self.gas = Decimal('0')
+                self.load = Decimal('0')
+                self.other_allowance = Decimal('0')
+                self.rewards_adjustments = Decimal('0')
+                self.kpi = Decimal('0')
+                self.allowances = Decimal('0')
+                # Deductions
+                self.late = Decimal('0')
+                self.id_deduction = Decimal('0')
+                self.uniform = Decimal('0')
+                self.insurance = Decimal('0')
+                self.surety_bond = Decimal('0')
+                self.convenience_fee = Decimal('0')
+                self.general_deduction = Decimal('0')
                 self.deduction_details = {}
                 self.sss_deduction = Decimal('0')
                 self.philhealth_deduction = Decimal('0')
@@ -1422,19 +1542,26 @@ class PayrollViewSet(viewsets.ModelViewSet):
             emp = serializer.validated_data.get('employee')
             period_start = serializer.validated_data.get('period_start')
             period_end = serializer.validated_data.get('period_end')
-            basic = serializer.validated_data.get('basic_salary', 0)
-            allowances = serializer.validated_data.get('allowances', 0)
-            overtime_pay = serializer.validated_data.get('overtime_pay', 0)
-            incentives = serializer.validated_data.get('incentives', 0)
+            
+            # List of all numeric fields to extract
+            fields_to_extract = [
+                'standard_pay', 'basic_salary', 'night_differential', 'ndot',
+                'rest_day', 'rest_day_ot', 'rest_day_nd', 'rest_day_ndot',
+                'special_holiday', 'special_holiday_ot', 'special_holiday_nd', 'special_holiday_ndot',
+                'legal_holiday', 'legal_holiday_ot', 'legal_holiday_nd', 'legal_holiday_ndot',
+                'legal_holiday_rd', 'legal_holiday_rdot', 'legal_holiday_rdnd', 'legal_holiday_rdndot',
+                'incentives', 'adjustment', 'gas', 'load', 'other_allowance', 'rewards_adjustments', 'kpi', 'allowances',
+                'late', 'id_deduction', 'uniform', 'insurance', 'surety_bond', 'convenience_fee', 'general_deduction'
+            ]
+            summary_kwargs = {}
+            for field in fields_to_extract:
+                val = serializer.validated_data.get(field, 0)
+                summary_kwargs[field] = float(val or 0)
+            
             deduction_details = serializer.validated_data.get('deduction_details', {}) or {}
 
             # Use compute helper to calculate derived fields
-            summary = compute_payroll_summary(emp, period_start, period_end,
-                                             basic_salary=float(basic),
-                                             allowances=float(allowances),
-                                             overtime_pay=float(overtime_pay),
-                                             incentives=float(incentives),
-                                             deduction_details=deduction_details)
+            summary = compute_payroll_summary(emp, period_start, period_end, deduction_details=deduction_details, **summary_kwargs)
 
             # Populate computed fields into validated_data so serializer.save() persists them
             serializer.validated_data['total_hours'] = summary.get('total_hours', 0)
@@ -1476,7 +1603,6 @@ class PayrollViewSet(viewsets.ModelViewSet):
                 serializer.validated_data['pagibig_percent'] = float(pagibig_pct or 0)
 
             # Recompute net_pay using final deduction values
-            total_gov = float((sss_amt or 0) + (phil_amt or 0) + (pagibig_amt or 0))
             serializer.validated_data['net_pay'] = summary.get('net_pay', 0)
         except Exception:
             # If computing fails, fall back to serializer defaults and allow model.save() to compute net_pay
@@ -1493,25 +1619,34 @@ class PayrollViewSet(viewsets.ModelViewSet):
             emp = serializer.validated_data.get('employee', instance.employee)
             period_start = serializer.validated_data.get('period_start', instance.period_start)
             period_end = serializer.validated_data.get('period_end', instance.period_end)
-            basic = serializer.validated_data.get('basic_salary', instance.basic_salary)
-            allowances = serializer.validated_data.get('allowances', instance.allowances)
-            overtime_pay = serializer.validated_data.get('overtime_pay', instance.overtime_pay)
-            incentives = serializer.validated_data.get('incentives', instance.incentives)
+            
+            # List of all numeric fields to extract
+            fields_to_extract = [
+                'standard_pay', 'basic_salary', 'night_differential', 'ndot',
+                'rest_day', 'rest_day_ot', 'rest_day_nd', 'rest_day_ndot',
+                'special_holiday', 'special_holiday_ot', 'special_holiday_nd', 'special_holiday_ndot',
+                'legal_holiday', 'legal_holiday_ot', 'legal_holiday_nd', 'legal_holiday_ndot',
+                'legal_holiday_rd', 'legal_holiday_rdot', 'legal_holiday_rdnd', 'legal_holiday_rdndot',
+                'incentives', 'adjustment', 'gas', 'load', 'other_allowance', 'rewards_adjustments', 'kpi', 'allowances',
+                'late', 'id_deduction', 'uniform', 'insurance', 'surety_bond', 'convenience_fee', 'general_deduction'
+            ]
+            summary_kwargs = {}
+            for field in fields_to_extract:
+                val = serializer.validated_data.get(field)
+                if val is None:
+                    val = getattr(instance, field, 0)
+                summary_kwargs[field] = float(val or 0)
+
             deduction_details = serializer.validated_data.get('deduction_details', instance.deduction_details) or {}
 
-            summary = compute_payroll_summary(emp, period_start, period_end,
-                                             basic_salary=float(basic),
-                                             allowances=float(allowances),
-                                             overtime_pay=float(overtime_pay),
-                                             incentives=float(incentives),
-                                             deduction_details=deduction_details)
+            summary = compute_payroll_summary(emp, period_start, period_end, deduction_details=deduction_details, **summary_kwargs)
 
             serializer.validated_data['total_hours'] = summary.get('total_hours', getattr(instance, 'total_hours', 0))
             serializer.validated_data['overtime_hours'] = summary.get('overtime_hours', getattr(instance, 'overtime_hours', 0))
             serializer.validated_data['lates'] = summary.get('lates', getattr(instance, 'lates', 0))
             serializer.validated_data['absences'] = summary.get('absences', getattr(instance, 'absences', 0))
 
-            total_earnings = float(summary.get('total_earnings', float(getattr(instance, 'basic_salary', 0)) + float(getattr(instance, 'allowances', 0))))
+            total_earnings = float(summary.get('total_earnings', 0))
             # For updates allow override via payload or validated_data; fall back to instance values
             sss_pct = serializer.validated_data.get('sss_percent') if 'sss_percent' in serializer.validated_data else (self.request.data.get('sss_percent') or getattr(instance, 'sss_percent', None))
             phil_pct = serializer.validated_data.get('philhealth_percent') if 'philhealth_percent' in serializer.validated_data else (self.request.data.get('philhealth_percent') or getattr(instance, 'philhealth_percent', None))
@@ -1543,13 +1678,7 @@ class PayrollViewSet(viewsets.ModelViewSet):
                 serializer.validated_data['pagibig_percent'] = float(serializer.validated_data.get('pagibig_percent') or 0)
 
             # net_pay: recompute conservatively
-            try:
-                total_gov = float((sss_amt or 0) + (phil_amt or 0) + (pagibig_amt or 0))
-                other_ded = float(serializer.validated_data.get('deduction_details') and sum(serializer.validated_data.get('deduction_details', {}).values()) or getattr(instance, 'deduction_details') and sum(getattr(instance, 'deduction_details', {}).values()) or 0)
-            except Exception:
-                total_gov = 0
-                other_ded = 0
-            serializer.validated_data['net_pay'] = round((float(total_earnings) - other_ded - total_gov), 2)
+            serializer.validated_data['net_pay'] = summary.get('net_pay', 0)
         except Exception:
             pass
 
@@ -1609,12 +1738,45 @@ class PayrollSummaryView(APIView):
             return Response({'detail': 'Invalid period_start/period_end'}, status=400)
 
         try:
+            standard_pay = float(request.query_params.get('standard_pay', 0))
             basic = float(request.query_params.get('basic_salary', 0))
-            allowances = float(request.query_params.get('allowances', 0))
             overtime_pay = float(request.query_params.get('overtime_pay', 0))
+            night_differential = float(request.query_params.get('night_differential', 0))
+            ndot = float(request.query_params.get('ndot', 0))
+            rest_day = float(request.query_params.get('rest_day', 0))
+            rest_day_ot = float(request.query_params.get('rest_day_ot', 0))
+            rest_day_nd = float(request.query_params.get('rest_day_nd', 0))
+            rest_day_ndot = float(request.query_params.get('rest_day_ndot', 0))
+            special_holiday = float(request.query_params.get('special_holiday', 0))
+            special_holiday_ot = float(request.query_params.get('special_holiday_ot', 0))
+            special_holiday_nd = float(request.query_params.get('special_holiday_nd', 0))
+            special_holiday_ndot = float(request.query_params.get('special_holiday_ndot', 0))
+            legal_holiday = float(request.query_params.get('legal_holiday', 0))
+            legal_holiday_ot = float(request.query_params.get('legal_holiday_ot', 0))
+            legal_holiday_nd = float(request.query_params.get('legal_holiday_nd', 0))
+            legal_holiday_ndot = float(request.query_params.get('legal_holiday_ndot', 0))
+            legal_holiday_rd = float(request.query_params.get('legal_holiday_rd', 0))
+            legal_holiday_rdot = float(request.query_params.get('legal_holiday_rdot', 0))
+            legal_holiday_rdnd = float(request.query_params.get('legal_holiday_rdnd', 0))
+            legal_holiday_rdndot = float(request.query_params.get('legal_holiday_rdndot', 0))
             incentives = float(request.query_params.get('incentives', 0))
+            adjustment = float(request.query_params.get('adjustment', 0))
+            gas = float(request.query_params.get('gas', 0))
+            load = float(request.query_params.get('load', 0))
+            other_allowance = float(request.query_params.get('other_allowance', 0))
+            rewards_adjustments = float(request.query_params.get('rewards_adjustments', 0))
+            kpi = float(request.query_params.get('kpi', 0))
+            allowances = float(request.query_params.get('allowances', 0))
+
+            late = float(request.query_params.get('late', 0))
+            id_deduction = float(request.query_params.get('id_deduction', 0))
+            uniform = float(request.query_params.get('uniform', 0))
+            insurance = float(request.query_params.get('insurance', 0))
+            surety_bond = float(request.query_params.get('surety_bond', 0))
+            convenience_fee = float(request.query_params.get('convenience_fee', 0))
+            general_deduction = float(request.query_params.get('general_deduction', 0))
         except Exception:
-            basic = allowances = overtime_pay = incentives = 0.0
+            standard_pay = basic = overtime_pay = night_differential = ndot = rest_day = rest_day_ot = rest_day_nd = rest_day_ndot = special_holiday = special_holiday_ot = special_holiday_nd = special_holiday_ndot = legal_holiday = legal_holiday_ot = legal_holiday_nd = legal_holiday_ndot = legal_holiday_rd = legal_holiday_rdot = legal_holiday_rdnd = legal_holiday_rdndot = incentives = adjustment = gas = load = other_allowance = rewards_adjustments = kpi = allowances = late = id_deduction = uniform = insurance = surety_bond = convenience_fee = general_deduction = 0.0
 
         dd = request.query_params.get('deduction_details')
         try:
@@ -1626,7 +1788,17 @@ class PayrollSummaryView(APIView):
         except Exception:
             dd_parsed = {}
 
-        summary = compute_payroll_summary(emp, start, end, basic_salary=basic, allowances=allowances, overtime_pay=overtime_pay, incentives=incentives, deduction_details=dd_parsed)
+        summary = compute_payroll_summary(emp, start, end,
+                                          standard_pay=standard_pay, basic_salary=basic, overtime_pay=overtime_pay,
+                                          night_differential=night_differential, ndot=ndot,
+                                          rest_day=rest_day, rest_day_ot=rest_day_ot, rest_day_nd=rest_day_nd, rest_day_ndot=rest_day_ndot,
+                                          special_holiday=special_holiday, special_holiday_ot=special_holiday_ot, special_holiday_nd=special_holiday_nd, special_holiday_ndot=special_holiday_ndot,
+                                          legal_holiday=legal_holiday, legal_holiday_ot=legal_holiday_ot, legal_holiday_nd=legal_holiday_nd, legal_holiday_ndot=legal_holiday_ndot,
+                                          legal_holiday_rd=legal_holiday_rd, legal_holiday_rdot=legal_holiday_rdot, legal_holiday_rdnd=legal_holiday_rdnd, legal_holiday_rdndot=legal_holiday_rdndot,
+                                          incentives=incentives, adjustment=adjustment, gas=gas, load=load, other_allowance=other_allowance,
+                                          rewards_adjustments=rewards_adjustments, kpi=kpi, allowances=allowances,
+                                          late=late, id_deduction=id_deduction, uniform=uniform, insurance=insurance, surety_bond=surety_bond, convenience_fee=convenience_fee, general_deduction=general_deduction,
+                                          deduction_details=dd_parsed)
         return Response(summary)
         try:
             if dd:
