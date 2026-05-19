@@ -3,6 +3,7 @@ import { HRPermission } from '@/types';
 import { Modal } from './Modal';
 import { useToast } from '@/hooks/useToast';
 import { apiClient } from '@/api/apiService';
+import { normalizeApiResponse } from '@/utils/apiResponseHandler';
 import { AlertCircle, Lock, Unlock, Shield, Key, Eye, EyeOff, ShieldCheck, UserCheck, Trash2, FileText, UserPlus } from 'lucide-react';
 import { LoadingSpinner, Button } from './common';
 
@@ -61,8 +62,9 @@ export const EmployeeAccessControlModal = ({
     try {
       setLoadingPermissions(true);
       const response = await apiClient.get(`hr-permissions/?hr_employee=${employee.id}`);
-      if (response.data && response.data.results?.length > 0) {
-        const perms = response.data.results[0];
+      const permsList = normalizeApiResponse(response.data);
+      if (permsList.length > 0) {
+        const perms = permsList[0];
         setHrPermissions({
           can_view_employees: perms.can_view_employees || false,
           can_edit_employee_info: perms.can_edit_employee_info || false,
@@ -78,11 +80,46 @@ export const EmployeeAccessControlModal = ({
     }
   };
 
-  const togglePermission = (key: PermKey) => {
-    setHrPermissions((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
+  const togglePermission = async (key: PermKey) => {
+    const updatedValue = !hrPermissions[key];
+    const updatedPermissions = {
+      ...hrPermissions,
+      [key]: updatedValue,
+    };
+    
+    // Snappy optimistic UI update
+    setHrPermissions(updatedPermissions);
+
+    try {
+      setIsLoading(true);
+      const existingResponse = await apiClient.get(`hr-permissions/?hr_employee=${employee.id}`);
+      const permsList = normalizeApiResponse(existingResponse.data);
+      
+      if (permsList.length > 0) {
+        const permId = permsList[0].id;
+        await apiClient.patch(`hr-permissions/${permId}/`, {
+          ...updatedPermissions,
+        });
+      } else {
+        await apiClient.post('hr-permissions/', {
+          hr_employee: employee.id,
+          ...updatedPermissions,
+        });
+      }
+      toast.success('HR Administrative power updated');
+      onUpdate?.();
+    } catch (error: any) {
+      // Revert local state on error
+      setHrPermissions((prev) => ({
+        ...prev,
+        [key]: !updatedValue,
+      }));
+      toast.error(
+        error?.response?.data?.error || error?.response?.data?.message || 'Failed to save permissions'
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const toggleAccountLock = async (newLockedState: boolean) => {
@@ -110,9 +147,10 @@ export const EmployeeAccessControlModal = ({
     try {
       setIsLoading(true);
       const existingResponse = await apiClient.get(`hr-permissions/?hr_employee=${employee.id}`);
+      const permsList = normalizeApiResponse(existingResponse.data);
       
-      if (existingResponse.data && existingResponse.data.results?.length > 0) {
-        const permId = existingResponse.data.results[0].id;
+      if (permsList.length > 0) {
+        const permId = permsList[0].id;
         await apiClient.patch(`hr-permissions/${permId}/`, {
           ...hrPermissions,
         });
@@ -197,7 +235,7 @@ export const EmployeeAccessControlModal = ({
 
             <div>
               <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight">{employee?.full_name}</h3>
-              <p className="text-[10px] font-black uppercase tracking-widest text-red-600 mt-1">{employee?.position}</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-red-650 mt-1">{employee?.position}</p>
               <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">#{employee?.employee_id}</p>
             </div>
           </div>
@@ -271,10 +309,11 @@ export const EmployeeAccessControlModal = ({
                   
                   <Button
                     onClick={handleSavePermissions}
-                    disabled={isLoading}
+                    isLoading={isLoading}
+                    variant="primary"
                     className="w-full mt-4 bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest text-[10px] py-4 rounded-xl transition-all shadow-xl shadow-red-600/20"
                   >
-                    {isLoading ? 'Processing...' : 'Apply Administrative Changes'}
+                    Apply Administrative Changes
                   </Button>
                 </div>
               )}
@@ -300,47 +339,48 @@ export const EmployeeAccessControlModal = ({
               </div>
             </div>
 
-              <div className="space-y-4 p-5 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm animate-in fade-in slide-in-from-top-4">
-                <div className="space-y-3">
-                  <div className="space-y-1.5">
-                    <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">New Password</label>
-                    <div className="relative">
-                      <input
-                        type={showPass ? 'text' : 'password'}
-                        value={manualData.password}
-                        onChange={(e) => setManualData({...manualData, password: e.target.value})}
-                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-red-600 transition-all"
-                        placeholder="At least 8 characters"
-                      />
-                      <button onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-                        {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Confirm Password</label>
-                    <div className="relative">
-                      <input
-                        type={showConfirm ? 'text' : 'password'}
-                        value={manualData.confirm}
-                        onChange={(e) => setManualData({...manualData, confirm: e.target.value})}
-                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-red-600 transition-all"
-                        placeholder="Re-type password"
-                      />
-                      <button onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-                        {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-                    </div>
+            <div className="space-y-4 p-5 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm animate-in fade-in slide-in-from-top-4">
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">New Password</label>
+                  <div className="relative">
+                    <input
+                      type={showPass ? 'text' : 'password'}
+                      value={manualData.password}
+                      onChange={(e) => setManualData({...manualData, password: e.target.value})}
+                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-red-600 transition-all"
+                      placeholder="At least 8 characters"
+                    />
+                    <button onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                      {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
                   </div>
                 </div>
-                <Button
-                  onClick={handleResetPassword}
-                  disabled={isLoading}
-                  className="w-full bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest text-[10px] py-4 rounded-xl shadow-lg shadow-red-600/20"
-                >
-                  {isLoading ? 'Updating...' : 'Save Manual Password'}
-                </Button>
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Confirm Password</label>
+                  <div className="relative">
+                    <input
+                      type={showConfirm ? 'text' : 'password'}
+                      value={manualData.confirm}
+                      onChange={(e) => setManualData({...manualData, confirm: e.target.value})}
+                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-red-600 transition-all"
+                      placeholder="Re-type password"
+                    />
+                    <button onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                      {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
               </div>
+              <Button
+                onClick={handleResetPassword}
+                isLoading={isLoading}
+                variant="primary"
+                className="w-full bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest text-[10px] py-4 rounded-xl shadow-lg shadow-red-600/20"
+              >
+                Save Manual Password
+              </Button>
+            </div>
           </section>
         </div>
       </div>

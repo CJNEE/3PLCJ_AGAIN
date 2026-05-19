@@ -2426,12 +2426,19 @@ def reset_password(request, employee_id):
     """Reset employee password (Admin or authorized HR)"""
     try:
         # Check requester role and permissions
-        requester_employee = Employee.objects.get(user=request.user)
-        is_admin = requester_employee.role == 'Admin'
+        try:
+            requester_employee = Employee.objects.get(user=request.user)
+            is_admin = requester_employee.role == 'Admin'
+        except Employee.DoesNotExist:
+            if request.user.is_superuser or request.user.is_staff:
+                is_admin = True
+                requester_employee = None
+            else:
+                return Response({"error": "Unauthorized: Requester profile not found."}, status=status.HTTP_403_FORBIDDEN)
         
         # Check HR permissions if not admin
         if not is_admin:
-            if requester_employee.role != 'HR':
+            if requester_employee is None or requester_employee.role != 'HR':
                 return Response({"error": "Unauthorized access."}, status=status.HTTP_403_FORBIDDEN)
             
             # Check if this HR has reset_password permission
@@ -2445,7 +2452,21 @@ def reset_password(request, employee_id):
         employee = Employee.objects.get(id=employee_id)
         user = employee.user
         if not user:
-             return Response({"error": "User account not found for this employee."}, status=status.HTTP_404_NOT_FOUND)
+            # Self-healing: Dynamically create Django User account if it doesn't exist
+            username = employee.jtp_code or employee.employee_id or f"emp_{employee.id}"
+            username = username.strip().lower()
+            
+            from django.contrib.auth.models import User
+            if User.objects.filter(username=username).exists():
+                username = f"{username}_{employee.id}"
+                
+            user = User.objects.create_user(
+                username=username,
+                first_name=employee.firstname or '',
+                last_name=employee.lastname or ''
+            )
+            employee.user = user
+            employee.save()
         
         # Check if manual password provided
         manual_password = request.data.get('manual_password')
