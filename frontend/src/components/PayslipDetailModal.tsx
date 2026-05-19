@@ -46,6 +46,11 @@ type Payslip = {
   period_end?: string;
   employee?: number | string;
   employee_id?: number | string;
+  tin?: string;
+  sss_no?: string;
+  philhealth_no?: string;
+  pagibig_no?: string;
+  net_pay?: number | string;
 };
 
 interface PayslipDetailModalProps {
@@ -60,6 +65,35 @@ interface PayslipDetailModalProps {
 const toNumber = (value: unknown): number => {
   const n = Number(value);
   return Number.isFinite(n) ? n : 0;
+};
+
+const formatPayslipPeriod = (startStr?: string, endStr?: string) => {
+  if (!startStr || !endStr) return 'N/A';
+  try {
+    const startDate = new Date(startStr);
+    const endDate = new Date(endStr);
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      return `${startStr} - ${endStr}`;
+    }
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    const startMonth = monthNames[startDate.getMonth()];
+    const startDay = startDate.getDate();
+    const endMonth = monthNames[endDate.getMonth()];
+    const endDay = endDate.getDate();
+    const startYear = startDate.getFullYear();
+    const endYear = endDate.getFullYear();
+
+    if (startMonth === endMonth && startYear === endYear) {
+      return `${startMonth} ${startDay} to ${endDay}, ${startYear}`;
+    } else {
+      return `${startMonth} ${startDay}, ${startYear} to ${endMonth} ${endDay}, ${endYear}`;
+    }
+  } catch (e) {
+    return `${startStr} - ${endStr}`;
+  }
 };
 
 export const PayslipDetailModal = ({
@@ -338,105 +372,123 @@ export const PayslipDetailModal = ({
   if (!payslip && !localPayslip) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="" size="lg">
-      <div className="max-h-[90vh] overflow-y-auto">
-        <div className="bg-red-600 p-6 text-white relative">
-          <button
-            onClick={handleDownload}
-            className="absolute top-4 right-4 hover:bg-red-700 p-2 rounded transition-colors"
-            aria-label="Download payslip"
-          >
-            <Download size={24} />
-          </button>
-
-          {/* Move Edit Payroll to top-left */}
-          <div className="absolute top-4 left-4">
-            <button onClick={() => setIsEditMode(true)} className="btn btn-primary">
-              Edit Payroll
+    <Modal isOpen={isOpen} onClose={onClose} title="" size="2xl">
+      <div className="max-h-[90vh] overflow-y-auto bg-gray-50 dark:bg-slate-950">
+        {/* HEADER AREA */}
+        <div className="bg-gradient-to-r from-red-800 via-red-900 to-red-950 p-6 text-white relative shadow-lg">
+          {/* Action Header Actions */}
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              {!isEditMode && (
+                <button
+                  onClick={() => setIsEditMode(true)}
+                  className="bg-white/20 hover:bg-white/30 text-white border border-white/20 font-semibold py-1.5 px-4 rounded-xl transition-all text-xs"
+                >
+                  Edit Payroll
+                </button>
+              )}
+            </div>
+            <button
+              onClick={handleDownload}
+              className="hover:bg-white/10 p-2 rounded-full transition-all"
+              aria-label="Download payslip"
+            >
+              <Download size={22} />
             </button>
           </div>
 
-          <div className="flex gap-6">
-            <div>
+          <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
+            {/* Profile Picture */}
+            <div className="shrink-0">
               {localPayslip?.profile_image_url || localPayslip?.profile_image ? (
                 <img
                   src={localPayslip?.profile_image_url || localPayslip?.profile_image}
                   alt={localPayslip?.full_name || localPayslip?.fullname || 'Employee'}
-                  className="w-24 h-24 rounded border-2 border-white object-cover"
+                  className="w-20 h-20 rounded-2xl border-2 border-white/30 object-cover shadow-md"
                 />
               ) : (
-                <div className="w-24 h-24 rounded border-2 border-white bg-red-500 flex items-center justify-center text-white text-3xl font-bold">
+                <div className="w-20 h-20 rounded-2xl border-2 border-white/30 bg-red-700 flex items-center justify-center text-white text-3xl font-bold shadow-md">
                   {(localPayslip?.full_name || localPayslip?.fullname || 'E').charAt(0).toUpperCase()}
                 </div>
               )}
             </div>
 
-            <div className="flex-1">
-              <h2 className="text-2xl font-bold mb-1">
+            {/* Employee Info & Grid */}
+            <div className="flex-1 min-w-0">
+              <h2 className="text-2xl font-bold tracking-tight truncate">
                 {localPayslip?.full_name || localPayslip?.fullname || 'N/A'}
               </h2>
-              <p className="text-sm mb-3">{localPayslip?.jtp_code || 'N/A'}</p>
+              <p className="text-red-200 text-xs font-semibold tracking-wider uppercase mt-0.5">
+                JTP Code: {localPayslip?.jtp_code || 'N/A'}
+              </p>
 
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-2 mt-4 text-xs text-white/80 border-t border-white/10 pt-3">
                 <div>
-                  <p className="opacity-90">Position</p>
-                  <p className="text-gray-600 text-sm">{localPayslip?.position || 'N/A'}</p>
+                  <span className="text-[10px] text-red-200 font-bold uppercase tracking-wider block">Position</span>
+                  <span className="font-semibold text-white truncate block">{localPayslip?.position || 'N/A'}</span>
                 </div>
                 <div>
-                  <p className="opacity-90">Date Hired:</p>
-                  <p className="text-gray-600 text-sm">{localPayslip?.date_hired || 'N/A'}</p>
+                  <span className="text-[10px] text-red-200 font-bold uppercase tracking-wider block">Date Hired</span>
+                  <span className="font-semibold text-white block">
+                    {localPayslip?.date_hired ? new Date(localPayslip.date_hired).toLocaleDateString() : 'N/A'}
+                  </span>
                 </div>
                 <div>
-                  <p className="opacity-90 font-bold">Hub Name :</p>
-                  <p className="text-gray-600 text-sm">{localPayslip?.hub_name || localPayslip?.hub || 'N/A'}</p>
+                  <span className="text-[10px] text-red-200 font-bold uppercase tracking-wider block">Hub Name</span>
+                  <span className="font-semibold text-white truncate block">{localPayslip?.hub_name || localPayslip?.hub || 'N/A'}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="mt-4 bg-red-700 bg-opacity-50 px-4 py-2 rounded text-sm font-bold inline-block">
-            <p className="opacity-90">
-              Payslip Period:{' '}
-              <span className="text-gray-600 text-sm">
-                {localPayslip?.payslip_period || `${localPayslip?.period_start || 'N/A'} - ${localPayslip?.period_end || 'N/A'}`}
-              </span>
-            </p>
+          {/* Payslip Period Banner */}
+          <div className="mt-5 bg-white/10 backdrop-blur border border-white/10 px-4 py-2 rounded-2xl text-xs flex items-center justify-between">
+            <span className="text-red-100 font-medium">Payslip Period:</span>
+            <span className="font-bold text-white text-right">
+              {formatPayslipPeriod(localPayslip?.period_start, localPayslip?.period_end)}
+            </span>
           </div>
         </div>
 
-        <div className="p-4 space-y-3">
-          <div>
-            <h3 className="bg-red-200 px-4 py-2 text-gray-600 text-sm text-sm mb-3 rounded font-bold">Attendance Summary</h3>
-            <div className="bg-white border border-gray-300 rounded p-4 space-y-3">
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <p className="text-gray-600 text-sm font-bold">Total Hours:</p>
-                  <p className="text-gray-600 text-sm">{localPayslip?.total_hours ?? localPayslip?.totalHours ?? '0'}</p>
-                </div>
-                <div>
-                  <p className="text-gray-600 text-sm font-bold">Overtime:</p>
-                  <p className="text-gray-600 text-sm">{localPayslip?.overtime_hours ?? '0'}</p>
-                </div>
+        {/* GOVERNMENT IDS SECTION */}
+        <div className="px-6 pt-6 pb-2">
+          <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-3xl p-4 shadow-sm">
+            <h4 className="text-gray-400 dark:text-gray-500 font-bold text-[10px] uppercase tracking-wider mb-3">Employee Government IDs</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+              <div>
+                <p className="text-gray-500 font-medium">TIN:</p>
+                <p className="font-semibold text-gray-800 dark:text-gray-200">{localPayslip?.tin || 'N/A'}</p>
               </div>
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <p className="text-gray-600 text-sm font-bold">Lates:</p>
-                  <p className="text-gray-600 text-sm">{localPayslip?.lates ?? 0}</p>
-                </div>
-                <div>
-                  <p className="text-gray-600 text-sm font-bold">Absences:</p>
-                  <p className="text-gray-600 text-sm">{localPayslip?.absences ?? 0}</p>
-                </div>
+              <div>
+                <p className="text-gray-500 font-medium">SSS No:</p>
+                <p className="font-semibold text-gray-800 dark:text-gray-200">{localPayslip?.sss_no || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-gray-500 font-medium">PhilHealth No:</p>
+                <p className="font-semibold text-gray-800 dark:text-gray-200">{localPayslip?.philhealth_no || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-gray-500 font-medium">Pag-IBIG No:</p>
+                <p className="font-semibold text-gray-800 dark:text-gray-200">{localPayslip?.pagibig_no || 'N/A'}</p>
               </div>
             </div>
           </div>
+        </div>
 
-          <div>
-            <h3 className="bg-red-200 px-4 py-2 text-gray-600 text-sm text-sm mb-3 rounded font-bold">Earnings</h3>
-            <div className="bg-white border border-gray-300 rounded p-4 space-y-3">
-              <div className="grid grid-cols-2 gap-6">
+        {/* TWO COLUMN CONTENT PANEL */}
+        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          {/* LEFT COLUMN: EARNINGS */}
+          <div className="space-y-6">
+            <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm">
+              <h3 className="text-gray-800 dark:text-gray-100 font-bold text-sm border-b pb-3 mb-4 flex justify-between items-center">
+                <span>Earnings Breakdown</span>
+                <span className="text-xs text-green-600 font-medium">In PHP</span>
+              </h3>
+
+              <div className="space-y-4">
                 <div>
-                  <p className="text-gray-600 text-sm font-bold">Basic Pay:</p>
+                  <p className="text-gray-500 text-xs font-semibold">Basic Salary</p>
                   {isEditMode ? (
                     <input
                       title="Basic Salary"
@@ -444,15 +496,15 @@ export const PayslipDetailModal = ({
                       type="number"
                       value={formData.basic_salary}
                       onChange={(e) => setFormData((p) => ({ ...p, basic_salary: toNumber(e.target.value) }))}
-                      className="input-field w-full"
+                      className="input-field w-full mt-1"
                     />
                   ) : (
-                    <p className="text-gray-600 text-sm">₱{toNumber(localPayslip?.basic_salary).toFixed(2)}</p>
+                    <p className="text-gray-800 dark:text-gray-200 font-bold mt-0.5">₱{toNumber(localPayslip?.basic_salary).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                   )}
                 </div>
 
                 <div>
-                  <p className="text-gray-600 text-sm font-bold">Allowance:</p>
+                  <p className="text-gray-500 text-xs font-semibold">Allowances</p>
                   {isEditMode ? (
                     <input
                       title="Allowances"
@@ -460,17 +512,15 @@ export const PayslipDetailModal = ({
                       type="number"
                       value={formData.allowances}
                       onChange={(e) => setFormData((p) => ({ ...p, allowances: toNumber(e.target.value) }))}
-                      className="input-field w-full"
+                      className="input-field w-full mt-1"
                     />
                   ) : (
-                    <p className="text-gray-600 text-sm">₱{toNumber(localPayslip?.allowances).toFixed(2)}</p>
+                    <p className="text-gray-800 dark:text-gray-200 font-semibold mt-0.5">₱{toNumber(localPayslip?.allowances).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                   )}
                 </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <p className="text-gray-600 text-sm font-bold">Overtime Pay:</p>
+                  <p className="text-gray-500 text-xs font-semibold">Overtime Pay</p>
                   {isEditMode ? (
                     <input
                       title="Overtime Pay"
@@ -478,14 +528,15 @@ export const PayslipDetailModal = ({
                       type="number"
                       value={formData.overtime_pay}
                       onChange={(e) => setFormData((p) => ({ ...p, overtime_pay: toNumber(e.target.value) }))}
-                      className="input-field w-full"
+                      className="input-field w-full mt-1"
                     />
                   ) : (
-                    <p className="text-gray-600 text-sm">₱{toNumber(localPayslip?.overtime_pay).toFixed(2)}</p>
+                    <p className="text-gray-800 dark:text-gray-200 font-semibold mt-0.5">₱{toNumber(localPayslip?.overtime_pay).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                   )}
                 </div>
+
                 <div>
-                  <p className="text-gray-600 text-sm font-bold">Incentives:</p>
+                  <p className="text-gray-500 text-xs font-semibold">Incentives</p>
                   {isEditMode ? (
                     <input
                       title="Incentives"
@@ -493,218 +544,255 @@ export const PayslipDetailModal = ({
                       type="number"
                       value={formData.incentives}
                       onChange={(e) => setFormData((p) => ({ ...p, incentives: toNumber(e.target.value) }))}
-                      className="input-field w-full"
+                      className="input-field w-full mt-1"
                     />
                   ) : (
-                    <p className="text-gray-600 text-sm">₱{toNumber(localPayslip?.incentives).toFixed(2)}</p>
+                    <p className="text-gray-800 dark:text-gray-200 font-semibold mt-0.5">₱{toNumber(localPayslip?.incentives).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                   )}
                 </div>
-              </div>
 
-              <div className="bg-blue-100 p-3 rounded mt-2">
-                <p className="text-gray-600 text-sm font-bold">Total Earnings:</p>
-                <p className="text-gray-600 text-sm">₱{toNumber(localPayslip?.total_earnings).toFixed(2)}</p>
+                <div className="bg-green-50 dark:bg-green-950/20 border border-green-100 dark:border-green-900/30 p-4 rounded-2xl flex justify-between items-center mt-6">
+                  <span className="text-green-700 dark:text-green-400 font-bold text-xs">Total Earnings</span>
+                  <span className="text-green-700 dark:text-green-400 font-extrabold text-sm">
+                    ₱{toNumber(localPayslip?.total_earnings).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
 
-          <div>
-            <h3 className="bg-red-200 px-4 py-2 text-gray-600 text-sm text-sm mb-3 rounded font-bold">Deductions</h3>
-            <div className="bg-white border border-gray-300 rounded p-4">
-              {localPayslip?.deduction_details && Object.keys(localPayslip.deduction_details).length > 0 ? (
-                <div className="space-y-3">
-                  {Object.entries(localPayslip.deduction_details).map(([label, amount]) => (
-                    <div key={label} className="grid grid-cols-2 gap-6">
-                      <div>
-                        <p className="text-gray-600 text-sm">{label}:</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-600 text-sm">₱{toNumber(amount).toFixed(2)}</p>
-                      </div>
-                    </div>
-                  ))}
+          {/* RIGHT COLUMN: DEDUCTIONS & ATTENDANCE */}
+          <div className="space-y-6">
+            {/* ATTENDANCE PANEL */}
+            <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm">
+              <h3 className="text-gray-800 dark:text-gray-100 font-bold text-xs border-b pb-3 mb-4">Attendance Summary</h3>
+              <div className="grid grid-cols-2 gap-4 text-xs">
+                <div>
+                  <p className="text-gray-400 font-medium">Total Hours</p>
+                  <p className="text-gray-800 dark:text-gray-200 font-bold text-sm mt-0.5">
+                    {localPayslip?.total_hours ?? localPayslip?.totalHours ?? '0'} hrs
+                  </p>
                 </div>
-              ) : (
-                <p className="text-gray-600 text-sm">No itemized deductions available</p>
-              )}
-
-              <div className="border-t pt-2 grid grid-cols-2 gap-6 mt-3">
-                <p className="text-gray-600 text-sm font-bold">Total:</p>
-                <p className="text-gray-600 text-sm">₱{toNumber(localPayslip?.total_deductions).toFixed(2)}</p>
+                <div>
+                  <p className="text-gray-400 font-medium">Overtime Hours</p>
+                  <p className="text-gray-800 dark:text-gray-200 font-semibold text-sm mt-0.5">
+                    {localPayslip?.overtime_hours ?? '0'} hrs
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-400 font-medium">Lates</p>
+                  <p className="text-gray-800 dark:text-gray-200 font-semibold text-sm mt-0.5">
+                    {localPayslip?.lates ?? 0}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-400 font-medium">Absences</p>
+                  <p className="text-gray-800 dark:text-gray-200 font-semibold text-sm mt-0.5">
+                    {localPayslip?.absences ?? 0}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div>
-            <h3 className="bg-gray-300 px-4 py-2 text-gray-600 text-sm text-sm mb-3 rounded font-bold">Government Deductions</h3>
-            <div className="bg-white border border-gray-300 rounded p-4 space-y-3">
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <p className="text-gray-600 text-sm font-bold">SSS:</p>
-                  {isEditMode ? (
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={govPercents.sss}
-                        onChange={(e) => setGovPercents((p) => ({ ...p, sss: toNumber(e.target.value) }))}
-                        className="input-field w-24"
-                      />
-                      <span className="text-gray-600 text-sm">% • ₱{toNumber(localPayslip?.sss_deduction).toFixed(2)}</span>
+            {/* DEDUCTIONS PANEL */}
+            <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm">
+              <h3 className="text-gray-800 dark:text-gray-100 font-bold text-sm border-b pb-3 mb-4 flex justify-between items-center">
+                <span>Deductions</span>
+                <span className="text-xs text-red-600 font-medium">In PHP</span>
+              </h3>
+
+              {/* Government Deductions */}
+              <div className="space-y-4">
+                <div className="border-b pb-3 border-gray-100 dark:border-slate-800">
+                  <p className="text-gray-500 text-xs font-semibold mb-2">Government Mandated Deductions</p>
+                  <div className="grid grid-cols-1 gap-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 dark:text-gray-400 text-xs font-medium">SSS</span>
+                      {isEditMode ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={govPercents.sss}
+                            onChange={(e) => setGovPercents((p) => ({ ...p, sss: toNumber(e.target.value) }))}
+                            className="input-field w-16 text-right py-0.5"
+                          />
+                          <span className="text-gray-500 text-[10px]">% (₱{toNumber(localPayslip?.sss_deduction).toFixed(2)})</span>
+                        </div>
+                      ) : (
+                        <span className="text-gray-800 dark:text-gray-200 text-xs font-bold">
+                          ₱{toNumber(localPayslip?.sss_deduction).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({localPayslip?.sss_percent || '0'}%)
+                        </span>
+                      )}
                     </div>
-                  ) : (
-                    <p className="text-gray-600 text-sm">{localPayslip?.sss_percent || '—'}% • ₱{toNumber(localPayslip?.sss_deduction).toFixed(2)}</p>
-                  )}
-                </div>
-                <div>
-                  <p className="text-gray-600 text-sm font-bold">Philhealth:</p>
-                  {isEditMode ? (
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={govPercents.philhealth}
-                        onChange={(e) => setGovPercents((p) => ({ ...p, philhealth: toNumber(e.target.value) }))}
-                        className="input-field w-24"
-                      />
-                      <span className="text-gray-600 text-sm">% • ₱{toNumber(localPayslip?.philhealth_deduction).toFixed(2)}</span>
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 dark:text-gray-400 text-xs font-medium">PhilHealth</span>
+                      {isEditMode ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={govPercents.philhealth}
+                            onChange={(e) => setGovPercents((p) => ({ ...p, philhealth: toNumber(e.target.value) }))}
+                            className="input-field w-16 text-right py-0.5"
+                          />
+                          <span className="text-gray-500 text-[10px]">% (₱{toNumber(localPayslip?.philhealth_deduction).toFixed(2)})</span>
+                        </div>
+                      ) : (
+                        <span className="text-gray-800 dark:text-gray-200 text-xs font-bold">
+                          ₱{toNumber(localPayslip?.philhealth_deduction).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({localPayslip?.philhealth_percent || '0'}%)
+                        </span>
+                      )}
                     </div>
-                  ) : (
-                    <p className="text-gray-600 text-sm">{localPayslip?.philhealth_percent || '—'}% • ₱{toNumber(localPayslip?.philhealth_deduction).toFixed(2)}</p>
-                  )}
-                </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <p className="text-gray-600 text-sm font-bold">Pag-IBIG:</p>
-                  {isEditMode ? (
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={govPercents.pagibig}
-                        onChange={(e) => setGovPercents((p) => ({ ...p, pagibig: toNumber(e.target.value) }))}
-                        className="input-field w-24"
-                      />
-                      <span className="text-gray-600 text-sm">% • ₱{toNumber(localPayslip?.pagibig_deduction).toFixed(2)}</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 dark:text-gray-400 text-xs font-medium">Pag-IBIG</span>
+                      {isEditMode ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={govPercents.pagibig}
+                            onChange={(e) => setGovPercents((p) => ({ ...p, pagibig: toNumber(e.target.value) }))}
+                            className="input-field w-16 text-right py-0.5"
+                          />
+                          <span className="text-gray-500 text-[10px]">% (₱{toNumber(localPayslip?.pagibig_deduction).toFixed(2)})</span>
+                        </div>
+                      ) : (
+                        <span className="text-gray-800 dark:text-gray-200 text-xs font-bold">
+                          ₱{toNumber(localPayslip?.pagibig_deduction).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({localPayslip?.pagibig_percent || '0'}%)
+                        </span>
+                      )}
                     </div>
-                  ) : (
-                    <p className="text-gray-600 text-sm">{localPayslip?.pagibig_percent || '—'}% • ₱{toNumber(localPayslip?.pagibig_deduction).toFixed(2)}</p>
-                  )}
-                </div>
-                <div>
-                  <p className="text-gray-600 text-sm font-bold">Status:</p>
-                  {isEditMode ? (
-                    <select
-                      title="Status"
-                      value={formData.status}
-                      onChange={(e) => setFormData((p) => ({ ...p, status: e.target.value }))}
-                      className="input-field w-full"
-                    >
-                      <option value="draft">Draft</option>
-                      <option value="approved">Approved</option>
-                      <option value="pending">Pending</option>
-                    </select>
-                  ) : (
-                    <p className="text-gray-600 text-sm ">{localPayslip?.status || 'N/A'}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="border-t pt-2 grid grid-cols-2 gap-6">
-                <p className="text-gray-600 text-sm font-bold">Total:</p>
-                <p className="text-gray-600 text-sm">₱{toNumber(localPayslip?.total_government_deductions).toFixed(2)}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-blue-50 p-3 rounded">
-            <p className="text-gray-600 text-sm font-bold">Total Pay:</p>
-            <p className="text-gray-600 text-lg font-bold">₱{(toNumber(localPayslip?.total_earnings ?? 0) - (toNumber(localPayslip?.total_deductions ?? 0) + toNumber(localPayslip?.total_government_deductions ?? 0))).toFixed(2)}</p>
-          </div>
-
-          <div className="bg-blue-100 border-2 border-blue-300 rounded p-4">
-            <p className="text-gray-600 text-sm font-bold">Total Deduction:</p>
-            <p className="text-gray-600 text-sm font-bold">
-              ₱
-              {(
-                toNumber(localPayslip?.total_deductions) + toNumber(localPayslip?.total_government_deductions)
-              ).toFixed(2)}
-            </p>
-          </div>
-
-          <div>
-            <h3 className="bg-red-200 px-4 py-2 text-gray-600 text-sm text-sm mb-3 rounded font-bold  ">Salary</h3>
-            <div className="bg-white border border-gray-300 rounded p-4 space-y-4">
-              <div className="flex justify-between pb-2 border-b">
-                <p className="text-gray-600 font-bold">Total Earnings:</p>
-                <p className="text-gray-600 text-sm">₱{toNumber(localPayslip?.total_earnings ?? 0).toFixed(2)}</p>
-              </div>
-              <div className="flex justify-between pb-2 border-b">
-                <p className="text-gray-600 font-bold">Total Deduction:</p>
-                <p className="text-gray-600 text-sm">₱{(toNumber(localPayslip?.total_deductions ?? 0) + toNumber(localPayslip?.total_government_deductions ?? 0)).toFixed(2)}</p>
-              </div>
-              <div className="flex justify-between py-2 bg-blue-50 px-3 rounded font-bold text-lg">
-                <p>Total Salary:</p>
-                <p>₱{(toNumber(localPayslip?.total_earnings ?? 0) - (toNumber(localPayslip?.total_deductions ?? 0) + toNumber(localPayslip?.total_government_deductions ?? 0))).toFixed(2)}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex gap-3 pt-4">
-            {isEditMode ? (
-              <button
-                onClick={handleSave}
-                disabled={isLoading}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-3 px-4 rounded transition-colors"
-              >
-                {isLoading ? 'Saving...' : 'Save Changes'}
-              </button>
-            ) : (
-              <button
-                onClick={handleApprove}
-                disabled={isLoading}
-                className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-bold py-3 px-4 rounded transition-colors"
-              >
-                {isLoading ? 'Approving...' : 'Approve'}
-              </button>
-            )}
-
-            <button
-              onClick={() => {
-                setIsEditMode(false);
-                onClose();
-              }}
-              className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-4 rounded transition-colors"
-            >
-              Close
-            </button>
-          </div>
-
-          {/* Past Payslips History */}
-          {history.length > 0 && (
-            <div className="mt-8 pt-6 border-t border-gray-200">
-              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest mb-4">Past Payslips History</h3>
-              <div className="space-y-3">
-                {history.map((prev) => (
-                  <div key={prev.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-red-200 transition-all">
-                    <div>
-                      <p className="text-xs font-bold text-gray-900">{prev.payslip_period || `${prev.period_start} - ${prev.period_end}`}</p>
-                      <p className="text-[10px] text-gray-500 uppercase font-black mt-0.5">Net Pay: ₱{toNumber(prev.total_earnings || 0).toFixed(2)}</p>
-                    </div>
-                    <button
-                      onClick={() => setLocalPayslip(prev)}
-                      className="text-[10px] font-black uppercase tracking-widest text-red-600 hover:underline"
-                    >
-                      View Record
-                    </button>
                   </div>
-                ))}
+                </div>
+
+                {/* Other Deductions */}
+                <div>
+                  <p className="text-gray-500 text-xs font-semibold mb-2">Other Itemized Deductions</p>
+                  {localPayslip?.deduction_details && Object.keys(localPayslip.deduction_details).length > 0 ? (
+                    <div className="space-y-2 max-h-[120px] overflow-y-auto">
+                      {Object.entries(localPayslip.deduction_details).map(([label, amount]) => (
+                        <div key={label} className="flex justify-between items-center">
+                          <span className="text-gray-600 dark:text-gray-400 text-xs font-medium">{label}</span>
+                          <span className="text-gray-800 dark:text-gray-200 text-xs font-bold">
+                            ₱{toNumber(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-400 italic text-[11px] py-1">No other deductions</p>
+                  )}
+                </div>
+
+                {/* Total Deductions Panel */}
+                <div className="bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30 p-4 rounded-2xl flex justify-between items-center mt-6">
+                  <span className="text-red-700 dark:text-red-400 font-bold text-xs">Total Deductions</span>
+                  <span className="text-red-700 dark:text-red-400 font-extrabold text-sm">
+                    ₱{(toNumber(localPayslip?.total_deductions) + toNumber(localPayslip?.total_government_deductions)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
               </div>
             </div>
-          )}
+          </div>
+
         </div>
+
+        {/* BOTTOM CARD: SALARY / NET PAY SUMMARY */}
+        <div className="px-6 pb-6">
+          <div className="bg-gradient-to-r from-blue-700 via-indigo-850 to-blue-900 rounded-3xl p-6 text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <p className="text-blue-200 text-xs font-bold uppercase tracking-wider">Net Salary Payday</p>
+              <h3 className="text-3xl font-extrabold tracking-tight mt-1">
+                ₱{(toNumber(localPayslip?.total_earnings ?? 0) - (toNumber(localPayslip?.total_deductions ?? 0) + toNumber(localPayslip?.total_government_deductions ?? 0))).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </h3>
+            </div>
+            
+            <div className="flex gap-4 items-center">
+              <div>
+                <span className="text-[10px] text-blue-200 uppercase font-black block text-right">Status</span>
+                {isEditMode ? (
+                  <select
+                    title="Status"
+                    value={formData.status}
+                    onChange={(e) => setFormData((p) => ({ ...p, status: e.target.value }))}
+                    className="input-field py-1 px-3 text-xs bg-white text-gray-800 rounded-xl mt-1"
+                  >
+                    <option value="draft">Draft</option>
+                    <option value="approved">Approved</option>
+                    <option value="pending">Pending</option>
+                  </select>
+                ) : (
+                  <span className={`inline-block px-3 py-1 text-xs font-bold rounded-full mt-1 uppercase tracking-wider border shadow-sm ${
+                    localPayslip?.status === 'approved'
+                      ? 'bg-green-500 border-green-400 text-white'
+                      : 'bg-yellow-500 border-yellow-400 text-white'
+                  }`}>
+                    {localPayslip?.status || 'Draft'}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* FOOTER ACTIONS */}
+        <div className="p-6 border-t border-gray-200 dark:border-slate-800 bg-gray-100/50 dark:bg-slate-900/50 rounded-b-lg flex flex-col sm:flex-row gap-3 justify-end">
+          {isEditMode ? (
+            <button
+              onClick={handleSave}
+              disabled={isLoading}
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-2.5 px-6 rounded-xl transition-all shadow-md text-sm"
+            >
+              {isLoading ? 'Saving...' : 'Save Changes'}
+            </button>
+          ) : (
+            <button
+              onClick={handleApprove}
+              disabled={isLoading || localPayslip?.status === 'approved'}
+              className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold py-2.5 px-6 rounded-xl transition-all shadow-md text-sm"
+            >
+              {isLoading ? 'Approving...' : localPayslip?.status === 'approved' ? 'Approved' : 'Approve Payslip'}
+            </button>
+          )}
+
+          <button
+            onClick={() => {
+              setIsEditMode(false);
+              onClose();
+            }}
+            className="bg-gray-200 dark:bg-slate-800 hover:bg-gray-300 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 font-semibold py-2.5 px-6 rounded-xl transition-all text-sm"
+          >
+            Close
+          </button>
+        </div>
+
+        {/* HISTORY SECTION */}
+        {history.length > 0 && (
+          <div className="px-6 py-6 border-t border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900/40">
+            <h3 className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4">Past Payslips History</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {history.map((prev) => (
+                <div key={prev.id} className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 hover:border-red-400 dark:hover:border-red-900 transition-all shadow-sm">
+                  <div>
+                    <p className="text-xs font-bold text-gray-800 dark:text-gray-200">
+                      {formatPayslipPeriod(prev.period_start, prev.period_end)}
+                    </p>
+                    <p className="text-[10px] text-green-600 font-bold mt-1">Net Pay: ₱{toNumber(prev.net_pay || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                  </div>
+                  <button
+                    onClick={() => setLocalPayslip(prev)}
+                    className="text-[10px] font-black uppercase tracking-widest text-red-600 hover:text-red-700"
+                  >
+                    View Record
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </Modal>
   );

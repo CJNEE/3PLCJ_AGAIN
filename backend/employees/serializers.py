@@ -325,6 +325,11 @@ class PayrollSerializer(serializers.ModelSerializer):
     total_deductions = serializers.SerializerMethodField()
     total_government_deductions = serializers.SerializerMethodField()
 
+    tin = serializers.CharField(source='employee.tin', read_only=True)
+    sss_no = serializers.CharField(source='employee.sss', read_only=True)
+    philhealth_no = serializers.CharField(source='employee.philhealth', read_only=True)
+    pagibig_no = serializers.CharField(source='employee.pagibig', read_only=True)
+
     # compute attendance summary live so UI always shows accurate values
     total_hours = serializers.SerializerMethodField()
     overtime_hours = serializers.SerializerMethodField()
@@ -344,6 +349,7 @@ class PayrollSerializer(serializers.ModelSerializer):
         model = Payroll
         fields = [
             'id', 'fullname', 'full_name', 'jtp_code', 'position', 'date_hired', 'hub', 'hub_name',
+            'tin', 'sss_no', 'philhealth_no', 'pagibig_no',
             'net_pay', 'status',
             'employee', 'period_start', 'period_end', 'payslip_period',
             'total_hours', 'overtime_hours', 'lates', 'absences',
