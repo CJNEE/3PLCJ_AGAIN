@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Card, Badge, LoadingSpinner, EmptyState } from '@/components/common';
+import { GlassCard } from '@/components/GlassCard';
 import { useGetHubs, useGetEmployees, useCreateHub, useDeleteHub, useUpdateHub } from '@/hooks/useQueries';
 import { MapPin, X, Search, Navigation, ChevronLeft, ChevronRight, Users, Footprints, Bike, Car, Plus, Trash2, Edit2, CloudRain, Sun, Cloud, Thermometer, Route, Shield } from 'lucide-react';
 import { normalizeApiResponse } from '@/utils/apiResponseHandler';
@@ -467,8 +468,8 @@ export const AdminHubsPage = () => {
         {/* Map and Details Container */}
         {filteredHubs.length > 0 ? (
           <div className="grid grid-cols-1 lg:grid-cols-6 gap-4 h-[600px]">
-            <Card className="lg:col-span-4 p-0 relative overflow-hidden rounded-2xl shadow-2xl border-white dark:border-gray-800">
-              <div className="w-full h-full">
+            <GlassCard className="lg:col-span-4 p-0 relative overflow-hidden rounded-2xl shadow-2xl border-white dark:border-gray-800">
+              <div className="map-container w-full h-full">
                 <MapContainer center={[12.5797, 124.0758]} zoom={6} style={{ width: '100%', height: '100%' }} ref={mapRef}>
                   <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap contributors' />
                   {userLocation && <Marker position={userLocation} icon={userIcon}><Popup>Your Location</Popup></Marker>}
@@ -487,7 +488,7 @@ export const AdminHubsPage = () => {
                   )}
                 </MapContainer>
               </div>
-            </Card>
+            </GlassCard>
 
             {hubState.selectedHub ? (
               <Card className="lg:col-span-2 p-0 overflow-hidden flex flex-col bg-white dark:bg-gray-900 border border-red-200 dark:border-gray-800 rounded-2xl shadow-2xl relative animate-in slide-in-from-right-4">
@@ -608,7 +609,7 @@ export const AdminHubsPage = () => {
           {filteredHubs.map((hub: any) => {
             const employeeCount = getHubEmployeeCount(hub.id);
             return (
-              <Card key={hub.id} className="p-5 hover:border-red-600/50 transition-all cursor-pointer group" onClick={() => handleMarkerClick(hub)}>
+              <GlassCard key={hub.id} className="p-5 hover:border-red-600/50 transition-all cursor-pointer group" onClick={() => handleMarkerClick(hub)}>
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
@@ -629,7 +630,7 @@ export const AdminHubsPage = () => {
                     </div>
                   </div>
                 </div>
-              </Card>
+              </GlassCard>
             );
           })}
         </div>
