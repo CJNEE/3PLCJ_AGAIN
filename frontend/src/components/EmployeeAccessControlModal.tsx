@@ -349,7 +349,7 @@ export const EmployeeAccessControlModal = ({
                       type={showPass ? 'text' : 'password'}
                       value={manualData.password}
                       onChange={(e) => setManualData({...manualData, password: e.target.value})}
-                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-red-600 transition-all"
+                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl text-xs font-bold text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-red-600 transition-all"
                       placeholder="At least 8 characters"
                     />
                     <button onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
@@ -364,7 +364,7 @@ export const EmployeeAccessControlModal = ({
                       type={showConfirm ? 'text' : 'password'}
                       value={manualData.confirm}
                       onChange={(e) => setManualData({...manualData, confirm: e.target.value})}
-                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-red-600 transition-all"
+                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl text-xs font-bold text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-red-600 transition-all"
                       placeholder="Re-type password"
                     />
                     <button onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">

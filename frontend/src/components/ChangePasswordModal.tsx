@@ -76,7 +76,7 @@ export const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProp
                 required
                 value={formData.current_password}
                 onChange={(e) => setFormData({ ...formData, current_password: e.target.value })}
-                className="w-full pl-10 pr-10 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl text-sm font-bold focus:ring-2 focus:ring-red-600 outline-none transition-all"
+                className="w-full pl-10 pr-10 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl text-sm font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-red-600 outline-none transition-all"
                 placeholder="Enter current password"
               />
               <button
@@ -101,7 +101,7 @@ export const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProp
                 required
                 value={formData.new_password}
                 onChange={(e) => setFormData({ ...formData, new_password: e.target.value })}
-                className="w-full pl-10 pr-10 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl text-sm font-bold focus:ring-2 focus:ring-red-600 outline-none transition-all"
+                className="w-full pl-10 pr-10 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl text-sm font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-red-600 outline-none transition-all"
                 placeholder="Minimum 8 characters"
               />
               <button
@@ -124,7 +124,7 @@ export const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProp
                 required
                 value={formData.confirm_password}
                 onChange={(e) => setFormData({ ...formData, confirm_password: e.target.value })}
-                className="w-full pl-10 pr-10 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl text-sm font-bold focus:ring-2 focus:ring-red-600 outline-none transition-all"
+                className="w-full pl-10 pr-10 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl text-sm font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-red-600 outline-none transition-all"
                 placeholder="Re-type new password"
               />
               <button

@@ -261,8 +261,8 @@ export const AdminDashboard = () => {
           <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
           <p className="text-gray-600 dark:text-gray-400">
             {employee?.role === 'HR'
-              ? 'HR Business Solutions | HR overview'
-              : 'HR Business Solutions | Admin overview'}
+              ? '3PL BUSINESS SOLUTIONS | HR overview'
+              : '3PL BUSINESS SOLUTIONS | Admin overview'}
           </p>
         </div>
         
@@ -271,15 +271,15 @@ export const AdminDashboard = () => {
       {/* Top Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
         {/* Total Employees */}
-        <Card className="flex flex-col items-center p-4">
-          <p className="text-gray-600 dark:text-gray-400 text-xs font-medium">Total Employees</p>
-          <p className="text-4xl font-bold text-red-700 mt-2">{totalEmployees}</p>
+        <Card className="flex flex-col items-center justify-center p-6 h-44 text-center">
+          <p className="text-gray-650 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider">Total Employees</p>
+          <p className="text-7xl font-black text-red-700 dark:text-red-500 mt-4 leading-none text-center w-full">{totalEmployees}</p>
         </Card>
 
         {/* Total Hubs */}
-        <Card className="flex flex-col items-center p-4">
-          <p className="text-gray-600 dark:text-gray-400 text-xs font-medium">Total Hubs</p>
-          <p className="text-4xl font-bold text-red-700 mt-2">{hubs.length}</p>
+        <Card className="flex flex-col items-center justify-center p-6 h-44 text-center">
+          <p className="text-gray-650 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider">Total Hubs</p>
+          <p className="text-7xl font-black text-red-700 dark:text-red-500 mt-4 leading-none text-center w-full">{hubs.length}</p>
         </Card>
 
         {/* Employee Status Pie Chart with Percentages */}
@@ -440,7 +440,7 @@ export const AdminDashboard = () => {
                         <Popup>
                           <div className="text-sm">
                             <p className="font-semibold">{hub.name}</p>
-                            <p className="text-gray-600">{hub.location || hub.city}</p>
+                            <p className="text-gray-600 dark:text-gray-300">{hub.location || hub.city}</p>
                             <p className="text-xs text-gray-500 mt-1">
                               {allEmployees.filter((emp: any) => emp.hub === hub.id).length} employees
                             </p>

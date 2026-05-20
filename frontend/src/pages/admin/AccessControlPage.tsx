@@ -231,7 +231,7 @@ export const AccessControlPage = () => {
                     <td className="px-4 py-3 text-center">
                       <button
                         onClick={() => handleManageClick(emp)}
-                        className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-1 px-4 rounded text-sm"
+                        className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-semibold py-1 px-4 rounded text-sm transition-colors"
                       >
                         Manage
                       </button>
