@@ -90,6 +90,7 @@ export default function HubsEmployeeChart({ hubsData = [], employees = [] }: Pro
           legend: {
             direction: 'horizontal',
             position: { vertical: 'top', horizontal: 'center' },
+            labelStyle: { fill: textColor },
           },
         }}
 

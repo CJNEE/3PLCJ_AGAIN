@@ -6,7 +6,7 @@ import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Toolti
 import { useAuth } from '@/hooks/useAuth';
 import { Search, Users, MapPin, AlertTriangle, Eye, Trash2, Edit, X, Navigation, Loader, User, Phone, Mail, Briefcase, Calendar, Shield, CreditCard, Clock, Landmark, FileText, CheckCircle, AlertCircle } from 'lucide-react';
 import { normalizeApiResponse, getApiResponseCount } from '@/utils/apiResponseHandler';
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import HubsEmployeeChart from '@/components/HubsEmployeeChart';
@@ -87,7 +87,20 @@ export const AdminDashboard = () => {
   // Loading state
   const isLoading = employeesQuery.isLoading || hubsQuery.isLoading;
 
-  // Process data
+function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords: (hub: any) => [number, number] }) {
+  const map = useMap();
+  useEffect(() => {
+    if (mapHubs && mapHubs.length > 0) {
+      const bounds = L.latLngBounds(mapHubs.map(hub => getCoords(hub)));
+      if (bounds.isValid()) {
+        map.fitBounds(bounds, { padding: [50, 50] });
+      }
+    }
+  }, [mapHubs, map, getCoords]);
+  return null;
+}
+
+// Process data
   const employees = useMemo(() => {
     const normalized = normalizeApiResponse(employeesQuery.data);
     return normalized.filter((emp: any) =>
@@ -375,7 +388,7 @@ export const AdminDashboard = () => {
         {/* Hub Locations Map & Hub Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Hub Locations Map */}
-        <Card className="p-0 overflow-hidden border border-gray-200 dark:border-gray-700 flex flex-col min-h-[500px]">
+        <Card className="p-0 overflow-hidden border border-gray-200 dark:border-gray-700 flex flex-col min-h-[500px] bg-white dark:bg-gray-900">
           <div className="flex justify-between items-center p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 z-10">
             <h2 className="text-lg font-semibold">Hub Locations</h2>
             <div className="relative flex-1 max-w-xs ml-4">
@@ -396,6 +409,7 @@ export const AdminDashboard = () => {
                 zoom={6} 
                 style={{ width: '100%', height: '100%' }}
               >
+                <FitBoundsComponent mapHubs={hubs} getCoords={getHubCoordinates} />
                 <TileLayer
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -650,7 +664,7 @@ export const AdminDashboard = () => {
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 md:p-8 space-y-6 bg-gray-50 dark:bg-gray-950/60 max-h-[calc(90vh-170px)] overflow-y-auto">
+            <div className="p-6 md:p-8 space-y-6 bg-gray-50 dark:bg-gray-950/60 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 120px)' }}>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 
                 {/* Column 1 */}
@@ -870,16 +884,6 @@ export const AdminDashboard = () => {
                 </div>
 
               </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="flex justify-end items-center gap-3 p-5 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 sticky bottom-0 z-20 rounded-b-2xl">
-              <button 
-                onClick={() => setShowEmployeeModal(false)}
-                className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all"
-              >
-                Close
-              </button>
             </div>
 
           </div>
