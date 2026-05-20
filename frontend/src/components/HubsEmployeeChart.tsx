@@ -113,6 +113,12 @@ export default function HubsEmployeeChart({ hubsData = [], employees = [] }: Pro
           '& .MuiChartsLegend-root text': {
             fill: `${textColor} !important`,
           },
+          '& .MuiChartsLegend-series text': {
+            fill: `${textColor} !important`,
+          },
+          '& .MuiChartsLegend-root tspan': {
+            fill: `${textColor} !important`,
+          },
           // Legend marker border/colors if necessary
           '& .MuiChartsLegend-root': {
             fill: textColor,
