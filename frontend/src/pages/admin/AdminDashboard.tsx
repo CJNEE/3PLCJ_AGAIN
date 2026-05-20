@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, Badge, Button, LoadingSpinner, ErrorMessage, EmptyState } from '@/components/common';
 import { Modal } from '@/components/Modal';
 import { useGetEmployees, useGetHubs, useGetAttendance, useGetSecurityAlerts, useGetActivityLogs } from '@/hooks/useQueries';
