@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { Hub, Employee } from '@/types';
+import { useTheme } from '@/context/ThemeContext';
 
 interface Props {
   hubsData?: Hub[];
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export default function HubsEmployeeChart({ hubsData = [], employees = [] }: Props) {
+  const { isDarkMode } = useTheme();
 
   const dataset = useMemo(() => {
     return hubsData.map((hub) => {
@@ -39,6 +41,9 @@ export default function HubsEmployeeChart({ hubsData = [], employees = [] }: Pro
     return <div style={{ padding: 20 }}>No employee data available</div>;
   }
 
+  const textColor = isDarkMode ? '#F3F4F6' : '#374151';
+  const gridColor = isDarkMode ? '#4B5563' : '#E5E7EB';
+
   return (
     <div style={{ width: '100%', overflowX: 'auto' }}>
       <BarChart
@@ -52,6 +57,7 @@ export default function HubsEmployeeChart({ hubsData = [], employees = [] }: Pro
               angle: -40,
               textAnchor: 'end',
               fontSize: 11,
+              fill: textColor,
             },
           },
         ]}
@@ -66,6 +72,12 @@ export default function HubsEmployeeChart({ hubsData = [], employees = [] }: Pro
         yAxis={[
           {
             label: 'Employee Count',
+            labelStyle: {
+              fill: textColor,
+            },
+            tickLabelStyle: {
+              fill: textColor,
+            },
           },
         ]}
 
@@ -79,6 +91,32 @@ export default function HubsEmployeeChart({ hubsData = [], employees = [] }: Pro
             direction: 'horizontal',
             position: { vertical: 'top', horizontal: 'center' },
           },
+        }}
+
+        sx={{
+          // Axis lines & ticks
+          '& .MuiChartsAxis-line': {
+            stroke: gridColor,
+          },
+          '& .MuiChartsAxis-tick': {
+            stroke: gridColor,
+          },
+          // Tick labels (fallbacks)
+          '& .MuiChartsAxis-tickLabel': {
+            fill: `${textColor} !important`,
+          },
+          // Axis title/label (fallbacks)
+          '& .MuiChartsAxis-label': {
+            fill: `${textColor} !important`,
+          },
+          // Legend texts (fallbacks)
+          '& .MuiChartsLegend-root text': {
+            fill: `${textColor} !important`,
+          },
+          // Legend marker border/colors if necessary
+          '& .MuiChartsLegend-root': {
+            fill: textColor,
+          }
         }}
       />
     </div>

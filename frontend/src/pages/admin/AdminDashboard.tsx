@@ -4,7 +4,7 @@ import { Modal } from '@/components/Modal';
 import { useGetEmployees, useGetHubs, useGetAttendance, useGetSecurityAlerts, useGetActivityLogs } from '@/hooks/useQueries';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { useAuth } from '@/hooks/useAuth';
-import { Search, Users, MapPin, AlertTriangle, Eye, Trash2, Edit, X, Navigation, Loader } from 'lucide-react';
+import { Search, Users, MapPin, AlertTriangle, Eye, Trash2, Edit, X, Navigation, Loader, User, Phone, Mail, Briefcase, Calendar, Shield, CreditCard, Clock, Landmark, FileText, CheckCircle, AlertCircle } from 'lucide-react';
 import { normalizeApiResponse, getApiResponseCount } from '@/utils/apiResponseHandler';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import L from 'leaflet';
@@ -17,7 +17,7 @@ const STATUS_COLORS: Record<string, string> = {
   'Active': '#10B981',      // green
   'AWOL': '#F59E0B',        // yellow
   'Blacklist': '#EF4444',   // red
-  'Resign': '#1F2937',      // black
+  'Resign': '#3B82F6',      // blue
 };
 
 const EMPLOYMENT_TYPE_COLORS: Record<string, string> = {
@@ -315,7 +315,7 @@ export const AdminDashboard = () => {
                         style={{ backgroundColor: STATUS_COLORS[entry.name] || '#3B82F6' }}
                       />
                       <span className="text-gray-600 dark:text-gray-400">{entry.name}</span>
-                      <span className="font-semibold">{percentage}%</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{percentage}%</span>
                     </div>
                   );
                 })}
@@ -582,233 +582,306 @@ export const AdminDashboard = () => {
 
       {/* Employee Details Modal */}
       {showEmployeeModal && selectedEmployee && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50" onClick={(e) => e.target === e.currentTarget && setShowEmployeeModal(false)}>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && setShowEmployeeModal(false)}>
           
-          <div className="bg-white dark:bg-dark-card rounded-lg shadow-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto relative z-[9999]" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-red-700 text-white p-6 flex justify-between items-center z-[10000]">
-              <h2 className="text-xl font-bold">Employee Details</h2>
-              <button 
-                onClick={() => setShowEmployeeModal(false)}
-                className="text-white hover:text-gray-200 text-2xl"
-              >
-                ×
-              </button>
-            </div>
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden relative z-[9999] border border-gray-100 dark:border-gray-800" onClick={(e) => e.stopPropagation()}>
+            
+            {/* Header Banner */}
+            <div className="relative overflow-hidden bg-gradient-to-r from-red-800 to-red-650 p-6 md:p-8 text-white">
+              {/* Abstract decorative graphic */}
+              <div className="absolute right-0 top-0 w-48 h-48 bg-white/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
+              <div className="absolute left-1/3 bottom-0 w-32 h-32 bg-red-900/40 rounded-full blur-2xl pointer-events-none" />
 
-            <div className="p-6 space-y-6">
-              {/* Profile Image */}
-              {selectedEmployee.profile_image && (
-                <div className="flex justify-center">
-                  <img 
-                    src={selectedEmployee.profile_image} 
-                    alt={selectedEmployee.full_name}
-                    className="w-32 h-32 rounded-full object-cover border-4 border-red-700"
-                  />
-                </div>
-              )}
-
-              {/* Personal Information */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4 text-red-700">Personal Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">First Name</p>
-                    <p className="text-sm font-medium">{selectedEmployee.firstname || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Last Name</p>
-                    <p className="text-sm font-medium">{selectedEmployee.lastname || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Middle Initial</p>
-                    <p className="text-sm font-medium">{selectedEmployee.middle_initial || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Place of Birth</p>
-                    <p className="text-sm font-medium">{selectedEmployee.place_of_birth || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Date of Birth</p>
-                    <p className="text-sm font-medium">{selectedEmployee.date_of_birth || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Gender</p>
-                    <p className="text-sm font-medium">{selectedEmployee.gender || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Nationality</p>
-                    <p className="text-sm font-medium">{selectedEmployee.nationality || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Marital Status</p>
-                    <p className="text-sm font-medium">{selectedEmployee.marital_status || 'N/A'}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Contact Information */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4 text-red-700">Contact Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Email Address</p>
-                    <p className="text-sm font-medium">{selectedEmployee.email_address || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Phone Number</p>
-                    <p className="text-sm font-medium">{selectedEmployee.phone_number || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Current Address</p>
-                    <p className="text-sm font-medium">{selectedEmployee.current_address || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Permanent Address</p>
-                    <p className="text-sm font-medium">{selectedEmployee.permanent_address || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Emergency Contact Name</p>
-                    <p className="text-sm font-medium">{selectedEmployee.emergency_contact_name || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Emergency Contact Phone</p>
-                    <p className="text-sm font-medium">{selectedEmployee.emergency_contact_phone || 'N/A'}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Employment Information */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4 text-red-700">Employment Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Position</p>
-                    <p className="text-sm font-medium">{selectedEmployee.position || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Employment Type</p>
-                    <p className="text-sm font-medium">{selectedEmployee.employment_type || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Status</p>
-                    <p className="text-sm font-medium">
-                      <Badge variant={selectedEmployee.status === 'Active' ? 'success' : 'warning'}>
-                        {selectedEmployee.status}
-                      </Badge>
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Role</p>
-                    <p className="text-sm font-medium">{selectedEmployee.role || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Hub</p>
-                    <p className="text-sm font-medium">{selectedEmployee.hub_name || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Hired Date</p>
-                    <p className="text-sm font-medium">{selectedEmployee.hired_date || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Employee ID</p>
-                    <p className="text-sm font-medium">{selectedEmployee.employee_id || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">JTP Code</p>
-                    <p className="text-sm font-medium">{selectedEmployee.jtp_code || 'N/A'}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Government IDs */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4 text-red-700">Government IDs</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">TIN</p>
-                    <p className="text-sm font-medium">{selectedEmployee.tin || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">SSS</p>
-                    <p className="text-sm font-medium">{selectedEmployee.sss || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">PhilHealth</p>
-                    <p className="text-sm font-medium">{selectedEmployee.philhealth || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">PAG-IBIG</p>
-                    <p className="text-sm font-medium">{selectedEmployee.pagibig || 'N/A'}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* System Information */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4 text-red-700">System Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Can Login</p>
-                    <p className="text-sm font-medium">
-                      <span className={`px-2 py-1 rounded text-xs font-semibold ${selectedEmployee.can_login ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                        {selectedEmployee.can_login ? 'Yes' : 'No'}
-                      </span>
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Can Edit Info</p>
-                    <p className="text-sm font-medium">
-                      <span className={`px-2 py-1 rounded text-xs font-semibold ${selectedEmployee.can_edit_info ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                        {selectedEmployee.can_edit_info ? 'Yes' : 'No'}
-                      </span>
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Is Active</p>
-                    <p className="text-sm font-medium">
-                      <span className={`px-2 py-1 rounded text-xs font-semibold ${selectedEmployee.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                        {selectedEmployee.is_active ? 'Yes' : 'No'}
-                      </span>
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Created At</p>
-                    <p className="text-sm font-medium">{selectedEmployee.created_at ? new Date(selectedEmployee.created_at).toLocaleDateString() : 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">Updated At</p>
-                    <p className="text-sm font-medium">{selectedEmployee.updated_at ? new Date(selectedEmployee.updated_at).toLocaleDateString() : 'N/A'}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Latest Clock In/Out */}
-              {selectedEmployee.latest_clock_in_out && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-4 text-red-700">Latest Clock In/Out</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-gray-500 font-medium">Clock In Time</p>
-                      <p className="text-sm font-medium">{selectedEmployee.latest_clock_in_out.clock_in || 'N/A'}</p>
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 relative z-10">
+                <div className="relative shrink-0">
+                  {selectedEmployee.profile_image ? (
+                    <img 
+                      src={selectedEmployee.profile_image} 
+                      alt={selectedEmployee.full_name}
+                      className="w-24 h-24 rounded-2xl object-cover border-4 border-white/20 shadow-xl"
+                    />
+                  ) : (
+                    <div className="w-24 h-24 rounded-2xl bg-white/10 border-4 border-white/20 shadow-xl flex items-center justify-center text-4xl font-extrabold text-white">
+                      {selectedEmployee.full_name?.charAt(0).toUpperCase()}
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-500 font-medium">Clock Out Time</p>
-                      <p className="text-sm font-medium">{selectedEmployee.latest_clock_in_out.clock_out || 'N/A'}</p>
-                    </div>
+                  )}
+                  <span className={`absolute -bottom-1 -right-1 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-md text-white border-2 border-red-800 ${
+                    selectedEmployee.status?.toLowerCase() === 'active' ? 'bg-green-500' : 'bg-amber-500'
+                  }`}>
+                    {selectedEmployee.status}
+                  </span>
+                </div>
+
+                <div className="flex-1 text-center sm:text-left mt-1">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-center sm:justify-start gap-2.5 mb-1.5">
+                    <h2 className="text-2xl md:text-3xl font-black tracking-tight">{selectedEmployee.full_name}</h2>
+                    <span className="inline-block px-2.5 py-0.5 rounded-full bg-white/10 backdrop-blur-md text-[10px] font-bold uppercase tracking-wider text-red-100 border border-white/10">
+                      ID: {selectedEmployee.employee_id || 'N/A'}
+                    </span>
+                  </div>
+                  <p className="text-red-100/90 font-medium text-sm md:text-base mb-3">
+                    {selectedEmployee.position} &bull; {selectedEmployee.hub_name || 'No Hub Assigned'}
+                  </p>
+
+                  <div className="flex flex-wrap justify-center sm:justify-start gap-2 text-xs">
+                    <span className="px-2.5 py-1 rounded-lg bg-black/15 text-white/95 font-semibold">
+                      {selectedEmployee.employment_type || 'N/A'}
+                    </span>
+                    <span className="px-2.5 py-1 rounded-lg bg-black/15 text-white/95 font-semibold">
+                      Role: {selectedEmployee.role || 'N/A'}
+                    </span>
+                    {selectedEmployee.jtp_code && (
+                      <span className="px-2.5 py-1 rounded-lg bg-black/15 text-white/95 font-semibold">
+                        JTP: {selectedEmployee.jtp_code}
+                      </span>
+                    )}
                   </div>
                 </div>
-              )}
 
-              {/* Close Button */}
-              <div className="flex justify-end pt-4 border-t">
+                {/* Top Right Close Button */}
                 <button 
                   onClick={() => setShowEmployeeModal(false)}
-                  className="px-4 py-2 bg-red-700 text-white rounded hover:bg-red-800 transition"
+                  className="absolute top-[-10px] right-[-10px] sm:static sm:self-start bg-white/10 hover:bg-white/20 text-white hover:text-white p-2 rounded-xl transition-all"
+                  aria-label="Close modal"
                 >
-                  Close
+                  <X size={18} />
                 </button>
               </div>
             </div>
+
+            {/* Modal Body */}
+            <div className="p-6 md:p-8 space-y-6 bg-gray-50 dark:bg-gray-950/60 max-h-[calc(90vh-170px)] overflow-y-auto">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                {/* Column 1 */}
+                <div className="space-y-6">
+                  {/* Personal Information */}
+                  <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm space-y-4">
+                    <div className="flex items-center gap-2 pb-3 border-b border-gray-100 dark:border-gray-800">
+                      <User size={18} className="text-red-600 dark:text-red-500" />
+                      <h3 className="text-sm font-black uppercase tracking-wider text-gray-800 dark:text-white">Personal Info</h3>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">First Name</p>
+                        <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.firstname || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Last Name</p>
+                        <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.lastname || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Middle Initial</p>
+                        <p className="text-sm font-semibold text-gray-850 dark:text-white">{selectedEmployee.middle_initial || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Gender</p>
+                        <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.gender || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Date of Birth</p>
+                        <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.date_of_birth || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Place of Birth</p>
+                        <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.place_of_birth || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Nationality</p>
+                        <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.nationality || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Marital Status</p>
+                        <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.marital_status || 'N/A'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Contact Information */}
+                  <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm space-y-4">
+                    <div className="flex items-center gap-2 pb-3 border-b border-gray-100 dark:border-gray-800">
+                      <Phone size={18} className="text-red-600 dark:text-red-500" />
+                      <h3 className="text-sm font-black uppercase tracking-wider text-gray-800 dark:text-white">Contact Info</h3>
+                    </div>
+                    <div className="space-y-3.5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Email Address</p>
+                          <p className="text-sm font-semibold text-gray-805 dark:text-white break-all">{selectedEmployee.email_address || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Phone Number</p>
+                          <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.phone_number || 'N/A'}</p>
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Current Address</p>
+                        <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.current_address || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Permanent Address</p>
+                        <p className="text-sm font-semibold text-gray-850 dark:text-white">{selectedEmployee.permanent_address || 'N/A'}</p>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-gray-100 dark:border-gray-800">
+                        <div>
+                          <p className="text-[10px] font-black text-gray-400 dark:text-gray-505 uppercase tracking-widest">Emergency Contact Name</p>
+                          <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.emergency_contact_name || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-gray-400 dark:text-gray-550 uppercase tracking-widest">Emergency Contact Phone</p>
+                          <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.emergency_contact_phone || 'N/A'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Column 2 */}
+                <div className="space-y-6">
+                  {/* Employment Details */}
+                  <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm space-y-4">
+                    <div className="flex items-center gap-2 pb-3 border-b border-gray-100 dark:border-gray-800">
+                      <Briefcase size={18} className="text-red-600 dark:text-red-500" />
+                      <h3 className="text-sm font-black uppercase tracking-wider text-gray-800 dark:text-white">Employment Info</h3>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Position</p>
+                        <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.position || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Employment Type</p>
+                        <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.employment_type || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Hub</p>
+                        <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.hub_name || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Hired Date</p>
+                        <p className="text-sm font-semibold text-gray-855 dark:text-white">{selectedEmployee.hired_date || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Employee ID</p>
+                        <p className="text-sm font-semibold text-gray-850 dark:text-white">{selectedEmployee.employee_id || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">JTP Code</p>
+                        <p className="text-sm font-semibold text-gray-850 dark:text-white">{selectedEmployee.jtp_code || 'N/A'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Government IDs */}
+                  <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm space-y-4">
+                    <div className="flex items-center gap-2 pb-3 border-b border-gray-100 dark:border-gray-800">
+                      <Landmark size={18} className="text-red-600 dark:text-red-500" />
+                      <h3 className="text-sm font-black uppercase tracking-wider text-gray-800 dark:text-white">Government IDs</h3>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">TIN</p>
+                        <p className="text-sm font-semibold text-gray-850 dark:text-white">{selectedEmployee.tin || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">SSS</p>
+                        <p className="text-sm font-semibold text-gray-850 dark:text-white">{selectedEmployee.sss || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">PhilHealth</p>
+                        <p className="text-sm font-semibold text-gray-850 dark:text-white">{selectedEmployee.philhealth || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">PAG-IBIG</p>
+                        <p className="text-sm font-semibold text-gray-850 dark:text-white">{selectedEmployee.pagibig || 'N/A'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Permissions & System Info */}
+                  <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm space-y-4">
+                    <div className="flex items-center gap-2 pb-3 border-b border-gray-100 dark:border-gray-800">
+                      <Shield size={18} className="text-red-600 dark:text-red-500" />
+                      <h3 className="text-sm font-black uppercase tracking-wider text-gray-800 dark:text-white">Permissions & System Info</h3>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pb-2">
+                      <div>
+                        <p className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5">Can Login</p>
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-black tracking-wide ${
+                          selectedEmployee.can_login 
+                            ? 'bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20' 
+                            : 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
+                        }`}>
+                          {selectedEmployee.can_login ? 'Allowed' : 'Denied'}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5">Can Edit Info</p>
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-black tracking-wide ${
+                          selectedEmployee.can_edit_info 
+                            ? 'bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20' 
+                            : 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
+                        }`}>
+                          {selectedEmployee.can_edit_info ? 'Allowed' : 'Denied'}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5">Is Active</p>
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-black tracking-wide ${
+                          selectedEmployee.is_active 
+                            ? 'bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20' 
+                            : 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
+                        }`}>
+                          {selectedEmployee.is_active ? 'Yes' : 'No'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-gray-100 dark:border-gray-800/60 text-xs">
+                      <div>
+                        <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Created At</p>
+                        <p className="font-semibold text-gray-800 dark:text-white">{selectedEmployee.created_at ? new Date(selectedEmployee.created_at).toLocaleDateString() : 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Updated At</p>
+                        <p className="font-semibold text-gray-800 dark:text-white">{selectedEmployee.updated_at ? new Date(selectedEmployee.updated_at).toLocaleDateString() : 'N/A'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Attendance Info */}
+                  {selectedEmployee.latest_clock_in_out && (
+                    <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm space-y-4">
+                      <div className="flex items-center gap-2 pb-3 border-b border-gray-100 dark:border-gray-800">
+                        <Clock size={18} className="text-red-600 dark:text-red-500" />
+                        <h3 className="text-sm font-black uppercase tracking-wider text-gray-800 dark:text-white">Latest Clock In/Out</h3>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Clock In Time</p>
+                          <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.latest_clock_in_out.clock_in || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Clock Out Time</p>
+                          <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.latest_clock_in_out.clock_out || 'N/A'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex justify-end items-center gap-3 p-5 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 sticky bottom-0 z-20 rounded-b-2xl">
+              <button 
+                onClick={() => setShowEmployeeModal(false)}
+                className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all"
+              >
+                Close
+              </button>
+            </div>
+
           </div>
         </div>
       )}
