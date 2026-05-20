@@ -272,14 +272,14 @@ export const AdminDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
         {/* Total Employees */}
         <Card className="flex flex-col items-center justify-center p-6 h-44 text-center">
-          <p className="text-gray-650 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider">Total Employees</p>
-          <p className="text-7xl font-black text-red-700 dark:text-red-500 mt-4 leading-none text-center w-full">{totalEmployees}</p>
+          <p className="text-gray-600 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider">Total Employees</p>
+          <p className="text-7xl font-black text-red-700 dark:text-white mt-4 leading-none text-center w-full">{totalEmployees}</p>
         </Card>
 
         {/* Total Hubs */}
         <Card className="flex flex-col items-center justify-center p-6 h-44 text-center">
-          <p className="text-gray-650 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider">Total Hubs</p>
-          <p className="text-7xl font-black text-red-700 dark:text-red-500 mt-4 leading-none text-center w-full">{hubs.length}</p>
+          <p className="text-gray-600 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider">Total Hubs</p>
+          <p className="text-7xl font-black text-red-700 dark:text-white mt-4 leading-none text-center w-full">{hubs.length}</p>
         </Card>
 
         {/* Employee Status Pie Chart with Percentages */}
