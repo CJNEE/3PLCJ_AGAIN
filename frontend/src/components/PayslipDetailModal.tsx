@@ -132,12 +132,40 @@ const formatPayslipPeriod = (startStr?: string, endStr?: string) => {
     const endYear = endDate.getFullYear();
 
     if (startMonth === endMonth && startYear === endYear) {
+      if (startDay === endDay) {
+        return `${startMonth} ${startDay}, ${startYear}`;
+      }
       return `${startMonth} ${startDay} to ${endDay}, ${startYear}`;
     } else {
       return `${startMonth} ${startDay}, ${startYear} to ${endMonth} ${endDay}, ${endYear}`;
     }
   } catch (e) {
     return `${startStr} - ${endStr}`;
+  }
+};
+
+const get15DayRange = (startDateStr: string): { start: string; end: string } => {
+  if (!startDateStr) return { start: '', end: '' };
+  const d = new Date(startDateStr);
+  if (isNaN(d.getTime())) return { start: startDateStr, end: startDateStr };
+  
+  const year = d.getFullYear();
+  const month = d.getMonth(); // 0-indexed
+  const day = d.getDate();
+  
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  
+  if (day <= 15) {
+    // Range is 1st to 15th
+    const start = `${year}-${pad(month + 1)}-01`;
+    const end = `${year}-${pad(month + 1)}-15`;
+    return { start, end };
+  } else {
+    // Range is 16th to end of month
+    const start = `${year}-${pad(month + 1)}-16`;
+    const lastDay = new Date(year, month + 1, 0).getDate();
+    const end = `${year}-${pad(month + 1)}-${pad(lastDay)}`;
+    return { start, end };
   }
 };
 
@@ -153,6 +181,8 @@ export const PayslipDetailModal = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [localPayslip, setLocalPayslip] = useState<Payslip | null>(payslip);
+  const [periodStart, setPeriodStart] = useState<string>('');
+  const [periodEnd, setPeriodEnd] = useState<string>('');
 
   const history = (allPayroll || []).filter(p => {
     if (!payslip) return false;
@@ -259,83 +289,101 @@ export const PayslipDetailModal = ({
       philhealth: toNumber((payslip as any)?.philhealth_percent ?? (localPayslip as any)?.philhealth_percent ?? 0),
       pagibig: toNumber((payslip as any)?.pagibig_percent ?? (localPayslip as any)?.pagibig_percent ?? 0),
     });
+    setPeriodStart(payslip?.period_start || '');
+    setPeriodEnd(payslip?.period_end || '');
   }, [payslip]);
 
+  const fetchComputed = async (start: string, end: string) => {
+    const employee = (payslip as any)?.employee ?? (payslip as any)?.employee_id ?? (localPayslip as any)?.employee;
+    if (!employee || !start || !end) return;
+
+    try {
+      setIsLoading(true);
+      const params = new URLSearchParams();
+      params.set('employee_id', String(typeof employee === 'object' ? (employee as any).id : employee));
+      params.set('period_start', start);
+      params.set('period_end', end);
+      
+      params.set('standard_pay', String(toNumber(formData.standard_pay)));
+      params.set('basic_salary', String(toNumber(formData.basic_salary)));
+      params.set('overtime_pay', String(toNumber(formData.basic_salary) * 0.25));
+      params.set('night_differential', String(toNumber(formData.night_differential)));
+      params.set('ndot', String(toNumber(formData.ndot)));
+      params.set('rest_day', String(toNumber(formData.rest_day)));
+      params.set('rest_day_ot', String(toNumber(formData.rest_day_ot)));
+      params.set('rest_day_nd', String(toNumber(formData.rest_day_nd)));
+      params.set('rest_day_ndot', String(toNumber(formData.rest_day_ndot)));
+      params.set('special_holiday', String(toNumber(formData.special_holiday)));
+      params.set('special_holiday_ot', String(toNumber(formData.special_holiday_ot)));
+      params.set('special_holiday_nd', String(toNumber(formData.special_holiday_nd)));
+      params.set('special_holiday_ndot', String(toNumber(formData.special_holiday_ndot)));
+      params.set('legal_holiday', String(toNumber(formData.legal_holiday)));
+      params.set('legal_holiday_ot', String(toNumber(formData.legal_holiday_ot)));
+      params.set('legal_holiday_nd', String(toNumber(formData.legal_holiday_nd)));
+      params.set('legal_holiday_ndot', String(toNumber(formData.legal_holiday_ndot)));
+      params.set('legal_holiday_rd', String(toNumber(formData.legal_holiday_rd)));
+      params.set('legal_holiday_rdot', String(toNumber(formData.legal_holiday_rdot)));
+      params.set('legal_holiday_rdnd', String(toNumber(formData.legal_holiday_rdnd)));
+      params.set('legal_holiday_rdndot', String(toNumber(formData.legal_holiday_rdndot)));
+      params.set('incentives', String(toNumber(formData.incentives)));
+      params.set('adjustment', String(toNumber(formData.adjustment)));
+      params.set('gas', String(toNumber(formData.gas)));
+      params.set('load', String(toNumber(formData.load)));
+      params.set('other_allowance', String(toNumber(formData.other_allowance)));
+      params.set('rewards_adjustments', String(toNumber(formData.rewards_adjustments)));
+      params.set('kpi', String(toNumber(formData.kpi)));
+      params.set('allowances', String(toNumber(formData.allowances)));
+
+      params.set('late', String(toNumber(formData.late)));
+      params.set('id_deduction', String(toNumber(formData.id_deduction)));
+      params.set('uniform', String(toNumber(formData.uniform)));
+      params.set('insurance', String(toNumber(formData.insurance)));
+      params.set('surety_bond', String(toNumber(formData.surety_bond)));
+      params.set('convenience_fee', String(toNumber(formData.convenience_fee)));
+      params.set('general_deduction', String(toNumber(formData.general_deduction)));
+
+      const res = await fetch(`/api/payroll/compute/?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
+      });
+      if (!res.ok) throw new Error('Failed to compute payroll');
+      const data = await res.json();
+      setLocalPayslip((p) => ({ ...(p as any), ...data } as Payslip));
+      setGovPercents({
+        sss: toNumber(data.sss_percent ?? 0),
+        philhealth: toNumber(data.philhealth_percent ?? 0),
+        pagibig: toNumber(data.pagibig_percent ?? 0),
+      });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchComputed = async () => {
-      if (!isOpen) return;
-      if (payslip && payslip.id) return;
+    if (!isOpen) return;
+    if (payslip && payslip.id) return;
 
-      const employee = (payslip as any)?.employee ?? (payslip as any)?.employee_id ?? (localPayslip as any)?.employee;
-      const period_start = (payslip as any)?.period_start || (localPayslip as any)?.period_start;
-      const period_end = (payslip as any)?.period_end || (localPayslip as any)?.period_end;
-      if (!employee || !period_start || !period_end) return;
-
-      try {
-        setIsLoading(true);
-        const params = new URLSearchParams();
-        params.set('employee_id', String(typeof employee === 'object' ? (employee as any).id : employee));
-        params.set('period_start', period_start);
-        params.set('period_end', period_end);
-        
-        params.set('standard_pay', String(toNumber(formData.standard_pay)));
-        params.set('basic_salary', String(toNumber(formData.basic_salary)));
-        params.set('overtime_pay', String(toNumber(formData.basic_salary) * 0.25));
-        params.set('night_differential', String(toNumber(formData.night_differential)));
-        params.set('ndot', String(toNumber(formData.ndot)));
-        params.set('rest_day', String(toNumber(formData.rest_day)));
-        params.set('rest_day_ot', String(toNumber(formData.rest_day_ot)));
-        params.set('rest_day_nd', String(toNumber(formData.rest_day_nd)));
-        params.set('rest_day_ndot', String(toNumber(formData.rest_day_ndot)));
-        params.set('special_holiday', String(toNumber(formData.special_holiday)));
-        params.set('special_holiday_ot', String(toNumber(formData.special_holiday_ot)));
-        params.set('special_holiday_nd', String(toNumber(formData.special_holiday_nd)));
-        params.set('special_holiday_ndot', String(toNumber(formData.special_holiday_ndot)));
-        params.set('legal_holiday', String(toNumber(formData.legal_holiday)));
-        params.set('legal_holiday_ot', String(toNumber(formData.legal_holiday_ot)));
-        params.set('legal_holiday_nd', String(toNumber(formData.legal_holiday_nd)));
-        params.set('legal_holiday_ndot', String(toNumber(formData.legal_holiday_ndot)));
-        params.set('legal_holiday_rd', String(toNumber(formData.legal_holiday_rd)));
-        params.set('legal_holiday_rdot', String(toNumber(formData.legal_holiday_rdot)));
-        params.set('legal_holiday_rdnd', String(toNumber(formData.legal_holiday_rdnd)));
-        params.set('legal_holiday_rdndot', String(toNumber(formData.legal_holiday_rdndot)));
-        params.set('incentives', String(toNumber(formData.incentives)));
-        params.set('adjustment', String(toNumber(formData.adjustment)));
-        params.set('gas', String(toNumber(formData.gas)));
-        params.set('load', String(toNumber(formData.load)));
-        params.set('other_allowance', String(toNumber(formData.other_allowance)));
-        params.set('rewards_adjustments', String(toNumber(formData.rewards_adjustments)));
-        params.set('kpi', String(toNumber(formData.kpi)));
-        params.set('allowances', String(toNumber(formData.allowances)));
-
-        params.set('late', String(toNumber(formData.late)));
-        params.set('id_deduction', String(toNumber(formData.id_deduction)));
-        params.set('uniform', String(toNumber(formData.uniform)));
-        params.set('insurance', String(toNumber(formData.insurance)));
-        params.set('surety_bond', String(toNumber(formData.surety_bond)));
-        params.set('convenience_fee', String(toNumber(formData.convenience_fee)));
-        params.set('general_deduction', String(toNumber(formData.general_deduction)));
-
-        const res = await fetch(`/api/payroll/compute/?${params.toString()}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
-        });
-        if (!res.ok) throw new Error('Failed to compute payslip');
-        const data = await res.json();
-        setLocalPayslip((p) => ({ ...(p as any), ...data } as Payslip));
-        setGovPercents({
-          sss: toNumber(data.sss_percent ?? 0),
-          philhealth: toNumber(data.philhealth_percent ?? 0),
-          pagibig: toNumber(data.pagibig_percent ?? 0),
-        });
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchComputed();
+    const start = payslip?.period_start || localPayslip?.period_start || periodStart;
+    const end = payslip?.period_end || localPayslip?.period_end || periodEnd;
+    if (start && end) {
+      fetchComputed(start, end);
+    }
   }, [isOpen, payslip]);
+
+  const handlePeriodStartChange = (val: string) => {
+    setPeriodStart(val);
+    const range = get15DayRange(val);
+    if (range.end) {
+      setPeriodEnd(range.end);
+      fetchComputed(val, range.end);
+    }
+  };
+
+  const handlePeriodEndChange = (val: string) => {
+    setPeriodEnd(val);
+    fetchComputed(periodStart, val);
+  };
 
   const handleSave = async () => {
     const payload = {
@@ -382,44 +430,56 @@ export const PayslipDetailModal = ({
       philhealth_percent: govPercents.philhealth,
       pagibig_percent: govPercents.pagibig,
       status: formData.status,
+      period_start: periodStart,
+      period_end: periodEnd,
+    };
+
+    const performCreate = async () => {
+      const maybeEmployee = (localPayslip as any)?.employee ?? (localPayslip as any)?.employee_id ?? (payslip as any)?.employee ?? (payslip as any)?.employee_id;
+      let employeeId: number | null = null;
+      if (typeof maybeEmployee === 'number') employeeId = maybeEmployee;
+      else if (typeof maybeEmployee === 'string' && /^\d+$/.test(maybeEmployee)) employeeId = parseInt(maybeEmployee, 10);
+      else if (maybeEmployee && typeof maybeEmployee === 'object' && (maybeEmployee as any).id) employeeId = (maybeEmployee as any).id;
+
+      if (!employeeId) {
+        throw new Error('Missing employee id for creating payroll');
+      }
+
+      const createPayload = { ...payload, employee: employeeId } as any;
+
+      const todayISO = new Date().toISOString().slice(0, 10);
+      createPayload.period_start = periodStart || todayISO;
+      createPayload.period_end = periodEnd || todayISO;
+
+      if (!createPayload.deduction_details) createPayload.deduction_details = {};
+
+      const created = await createPayrollMutation.mutateAsync(createPayload);
+      setLocalPayslip(created);
+      setIsEditMode(false);
+      success('Payroll created successfully');
+      onSave?.(created);
     };
 
     try {
       setIsLoading(true);
 
       if (payslip?.id) {
-        const updated = await updatePayrollMutation.mutateAsync({ id: payslip.id, data: payload });
-        setLocalPayslip(updated);
-        setIsEditMode(false);
-        success('Payroll updated successfully');
-        onSave?.(updated);
-      } else {
-        const maybeEmployee = (localPayslip as any)?.employee ?? (localPayslip as any)?.employee_id ?? (payslip as any)?.employee ?? (payslip as any)?.employee_id;
-        let employeeId: number | null = null;
-        if (typeof maybeEmployee === 'number') employeeId = maybeEmployee;
-        else if (typeof maybeEmployee === 'string' && /^\d+$/.test(maybeEmployee)) employeeId = parseInt(maybeEmployee, 10);
-        else if (maybeEmployee && typeof maybeEmployee === 'object' && (maybeEmployee as any).id) employeeId = (maybeEmployee as any).id;
-
-        const period_start = (localPayslip as any)?.period_start || (payslip as any)?.period_start;
-        const period_end = (localPayslip as any)?.period_end || (payslip as any)?.period_end;
-
-        if (!employeeId) {
-          throw new Error('Missing employee id for creating payroll');
+        try {
+          const updated = await updatePayrollMutation.mutateAsync({ id: payslip.id, data: payload });
+          setLocalPayslip(updated);
+          setIsEditMode(false);
+          success('Payroll updated successfully');
+          onSave?.(updated);
+        } catch (updateErr: any) {
+          if (updateErr?.response?.status === 404) {
+            // Fallback to create if not found
+            await performCreate();
+          } else {
+            throw updateErr;
+          }
         }
-
-        const createPayload = { ...payload, employee: employeeId } as any;
-
-        const todayISO = new Date().toISOString().slice(0, 10);
-        createPayload.period_start = period_start || todayISO;
-        createPayload.period_end = period_end || todayISO;
-
-        if (!createPayload.deduction_details) createPayload.deduction_details = {};
-
-        const created = await createPayrollMutation.mutateAsync(createPayload);
-        setLocalPayslip(created);
-        setIsEditMode(false);
-        success('Payroll created successfully');
-        onSave?.(created);
+      } else {
+        await performCreate();
       }
     } catch (err: unknown) {
       const axiosErr = err as any;
@@ -475,13 +535,13 @@ export const PayslipDetailModal = ({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Payslip-${localPayslip.full_name || 'Employee'}-${localPayslip.period_end}.csv`;
+      a.download = `Payroll-${localPayslip.full_name || 'Employee'}-${localPayslip.period_end}.csv`;
       a.click();
       window.URL.revokeObjectURL(url);
-      success('Payslip downloaded successfully');
+      success('Payroll downloaded successfully');
     } catch (err) {
       console.error(err);
-      error('Failed to download payslip');
+      error('Failed to download payroll');
     }
   };
 
@@ -747,17 +807,7 @@ export const PayslipDetailModal = ({
         {/* HEADER AREA */}
         <div className="bg-gradient-to-br from-red-800 via-red-950 to-slate-950 p-6 text-white relative shadow-xl rounded-3xl">
           <div className="flex justify-between items-center mb-6">
-            <div>
-              {!isEditMode && (
-                <button
-                  onClick={() => setIsEditMode(true)}
-                  className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-semibold py-1.5 px-4 rounded-xl transition-all text-xs flex items-center gap-1.5 shadow-sm"
-                >
-                  <Edit2 size={12} />
-                  Edit Payroll
-                </button>
-              )}
-            </div>
+            <div />
             <button
               onClick={handleDownload}
               className="bg-white/10 hover:bg-white/20 p-2.5 rounded-full transition-all text-white border border-white/10"
@@ -815,11 +865,36 @@ export const PayslipDetailModal = ({
             </div>
           </div>
 
-          <div className="mt-5 bg-white/5 border border-white/10 px-4 py-2.5 rounded-2xl text-xs flex items-center justify-between shadow-inner">
-            <span className="text-red-100 font-medium">Payslip Period:</span>
-            <span className="font-bold text-white text-right">
-              {formatPayslipPeriod(localPayslip?.period_start, localPayslip?.period_end)}
-            </span>
+          <div className="mt-5 bg-white/5 border border-white/10 px-4 py-2.5 rounded-2xl text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-inner">
+            <span className="text-red-100 font-medium">Payroll Period:</span>
+            {isEditMode ? (
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-red-200 text-[10px] uppercase font-bold">Start:</span>
+                  <input
+                    title="Period Start"
+                    type="date"
+                    value={periodStart}
+                    onChange={(e) => handlePeriodStartChange(e.target.value)}
+                    className="bg-slate-900 text-white border border-white/20 rounded-xl px-2.5 py-1 text-xs outline-none focus:ring-2 focus:ring-red-500/50"
+                  />
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-red-200 text-[10px] uppercase font-bold">End:</span>
+                  <input
+                    title="Period End"
+                    type="date"
+                    value={periodEnd}
+                    onChange={(e) => handlePeriodEndChange(e.target.value)}
+                    className="bg-slate-900 text-white border border-white/20 rounded-xl px-2.5 py-1 text-xs outline-none focus:ring-2 focus:ring-red-500/50"
+                  />
+                </div>
+              </div>
+            ) : (
+              <span className="font-bold text-white text-right">
+                {formatPayslipPeriod(localPayslip?.period_start || periodStart, localPayslip?.period_end || periodEnd)}
+              </span>
+            )}
           </div>
         </div>
 
@@ -1104,7 +1179,7 @@ export const PayslipDetailModal = ({
         {/* HISTORY SECTION */}
         {history.length > 0 && (
           <div className="pt-6 border-t border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900/10 rounded-b-2xl">
-            <h3 className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4">Past Payslips History</h3>
+            <h3 className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4">Past Payroll History</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {history.map((prev) => (
                 <div key={prev.id} className="flex items-center justify-between p-4 bg-white dark:bg-slate-900/60 rounded-2xl border border-gray-200 dark:border-slate-850 hover:border-red-400 dark:hover:border-red-900 transition-all shadow-sm">

@@ -1314,6 +1314,9 @@ class PayrollViewSet(viewsets.ModelViewSet):
         # Existing payroll rows
         queryset = Payroll.objects.select_related('employee', 'employee__hub').order_by('-period_end')
 
+        if getattr(self, 'action', None) != 'list':
+            return queryset
+
         if hub:
             queryset = queryset.filter(employee__hub__name=hub)
 

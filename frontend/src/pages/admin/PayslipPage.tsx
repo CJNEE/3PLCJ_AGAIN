@@ -56,6 +56,9 @@ export const PayslipPage = () => {
       const endYear = endDate.getFullYear();
 
       if (startMonth === endMonth && startYear === endYear) {
+        if (startDay === endDay) {
+          return `${startMonth} ${startDay}, ${startYear}`;
+        }
         return `${startMonth} ${startDay} to ${endDay}, ${startYear}`;
       } else {
         return `${startMonth} ${startDay}, ${startYear} to ${endMonth} ${endDay}, ${endYear}`;
@@ -359,11 +362,11 @@ export const PayslipPage = () => {
           <div className="flex flex-col lg:flex-row gap-3 items-end">
             <div className="flex-1">
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
-              <input type="date" value={startDate} disabled onChange={(e) => setStartDate(e.target.value)} className="input-field w-full disabled:opacity-50 cursor-not-allowed" />
+              <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="input-field w-full" />
             </div>
             <div className="flex-1">
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">End Date</label>
-              <input type="date" value={endDate} disabled onChange={(e) => setEndDate(e.target.value)} className="input-field w-full disabled:opacity-50 cursor-not-allowed" />
+              <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="input-field w-full" />
             </div>
             <div className="flex-1">
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Year</label>
@@ -383,9 +386,9 @@ export const PayslipPage = () => {
               <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} aria-label="Filter by status" className="input-field w-full">
                 <option value="All">All Status</option>
                 {isAdmin ? (
-                  <><option value="Approved">Approved</option><option value="Pending">Pending</option><option value="Draft">Draft</option></>
+                  <><option value="approved">Approved</option><option value="pending">Pending</option><option value="draft">Draft</option></>
                 ) : (
-                  <><option value="Approved">Approved</option><option value="Present">Present</option><option value="Pending">Pending</option><option value="Absent">Absent</option><option value="Rejected">Rejected</option></>
+                  <><option value="approved">Approved</option><option value="present">Present</option><option value="pending">Pending</option><option value="absent">Absent</option><option value="rejected">Rejected</option></>
                 )}
               </select>
             </div>
@@ -433,7 +436,7 @@ export const PayslipPage = () => {
                             <td className="px-4 py-3 text-center flex flex-col gap-1 items-center">
                               <button onClick={() => { setSelectedPayslip(record); setIsModalOpen(true); }} className="btn btn-primary">View</button>
                               {isAdmin && (
-                                <button onClick={async () => { const updated = { ...record, status: 'Approved' }; await handleSave(updated); }} className="btn btn-success mt-1">Approve</button>
+                                <button onClick={async () => { const updated = { ...record, status: 'approved' }; await handleSave(updated); }} className="btn btn-success mt-1">Approve</button>
                               )}
                               <button onClick={() => handleDownload(hubName)} className="btn btn-secondary mt-1">Download</button>
                             </td>
@@ -455,7 +458,7 @@ export const PayslipPage = () => {
           <Card>
             <EmptyState
               title="No data available"
-              description="No payslip records match your filters. Try adjusting your search criteria."
+              description="No payroll records match your filters. Try adjusting your search criteria."
             />
           </Card>
         )}

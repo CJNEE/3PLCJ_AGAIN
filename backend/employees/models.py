@@ -224,6 +224,7 @@ class LiveLocation(models.Model):
 class Payroll(models.Model):
     STATUS_CHOICES = [
         ('draft', 'Draft'),
+        ('pending', 'Pending'),
         ('approved', 'Approved'),
     ]
     
