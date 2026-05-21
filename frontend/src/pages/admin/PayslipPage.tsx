@@ -347,14 +347,15 @@ export const PayslipPage = () => {
                     )}
                     {isEditMode && (
                       <div className="flex gap-2">
-                        <button onClick={() => handleSave({})} className="bg-green-600 hover:bg-green-700 text-white font-semibold py-1.5 px-4 rounded-xl transition-all text-xs flex items-center gap-1.5">Save Changes</button>
+                        <button onClick={() => handleSave()} className="bg-green-600 hover:bg-green-700 text-white font-semibold py-1.5 px-4 rounded-xl transition-all text-xs flex items-center gap-1.5">Save Changes</button>
                         <button onClick={() => setIsEditMode(false)} className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-1.5 px-4 rounded-xl transition-all text-xs flex items-center gap-1.5">Cancel</button>
                       </div>
                     )}
                   </div>
                 </>
               ) : (
-                  />
+                <div className="text-center py-6 text-gray-500">
+                  No records found for this hub.
                 </div>
               )}
             </Card>
