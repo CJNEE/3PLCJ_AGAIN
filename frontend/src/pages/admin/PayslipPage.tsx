@@ -61,7 +61,7 @@ export const PayslipPage = () => {
     }
   };
 
-  const handleSave = async (updated: any) => {
+  const handleSave = async (updated?: any) => {
     console.log('Saved:', updated);
   };
 
