@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Modal } from './Modal';
 import { useToast } from '@/hooks/useToast';
 import { useUpdatePayroll, useCreatePayroll } from '@/hooks/useQueries';
+import { useAuth } from '@/hooks/useAuth';
 import { 
   Download, 
   Edit2, 
@@ -148,6 +149,7 @@ export const PayslipDetailModal = ({
   onSave,
 }: PayslipDetailModalProps) => {
   const { success, error } = useToast();
+  const { isAdmin } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [localPayslip, setLocalPayslip] = useState<Payslip | null>(payslip);
@@ -1045,6 +1047,7 @@ export const PayslipDetailModal = ({
                 >
                   <option value="draft">Draft</option>
                   <option value="pending">Pending</option>
+                  {isAdmin && <option value="approved">Approved</option>}
                 </select>
               ) : (
                 <span className={`inline-block px-3 py-1 text-xs font-bold rounded-full mt-1 uppercase tracking-wider border shadow-sm ${localPayslip?.status === 'approved'

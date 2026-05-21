@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { Card, Badge, LoadingSpinner, EmptyState } from '@/components/common';
 import { Sidebar } from '@/components/Sidebar';
 import { PayslipDetailModal } from '@/components/PayslipDetailModal';
-import { useGetPayroll, useGetHubs, useGetEmployees } from '@/hooks/useQueries';
+import { useGetPayroll, useGetHubs, useGetEmployees, useUpdatePayroll, useCreatePayroll } from '@/hooks/useQueries';
 import { Download, Search, Shield, Edit2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { normalizeApiResponse } from '@/utils/apiResponseHandler';
@@ -11,6 +11,7 @@ export const PayslipPage = () => {
   const { canEditPayroll, isAdmin } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Sidebar should render even on desktop
 
@@ -27,6 +28,9 @@ export const PayslipPage = () => {
   const { data: payrollData, isLoading: payrollLoading } = useGetPayroll();
   const { data: hubsData, isLoading: hubsLoading } = useGetHubs();
   const { data: employeesData, isLoading: employeesLoading } = useGetEmployees();
+  
+  const updatePayrollMutation = useUpdatePayroll();
+  const createPayrollMutation = useCreatePayroll();
 
   const payroll = normalizeApiResponse(payrollData);
   const hubs = normalizeApiResponse(hubsData);
@@ -62,7 +66,40 @@ export const PayslipPage = () => {
   };
 
   const handleSave = async (updated?: any) => {
-    console.log('Saved:', updated);
+    try {
+      setIsLoading(true);
+      const payload = updated ?? selectedPayslip;
+      if (!payload) {
+        throw new Error('No payroll data provided');
+      }
+      if (payload.id) {
+        // Try to update existing record
+        try {
+          const updatedPayroll = await updatePayrollMutation.mutateAsync({ id: payload.id, data: payload });
+          // success('Payroll updated successfully');
+          setSelectedPayslip(updatedPayroll);
+        } catch (updateErr: any) {
+          if (updateErr?.response?.status === 404) {
+            // Fallback to create if not found
+            const created = await createPayrollMutation.mutateAsync(payload);
+            // success('Payroll created successfully');
+            setSelectedPayslip(created);
+          } else {
+            throw updateErr;
+          }
+        }
+      } else {
+        // No ID, create new payroll
+        const created = await createPayrollMutation.mutateAsync(payload);
+        // success('Payroll created successfully');
+        setSelectedPayslip(created);
+      }
+      setIsModalOpen(false);
+    } catch (err: any) {
+      // error(err?.response?.data?.detail || err?.message || 'Failed to save payroll');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Calculate stats
@@ -134,39 +171,105 @@ export const PayslipPage = () => {
       return;
     }
 
-    // Prepare CSV data
+    // Prepare CSV data with all detailed fields
     const headers = [
-      'Fullname', 'JTP Code', 'Hub', 'Period',
-      'Total Hours', 'Overtime Hours', 'Lates', 'Absences',
-      'Basic Pay', 'Allowance', 'Overtime Pay', 'Incentives',
-      'Total Earnings', 'SSS Deduction', 'Philhealth Deduction', 'Pagibig Deduction',
-      'Other Deductions', 'Total Deductions', 'Net Pay', 'Status'
+      'Fullname', 'JTP Code', 'Hub', 'Period Start', 'Period End',
+      'Total Hours', 'Overtime Hours', 'Lates (Count)', 'Absences (Count)',
+      'Basic Salary', 'Standard Pay', 'Overtime Pay', 'Night Differential', 'NDOT',
+      'Rest Day', 'Rest Day OT', 'Rest Day ND', 'Rest Day NDOT',
+      'Special Holiday', 'Special Holiday OT', 'Special Holiday ND', 'Special Holiday NDOT',
+      'Legal Holiday', 'Legal Holiday OT', 'Legal Holiday ND', 'Legal Holiday NDOT',
+      'Legal Holiday RD', 'Legal Holiday RDOT', 'Legal Holiday RDND', 'Legal Holiday RDNDOT',
+      'Incentives', 'Adjustment', 'Gas', 'Load', 'Other Allowance', 'Rewards Adjustments', 'KPI', 'Allowances (Legacy)',
+      'Total Earnings',
+      'Late Deduction', 'ID Deduction', 'Uniform', 'Insurance', 'Surety Bond', 'Convenience Fee', 'General Deduction',
+      'SSS Deduction', 'Philhealth Deduction', 'Pagibig Deduction',
+      'Other Deductions (Details sum)', 'Total Deductions',
+      'Net Pay', 'Status'
     ];
 
     const rows = hubData.map((record: any) => {
-      const govDeductions = (parseFloat(record.sss_deduction || '0')) + (parseFloat(record.philhealth_deduction || '0')) + (parseFloat(record.pagibig_deduction || '0'));
-      const otherDeductions = parseFloat(record.total_deductions || '0');
-      const totalDed = govDeductions + otherDeductions;
+      // Calculate earnings total if not provided
+      const totalEarnings = record.total_earnings || (
+        parseFloat(record.basic_salary || '0') + parseFloat(record.standard_pay || '0') + parseFloat(record.overtime_pay || '0') +
+        parseFloat(record.night_differential || '0') + parseFloat(record.ndot || '0') +
+        parseFloat(record.rest_day || '0') + parseFloat(record.rest_day_ot || '0') + parseFloat(record.rest_day_nd || '0') + parseFloat(record.rest_day_ndot || '0') +
+        parseFloat(record.special_holiday || '0') + parseFloat(record.special_holiday_ot || '0') + parseFloat(record.special_holiday_nd || '0') + parseFloat(record.special_holiday_ndot || '0') +
+        parseFloat(record.legal_holiday || '0') + parseFloat(record.legal_holiday_ot || '0') + parseFloat(record.legal_holiday_nd || '0') + parseFloat(record.legal_holiday_ndot || '0') +
+        parseFloat(record.legal_holiday_rd || '0') + parseFloat(record.legal_holiday_rdot || '0') + parseFloat(record.legal_holiday_rdnd || '0') + parseFloat(record.legal_holiday_rdndot || '0') +
+        parseFloat(record.incentives || '0') + parseFloat(record.adjustment || '0') + parseFloat(record.gas || '0') + parseFloat(record.load || '0') +
+        parseFloat(record.other_allowance || '0') + parseFloat(record.rewards_adjustments || '0') + parseFloat(record.kpi || '0') + parseFloat(record.allowances || '0')
+      );
+
+      // Calculate other deductions from deduction_details
+      let sumOther = 0;
+      if (record.deduction_details) {
+        if (typeof record.deduction_details === 'object' && !Array.isArray(record.deduction_details)) {
+          sumOther = Object.values(record.deduction_details).reduce((acc: number, val: any) => acc + (parseFloat(val) || 0), 0);
+        } else if (Array.isArray(record.deduction_details)) {
+          sumOther = record.deduction_details.reduce((acc: number, val: any) => acc + (parseFloat(val) || 0), 0);
+        }
+      }
+
+      const totalDed = (
+        parseFloat(record.late || '0') + parseFloat(record.id_deduction || '0') + parseFloat(record.uniform || '0') +
+        parseFloat(record.insurance || '0') + parseFloat(record.surety_bond || '0') + parseFloat(record.convenience_fee || '0') +
+        parseFloat(record.general_deduction || '0') + parseFloat(record.sss_deduction || '0') + parseFloat(record.philhealth_deduction || '0') +
+        parseFloat(record.pagibig_deduction || '0') + sumOther
+      );
       
       return [
         record.fullname || record.full_name || 'N/A',
         record.jtp_code || 'N/A',
         record.hub || record.hub_name || 'N/A',
-        formatPayrollPeriod(record.period_start, record.period_end),
+        record.period_start || '',
+        record.period_end || '',
         record.total_hours || '0',
         record.overtime_hours || '0',
         record.lates || '0',
         record.absences || '0',
         record.basic_salary || '0',
-        record.allowances || '0',
+        record.standard_pay || '0',
         record.overtime_pay || '0',
+        record.night_differential || '0',
+        record.ndot || '0',
+        record.rest_day || '0',
+        record.rest_day_ot || '0',
+        record.rest_day_nd || '0',
+        record.rest_day_ndot || '0',
+        record.special_holiday || '0',
+        record.special_holiday_ot || '0',
+        record.special_holiday_nd || '0',
+        record.special_holiday_ndot || '0',
+        record.legal_holiday || '0',
+        record.legal_holiday_ot || '0',
+        record.legal_holiday_nd || '0',
+        record.legal_holiday_ndot || '0',
+        record.legal_holiday_rd || '0',
+        record.legal_holiday_rdot || '0',
+        record.legal_holiday_rdnd || '0',
+        record.legal_holiday_rdndot || '0',
         record.incentives || '0',
-        record.total_earnings || '0',
+        record.adjustment || '0',
+        record.gas || '0',
+        record.load || '0',
+        record.other_allowance || '0',
+        record.rewards_adjustments || '0',
+        record.kpi || '0',
+        record.allowances || '0',
+        totalEarnings.toFixed(2),
+        record.late || '0',
+        record.id_deduction || '0',
+        record.uniform || '0',
+        record.insurance || '0',
+        record.surety_bond || '0',
+        record.convenience_fee || '0',
+        record.general_deduction || '0',
         record.sss_deduction || '0',
         record.philhealth_deduction || '0',
         record.pagibig_deduction || '0',
-        otherDeductions,
-        totalDed,
+        sumOther.toFixed(2),
+        totalDed.toFixed(2),
         record.net_pay || '0.00',
         record.status || 'N/A',
       ];
@@ -256,11 +359,11 @@ export const PayslipPage = () => {
           <div className="flex flex-col lg:flex-row gap-3 items-end">
             <div className="flex-1">
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
-              <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="input-field w-full" />
+              <input type="date" value={startDate} disabled onChange={(e) => setStartDate(e.target.value)} className="input-field w-full disabled:opacity-50 cursor-not-allowed" />
             </div>
             <div className="flex-1">
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">End Date</label>
-              <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="input-field w-full" />
+              <input type="date" value={endDate} disabled onChange={(e) => setEndDate(e.target.value)} className="input-field w-full disabled:opacity-50 cursor-not-allowed" />
             </div>
             <div className="flex-1">
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Year</label>
@@ -339,19 +442,7 @@ export const PayslipPage = () => {
                       </tbody>
                     </table>
                   </div>
-                  <div className="flex justify-end">
-                    {!isEditMode && (
-                      <button onClick={() => setIsEditMode(true)} className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-semibold py-1.5 px-4 rounded-xl transition-all text-xs flex items-center gap-1.5 shadow-sm">
-                        <Edit2 size={12} /> Edit Payroll
-                      </button>
-                    )}
-                    {isEditMode && (
-                      <div className="flex gap-2">
-                        <button onClick={() => handleSave()} className="bg-green-600 hover:bg-green-700 text-white font-semibold py-1.5 px-4 rounded-xl transition-all text-xs flex items-center gap-1.5">Save Changes</button>
-                        <button onClick={() => setIsEditMode(false)} className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-1.5 px-4 rounded-xl transition-all text-xs flex items-center gap-1.5">Cancel</button>
-                      </div>
-                    )}
-                  </div>
+
                 </>
               ) : (
                 <div className="text-center py-6 text-gray-500">
