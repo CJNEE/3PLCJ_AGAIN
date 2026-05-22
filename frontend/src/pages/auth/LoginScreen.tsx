@@ -6,6 +6,7 @@ import { ErrorMessage } from '@/components/common';
 import { useToast } from '@/hooks/useToast';
 import { Eye, EyeOff } from 'lucide-react';
 import logo3pl from '@/images/3pl1.png';
+import mobileLogoLogin from '@/images/MOBILELOGOLOGIN.png';
 
 export const LoginScreen = () => {
   const navigate = useNavigate();
@@ -105,8 +106,8 @@ export const LoginScreen = () => {
             {/* Mobile logo — same asset as desktop */}
             <div className="flex md:hidden justify-center mb-6">
               <img
-                src={logo3pl}
-                alt="3PL Business Solutions"
+                src={mobileLogoLogin}
+                alt="Mobile Logo"
                 className="max-w-[200px] h-auto object-contain"
               />
             </div>
