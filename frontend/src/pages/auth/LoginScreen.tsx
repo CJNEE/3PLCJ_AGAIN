@@ -102,7 +102,7 @@ export const LoginScreen = () => {
 
         {/* Right Side - Login Form */}
         <div className="w-full md:w-1/2 bg-red-50 flex flex-col items-center justify-center p-8 md:p-12">
-          <div className="w-full max-w-sm bg-white rounded-lg shadow-lg border border-red-200 p-6">>
+          <div className="w-full max-w-sm bg-white rounded-lg shadow-lg border border-red-200 p-6">
             {/* Mobile logo — same asset as desktop */}
             <div className="flex md:hidden justify-center mb-6">
               <img
