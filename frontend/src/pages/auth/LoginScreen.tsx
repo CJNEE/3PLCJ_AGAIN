@@ -325,7 +325,7 @@ export const LoginScreen = () => {
               {/* FOOTER */}
               <div className="mt-8 text-center">
                 <p className="text-xs text-gray-400">
-                  © 2026 3PL Business Solutions
+                  © 2026 3PL Business Solutions | ManpoLink
                 </p>
               </div>
             </motion.div>
