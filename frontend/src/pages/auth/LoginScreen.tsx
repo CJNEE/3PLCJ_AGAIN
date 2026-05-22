@@ -89,7 +89,7 @@ export const LoginScreen = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-100 via-indigo-200 to-indigo-300 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-red-100 via-red-200 to-red-300 flex items-center justify-center p-4">
       <div className="w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row">
         {/* Left Side - Logo (desktop) */}
         <div className="hidden md:flex w-1/2 bg-white items-center justify-center p-8">
@@ -101,8 +101,8 @@ export const LoginScreen = () => {
         </div>
 
         {/* Right Side - Login Form */}
-        <div className="w-full md:w-1/2 bg-white flex flex-col items-center justify-center p-8 md:p-12">
-          <div className="w-full max-w-sm bg-white rounded-lg shadow-lg p-6">
+        <div className="w-full md:w-1/2 bg-red-50 flex flex-col items-center justify-center p-8 md:p-12">
+          <div className="w-full max-w-sm bg-white rounded-lg shadow-lg border border-red-200 p-6">>
             {/* Mobile logo — same asset as desktop */}
             <div className="flex md:hidden justify-center mb-6">
               <img
@@ -121,7 +121,7 @@ export const LoginScreen = () => {
 
               {/* Username */}
               <div>
-                <label className="block text-white text-sm font-medium mb-2">Username:</label>
+                <label className="block text-gray-800 text-sm font-medium mb-2">Username:</label>
                 <input
                   type="text"
                   name="username"
@@ -129,14 +129,14 @@ export const LoginScreen = () => {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder=""
-                  className="w-full px-4 py-3 rounded bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white"
+                  className="w-full px-4 py-3 rounded bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500"
                   disabled={loginMutation.isPending}
                 />
               </div>
 
               {/* Password */}
               <div>
-                <label className="block text-white text-sm font-medium mb-2">Password:</label>
+                <label className="block text-gray-800 text-sm font-medium mb-2">Password:</label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
@@ -145,7 +145,7 @@ export const LoginScreen = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder=""
-                    className="w-full px-4 py-3 rounded bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white pr-12"
+                    className="w-full px-4 py-3 rounded bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 pr-12"
                     disabled={loginMutation.isPending}
                   />
                   <button
@@ -162,7 +162,7 @@ export const LoginScreen = () => {
               <button
                 type="submit"
                 disabled={loginMutation.isPending}
-                className="w-full mt-8 px-6 py-3 bg-white text-red-700 font-semibold rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full mt-8 px-6 py-3 bg-gradient-to-r from-red-600 to-red-500 text-white font-semibold rounded hover:from-red-500 hover:to-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loginMutation.isPending ? 'Logging in...' : 'Login'}
               </button>
