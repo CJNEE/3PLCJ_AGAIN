@@ -124,10 +124,6 @@ export const LoginScreen = () => {
             replace: true,
           });
         }
-      } else {
-        setLoginError(
-          'Login failed: No token received'
-        );
       }
     } catch (err: unknown) {
       let errorMessage =
@@ -163,76 +159,107 @@ export const LoginScreen = () => {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#faf6f6]">
+    <div className="relative min-h-screen overflow-hidden bg-[#fdf8f8]">
       {/* ================= BACKGROUND ================= */}
       <div className="absolute inset-0 overflow-hidden">
-        {/* LEFT LIGHT BG */}
-        <div className="absolute left-0 top-0 h-full w-full bg-[#faf6f6]" />
+        {/* LEFT BG */}
+        <div className="absolute left-0 top-0 h-full w-full bg-[#fdf8f8]" />
 
-        {/* RED RIGHT PANEL */}
-        <div className="absolute right-0 top-0 h-full w-full lg:w-[56%] bg-gradient-to-br from-[#ff3b3b] via-[#f1172f] to-[#c6001c]">
-          {/* TOP RIGHT LINES */}
-          <div className="absolute right-[-120px] top-[-100px] h-[420px] w-[420px] rounded-full border border-white/10" />
-          <div className="absolute right-[-80px] top-[-60px] h-[340px] w-[340px] rounded-full border border-white/10" />
-          <div className="absolute right-[-40px] top-[-20px] h-[260px] w-[260px] rounded-full border border-white/10" />
+        {/* RIGHT RED PANEL */}
+        <div className="absolute right-0 top-0 hidden h-full w-[58%] overflow-hidden bg-gradient-to-br from-[#ff4040] via-[#f21832] to-[#c4001c] lg:block">
+          {/* WAVES */}
+          <div className="absolute right-[-120px] top-[-50px] h-[450px] w-[450px] rounded-full border border-white/10" />
+          <div className="absolute right-[-80px] top-[-10px] h-[380px] w-[380px] rounded-full border border-white/10" />
+          <div className="absolute right-[-40px] top-[30px] h-[310px] w-[310px] rounded-full border border-white/10" />
 
-          {/* BOTTOM SHAPE */}
-          <div className="absolute bottom-[-120px] left-[-40px] h-[280px] w-[520px] rounded-[100%] bg-black/10 blur-2xl" />
+          {/* BOTTOM WAVES */}
+          <div className="absolute bottom-[-180px] left-[-120px] h-[400px] w-[700px] rounded-[100%] bg-black/10 blur-2xl" />
+
+          {/* DOTS */}
+          <div className="absolute bottom-10 right-10 grid grid-cols-5 gap-3">
+            {Array.from({ length: 25 }).map(
+              (_, index) => (
+                <div
+                  key={index}
+                  className="h-1.5 w-1.5 rounded-full bg-white/50"
+                />
+              )
+            )}
+          </div>
+
+          {/* FLOATING */}
+          <motion.div
+            animate={{
+              y: [0, -20, 0],
+            }}
+            transition={{
+              duration: 7,
+              repeat: Infinity,
+            }}
+            className="absolute right-16 top-10 h-16 w-16 rounded-full bg-white/10 blur-sm"
+          />
+
+          <motion.div
+            animate={{
+              y: [0, 20, 0],
+            }}
+            transition={{
+              duration: 8,
+              repeat: Infinity,
+            }}
+            className="absolute left-16 bottom-16 h-28 w-28 rounded-full bg-white/10 blur-xl"
+          />
         </div>
 
-        {/* BIG WAVE DIVIDER */}
-        <div className="absolute left-[43%] top-0 hidden h-full w-[260px] -translate-x-1/2 bg-[#faf6f6] lg:block">
+        {/* CENTER WAVE */}
+        <div className="absolute left-[45%] top-0 hidden h-full w-[240px] -translate-x-1/2 lg:block">
           <svg
             viewBox="0 0 300 1000"
             preserveAspectRatio="none"
             className="h-full w-full"
           >
             <path
-              d="M120,0 
-                 C260,180 20,320 170,500
-                 C320,700 60,840 190,1000
-                 L0,1000 L0,0 Z"
-              fill="#faf6f6"
+              d="M130,0 
+                C280,180 20,330 170,520
+                C320,710 80,860 200,1000
+                L0,1000 L0,0 Z"
+              fill="#fdf8f8"
             />
           </svg>
         </div>
 
-        {/* LIGHT BLOBS */}
-        <motion.div
-          animate={{
-            y: [0, -20, 0],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-          }}
-          className="absolute left-[60px] top-[40px] h-[120px] w-[120px] rounded-full bg-red-100/70 blur-2xl"
-        />
+        {/* LEFT DECOR */}
+        <div className="absolute left-[5%] top-[8%] h-[140px] w-[140px] rounded-full bg-red-100/70 blur-2xl" />
 
-        <motion.div
-          animate={{
-            y: [0, 20, 0],
-          }}
-          transition={{
-            duration: 10,
-            repeat: Infinity,
-          }}
-          className="absolute bottom-[-80px] left-[-80px] h-[260px] w-[260px] rounded-full bg-red-100/80 blur-3xl"
-        />
+        <div className="absolute bottom-[-80px] left-[-80px] h-[260px] w-[260px] rounded-full bg-red-100/70 blur-3xl" />
 
-        <motion.div
-          animate={{
-            y: [0, -18, 0],
-          }}
-          transition={{
-            duration: 7,
-            repeat: Infinity,
-          }}
-          className="absolute bottom-[30%] left-[42%] h-[80px] w-[80px] rounded-full bg-red-200/40 blur-2xl"
-        />
+        {/* LEFT TOP LINES */}
+        <svg
+          className="absolute left-[12%] top-0 hidden opacity-40 lg:block"
+          width="520"
+          height="320"
+          viewBox="0 0 520 320"
+          fill="none"
+        >
+          <path
+            d="M0 0C180 100 120 250 520 320"
+            stroke="#f6c8c8"
+            strokeWidth="1"
+          />
+          <path
+            d="M0 0C160 80 100 220 500 300"
+            stroke="#f6c8c8"
+            strokeWidth="1"
+          />
+          <path
+            d="M0 0C140 60 80 200 470 280"
+            stroke="#f6c8c8"
+            strokeWidth="1"
+          />
+        </svg>
 
-        {/* DOTS */}
-        <div className="absolute left-[30%] top-[10%] hidden grid-cols-4 gap-4 lg:grid">
+        {/* DOTS LEFT */}
+        <div className="absolute left-[28%] top-[10%] hidden grid-cols-4 gap-4 lg:grid">
           {Array.from({ length: 16 }).map(
             (_, index) => (
               <div
@@ -243,7 +270,7 @@ export const LoginScreen = () => {
           )}
         </div>
 
-        <div className="absolute bottom-[14%] left-[25%] hidden grid-cols-4 gap-4 lg:grid">
+        <div className="absolute bottom-[14%] left-[24%] hidden grid-cols-4 gap-4 lg:grid">
           {Array.from({ length: 12 }).map(
             (_, index) => (
               <div
@@ -256,8 +283,8 @@ export const LoginScreen = () => {
       </div>
 
       {/* ================= MAIN ================= */}
-      <div className="relative z-10 flex min-h-screen items-center justify-center px-5 py-10">
-        <div className="grid w-full max-w-7xl items-center lg:grid-cols-2">
+      <div className="relative z-10 flex min-h-screen items-center justify-center px-5 py-8 lg:px-10">
+        <div className="grid w-full max-w-7xl items-center gap-10 lg:grid-cols-2">
           {/* ================= LEFT ================= */}
           <motion.div
             initial={{
@@ -271,12 +298,12 @@ export const LoginScreen = () => {
             transition={{
               duration: 0.8,
             }}
-            className="hidden items-center justify-center lg:flex"
+            className="hidden justify-center lg:flex"
           >
             <img
               src={logo3pl}
-              alt="3PL Business Solutions"
-              className="w-[430px] object-contain"
+              alt="3PL"
+              className="w-[430px] object-contain drop-shadow-[0_10px_40px_rgba(255,0,0,0.1)]"
             />
           </motion.div>
 
@@ -293,29 +320,29 @@ export const LoginScreen = () => {
             transition={{
               duration: 0.9,
             }}
-            className="relative mx-auto w-full max-w-[540px]"
+            className="mx-auto w-full max-w-[560px]"
           >
-            {/* MOBILE CARD */}
-            <div className="rounded-[40px] bg-gradient-to-br from-[#ff3434] via-[#f11831] to-[#c4001c] px-6 py-10 shadow-[0_25px_80px_rgba(255,0,0,0.25)] lg:bg-transparent lg:px-0 lg:py-0 lg:shadow-none">
+            {/* MOBILE CONTAINER */}
+            <div className="rounded-[38px] bg-gradient-to-br from-[#ff4040] via-[#f21832] to-[#c4001c] px-6 py-10 shadow-[0_20px_80px_rgba(255,0,0,0.25)] lg:bg-transparent lg:px-0 lg:py-0 lg:shadow-none">
               {/* MOBILE LOGO */}
               <div className="mb-8 flex justify-center lg:hidden">
                 <img
                   src={mobileLogoLogin}
                   alt="3PL"
-                  className="w-[170px] object-contain drop-shadow-xl"
+                  className="w-[180px] object-contain"
                 />
               </div>
 
               {/* LOCK */}
               <motion.div
                 animate={{
-                  y: [0, -8, 0],
+                  y: [0, -10, 0],
                 }}
                 transition={{
-                  duration: 3,
+                  duration: 4,
                   repeat: Infinity,
                 }}
-                className="mx-auto mb-7 flex h-24 w-24 items-center justify-center rounded-full border border-white/20 bg-white/10 shadow-[0_15px_40px_rgba(255,255,255,0.2)] backdrop-blur-md"
+                className="mx-auto flex h-24 w-24 items-center justify-center rounded-full border border-white/20 bg-white/10 backdrop-blur-md"
               >
                 <Lock
                   size={34}
@@ -324,7 +351,7 @@ export const LoginScreen = () => {
               </motion.div>
 
               {/* TITLE */}
-              <div className="text-center">
+              <div className="mt-8 text-center">
                 <h1 className="text-5xl font-black tracking-tight text-white sm:text-6xl">
                   Sign In
                 </h1>
@@ -363,7 +390,7 @@ export const LoginScreen = () => {
                     {/* GLOW */}
                     <div className="absolute inset-0 rounded-2xl bg-white/20 opacity-0 blur-xl transition-all duration-500 group-focus-within:opacity-100" />
 
-                    <div className="relative flex h-[72px] items-center rounded-2xl border border-white/20 bg-white/10 px-5 shadow-[0_8px_30px_rgba(0,0,0,0.15)] backdrop-blur-md transition-all duration-300 focus-within:border-white focus-within:bg-white/15">
+                    <div className="relative flex h-[74px] items-center rounded-2xl border border-white/20 bg-white/10 px-5 backdrop-blur-md transition-all duration-300 focus-within:border-white focus-within:bg-white/15">
                       <User
                         size={23}
                         className="mr-4 text-white"
@@ -404,7 +431,7 @@ export const LoginScreen = () => {
                     {/* GLOW */}
                     <div className="absolute inset-0 rounded-2xl bg-white/20 opacity-0 blur-xl transition-all duration-500 group-focus-within:opacity-100" />
 
-                    <div className="relative flex h-[72px] items-center rounded-2xl border border-white/20 bg-white/10 px-5 shadow-[0_8px_30px_rgba(0,0,0,0.15)] backdrop-blur-md transition-all duration-300 focus-within:border-white focus-within:bg-white/15">
+                    <div className="relative flex h-[74px] items-center rounded-2xl border border-white/20 bg-white/10 px-5 backdrop-blur-md transition-all duration-300 focus-within:border-white focus-within:bg-white/15">
                       <Lock
                         size={23}
                         className="mr-4 text-white"
@@ -462,9 +489,9 @@ export const LoginScreen = () => {
                   disabled={
                     loginMutation.isPending
                   }
-                  className="group relative mt-3 flex h-[74px] w-full items-center justify-center overflow-hidden rounded-full bg-white text-xl font-bold text-red-600 shadow-[0_15px_45px_rgba(255,255,255,0.25)] transition-all duration-300 hover:bg-red-50"
+                  className="group relative mt-4 flex h-[76px] w-full items-center justify-center overflow-hidden rounded-full bg-white text-xl font-bold text-red-600 shadow-[0_12px_35px_rgba(255,255,255,0.25)] transition-all duration-300 hover:bg-red-50"
                 >
-                  <span className="mr-3">
+                  <span className="mr-4">
                     {loginMutation.isPending
                       ? 'Signing In...'
                       : 'Login'}
@@ -472,7 +499,7 @@ export const LoginScreen = () => {
 
                   <ArrowRight
                     size={28}
-                    className="transition-all duration-300 group-hover:translate-x-1"
+                    className="transition-all duration-300 group-hover:translate-x-2"
                   />
 
                   {/* SHINE */}
