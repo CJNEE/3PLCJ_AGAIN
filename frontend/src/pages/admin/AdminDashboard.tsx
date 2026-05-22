@@ -260,10 +260,18 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
     );
   }
 
-  return ( <> <div className="hidden lg:block">
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
+      <Sidebar
+        open={sidebarOpen}
+        onToggle={() => setSidebarOpen(!sidebarOpen)}
+      />
 
-        {/* Total Hubs */}
-        <Card className="flex flex-col items-center justify-center p-6 h-44 text-center">
+      <div className="lg:ml-64">
+        <div className="hidden lg:block">
+
+          {/* Total Hubs */}
+          <Card className="flex flex-col items-center justify-center p-6 h-44 text-center">
           <p className="text-gray-600 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider">Total Hubs</p>
           <p className="text-7xl font-black text-red-700 dark:text-white mt-4 leading-none text-center w-full">{hubs.length}</p>
         </Card>
@@ -863,6 +871,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
           </div>
         </div>
       )}
-    </>
+
+    </div>
   );
 };
