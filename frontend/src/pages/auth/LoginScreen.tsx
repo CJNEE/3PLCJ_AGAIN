@@ -157,14 +157,12 @@ export const LoginScreen = () => {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#f4f7fb]">
+    <div className="relative min-h-screen overflow-hidden bg-[#f5f7fb]">
       {/* BACKGROUND */}
       <div className="absolute inset-0">
-        <div className="absolute top-[-100px] left-[-100px] h-[300px] w-[300px] rounded-full bg-red-100 blur-3xl" />
+        <div className="absolute top-[-120px] left-[-120px] h-[320px] w-[320px] rounded-full bg-red-100 blur-3xl" />
 
-        <div className="absolute bottom-[-120px] right-[-120px] h-[320px] w-[320px] rounded-full bg-blue-100 blur-3xl" />
-
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.4)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.4)_1px,transparent_1px)] bg-[size:80px_80px]" />
+        <div className="absolute bottom-[-120px] right-[-120px] h-[320px] w-[320px] rounded-full bg-rose-100 blur-3xl" />
       </div>
 
       {/* MAIN */}
@@ -172,23 +170,23 @@ export const LoginScreen = () => {
         <motion.div
           initial={{
             opacity: 0,
-            y: 30,
+            y: 20,
           }}
           animate={{
             opacity: 1,
             y: 0,
           }}
           transition={{
-            duration: 0.7,
+            duration: 0.6,
           }}
-          className="grid w-full max-w-7xl overflow-hidden rounded-[2.5rem] border border-white/70 bg-white/80 shadow-[0_20px_80px_rgba(15,23,42,0.12)] backdrop-blur-2xl lg:grid-cols-2"
+          className="grid w-full max-w-7xl overflow-hidden rounded-[2.5rem] border border-white/80 bg-white shadow-[0_20px_80px_rgba(15,23,42,0.12)] lg:grid-cols-2"
         >
           {/* LEFT SIDE */}
           <div className="relative hidden items-center justify-center overflow-hidden bg-white lg:flex">
-            {/* SOFT GLOW */}
-            <div className="absolute top-16 left-16 h-40 w-40 rounded-full bg-red-100 blur-3xl" />
+            {/* SOFT EFFECTS */}
+            <div className="absolute top-20 left-20 h-44 w-44 rounded-full bg-red-100 blur-3xl" />
 
-            <div className="absolute bottom-16 right-16 h-40 w-40 rounded-full bg-blue-100 blur-3xl" />
+            <div className="absolute bottom-20 right-20 h-44 w-44 rounded-full bg-rose-100 blur-3xl" />
 
             {/* LOGO */}
             <motion.div
@@ -210,7 +208,12 @@ export const LoginScreen = () => {
           </div>
 
           {/* RIGHT SIDE */}
-          <div className="flex items-center justify-center px-6 py-10 sm:px-10 lg:px-20">
+          <div className="relative flex items-center justify-center overflow-hidden bg-gradient-to-br from-red-600 via-red-500 to-rose-500 px-6 py-10 sm:px-10 lg:px-20">
+            {/* GLOW */}
+            <div className="absolute top-[-80px] right-[-80px] h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+
+            <div className="absolute bottom-[-100px] left-[-100px] h-72 w-72 rounded-full bg-white/10 blur-3xl" />
+
             <motion.div
               initial={{
                 opacity: 0,
@@ -224,7 +227,7 @@ export const LoginScreen = () => {
                 delay: 0.2,
                 duration: 0.7,
               }}
-              className="w-full max-w-md"
+              className="relative z-10 w-full max-w-md"
             >
               {/* MOBILE LOGO */}
               <div className="mb-10 flex justify-center lg:hidden">
@@ -242,17 +245,13 @@ export const LoginScreen = () => {
                 />
               </div>
 
-              {/* CARD */}
-              <div className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-8 shadow-[0_15px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+              {/* LOGIN CARD */}
+              <div className="rounded-[2rem] border border-white/20 bg-white/10 p-8 shadow-[0_15px_50px_rgba(0,0,0,0.18)] backdrop-blur-2xl">
                 {/* HEADER */}
                 <div className="mb-10">
-                  <h1 className="text-center text-5xl font-black tracking-tight text-slate-800">
+                  <h1 className="text-center text-5xl font-black tracking-tight text-white">
                     Sign In
                   </h1>
-
-                  <p className="mt-3 text-center text-sm text-slate-500">
-                    Employee Management Portal
-                  </p>
                 </div>
 
                 {/* ERROR */}
@@ -266,7 +265,7 @@ export const LoginScreen = () => {
                       opacity: 1,
                       y: 0,
                     }}
-                    className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600"
+                    className="mb-5 rounded-2xl border border-red-200/20 bg-white/10 px-4 py-3 text-sm text-white"
                   >
                     {loginError}
                   </motion.div>
@@ -279,7 +278,7 @@ export const LoginScreen = () => {
                 >
                   {/* USERNAME */}
                   <div>
-                    <label className="mb-3 block text-sm font-semibold text-slate-700">
+                    <label className="mb-3 block text-sm font-semibold text-white">
                       Username
                     </label>
 
@@ -297,13 +296,13 @@ export const LoginScreen = () => {
                       disabled={
                         loginMutation.isPending
                       }
-                      className="h-14 w-full rounded-2xl border border-slate-200 bg-white px-5 text-slate-800 placeholder:text-slate-400 outline-none transition-all duration-300 focus:border-red-500 focus:ring-4 focus:ring-red-100"
+                      className="h-14 w-full rounded-2xl border border-white/20 bg-white px-5 text-slate-800 placeholder:text-slate-400 outline-none transition-all duration-300 focus:border-white focus:ring-4 focus:ring-white/30"
                     />
                   </div>
 
                   {/* PASSWORD */}
                   <div>
-                    <label className="mb-3 block text-sm font-semibold text-slate-700">
+                    <label className="mb-3 block text-sm font-semibold text-white">
                       Password
                     </label>
 
@@ -326,7 +325,7 @@ export const LoginScreen = () => {
                         disabled={
                           loginMutation.isPending
                         }
-                        className="h-14 w-full rounded-2xl border border-slate-200 bg-white px-5 pr-14 text-slate-800 placeholder:text-slate-400 outline-none transition-all duration-300 focus:border-red-500 focus:ring-4 focus:ring-red-100"
+                        className="h-14 w-full rounded-2xl border border-white/20 bg-white px-5 pr-14 text-slate-800 placeholder:text-slate-400 outline-none transition-all duration-300 focus:border-white focus:ring-4 focus:ring-white/30"
                       />
 
                       <button
@@ -359,7 +358,7 @@ export const LoginScreen = () => {
                     disabled={
                       loginMutation.isPending
                     }
-                    className="relative mt-2 h-14 w-full overflow-hidden rounded-2xl bg-gradient-to-r from-red-600 to-rose-500 font-bold text-white shadow-[0_10px_25px_rgba(239,68,68,0.25)] transition-all duration-300 hover:shadow-[0_15px_35px_rgba(239,68,68,0.35)] disabled:cursor-not-allowed disabled:opacity-70"
+                    className="relative mt-2 h-14 w-full overflow-hidden rounded-2xl bg-white font-bold text-red-600 shadow-[0_10px_30px_rgba(255,255,255,0.2)] transition-all duration-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     <span className="relative z-10">
                       {loginMutation.isPending
@@ -367,13 +366,13 @@ export const LoginScreen = () => {
                         : 'Login'}
                     </span>
 
-                    <div className="absolute inset-0 translate-x-[-100%] bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-1000 hover:translate-x-[100%]" />
+                    <div className="absolute inset-0 translate-x-[-100%] bg-gradient-to-r from-transparent via-red-100 to-transparent transition-transform duration-1000 hover:translate-x-[100%]" />
                   </motion.button>
                 </form>
 
                 {/* FOOTER */}
                 <div className="mt-10 text-center">
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-white/70">
                     © 2026 3PL Business Solutions
                   </p>
                 </div>
