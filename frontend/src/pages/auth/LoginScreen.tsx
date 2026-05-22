@@ -1,10 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import {
-  Eye,
-  EyeOff,
-} from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 
 import { useAuth } from '@/hooks/useAuth';
 import { useLogin } from '@/hooks/useQueries';
@@ -94,15 +91,15 @@ export const LoginScreen = () => {
         setEmployee(response.employee ?? null);
         setIsAuthenticated(true);
 
-        const role =
-          response.user?.role ||
-          response.employee?.role;
-
         success(
           `Welcome back ${
             response.user?.username || ''
           }`
         );
+
+        const role =
+          response.user?.role ||
+          response.employee?.role;
 
         if (role === 'Admin') {
           navigate('/admin', {
@@ -160,38 +157,38 @@ export const LoginScreen = () => {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#020817]">
-      {/* BACKGROUND EFFECTS */}
+    <div className="relative min-h-screen overflow-hidden bg-[#f4f7fb]">
+      {/* BACKGROUND */}
       <div className="absolute inset-0">
-        <div className="absolute top-[-120px] left-[-120px] h-[350px] w-[350px] rounded-full bg-red-600/20 blur-3xl" />
+        <div className="absolute top-[-100px] left-[-100px] h-[300px] w-[300px] rounded-full bg-red-100 blur-3xl" />
 
-        <div className="absolute bottom-[-150px] right-[-100px] h-[350px] w-[350px] rounded-full bg-rose-500/20 blur-3xl" />
+        <div className="absolute bottom-[-120px] right-[-120px] h-[320px] w-[320px] rounded-full bg-blue-100 blur-3xl" />
 
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.04),transparent_40%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.4)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.4)_1px,transparent_1px)] bg-[size:80px_80px]" />
       </div>
 
-      {/* MAIN CONTAINER */}
+      {/* MAIN */}
       <div className="relative z-10 flex min-h-screen items-center justify-center p-4 lg:p-8">
         <motion.div
           initial={{
             opacity: 0,
-            y: 20,
+            y: 30,
           }}
           animate={{
             opacity: 1,
             y: 0,
           }}
           transition={{
-            duration: 0.6,
+            duration: 0.7,
           }}
-          className="grid w-full max-w-7xl overflow-hidden rounded-[2.5rem] border border-white/10 bg-[#071129]/80 backdrop-blur-2xl shadow-[0_20px_100px_rgba(0,0,0,0.45)] lg:grid-cols-2"
+          className="grid w-full max-w-7xl overflow-hidden rounded-[2.5rem] border border-white/70 bg-white/80 shadow-[0_20px_80px_rgba(15,23,42,0.12)] backdrop-blur-2xl lg:grid-cols-2"
         >
           {/* LEFT SIDE */}
-          <div className="relative hidden items-center justify-center overflow-hidden bg-gradient-to-br from-red-700 via-red-600 to-rose-500 lg:flex">
-            {/* Glow */}
-            <div className="absolute top-20 left-20 h-52 w-52 rounded-full bg-white/10 blur-3xl" />
+          <div className="relative hidden items-center justify-center overflow-hidden bg-white lg:flex">
+            {/* SOFT GLOW */}
+            <div className="absolute top-16 left-16 h-40 w-40 rounded-full bg-red-100 blur-3xl" />
 
-            <div className="absolute bottom-20 right-20 h-52 w-52 rounded-full bg-white/10 blur-3xl" />
+            <div className="absolute bottom-16 right-16 h-40 w-40 rounded-full bg-blue-100 blur-3xl" />
 
             {/* LOGO */}
             <motion.div
@@ -207,7 +204,7 @@ export const LoginScreen = () => {
               <img
                 src={logo3pl}
                 alt="3PL Logo"
-                className="w-[420px] drop-shadow-[0_15px_40px_rgba(0,0,0,0.45)]"
+                className="w-[430px] drop-shadow-[0_10px_30px_rgba(0,0,0,0.08)]"
               />
             </motion.div>
           </div>
@@ -225,7 +222,7 @@ export const LoginScreen = () => {
               }}
               transition={{
                 delay: 0.2,
-                duration: 0.6,
+                duration: 0.7,
               }}
               className="w-full max-w-md"
             >
@@ -241,20 +238,20 @@ export const LoginScreen = () => {
                   }}
                   src={mobileLogoLogin}
                   alt="Mobile Logo"
-                  className="w-[190px] drop-shadow-2xl"
+                  className="w-[180px]"
                 />
               </div>
 
-              {/* LOGIN CARD */}
-              <div className="rounded-[2rem] border border-white/10 bg-[#09152F]/90 p-8 shadow-[0_10px_50px_rgba(0,0,0,0.35)] backdrop-blur-xl">
+              {/* CARD */}
+              <div className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-8 shadow-[0_15px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
                 {/* HEADER */}
-                <div className="mb-10 text-center">
-                  <h1 className="bg-gradient-to-r from-red-500 to-rose-400 bg-clip-text text-5xl font-black tracking-tight text-transparent">
+                <div className="mb-10">
+                  <h1 className="text-center text-5xl font-black tracking-tight text-slate-800">
                     Sign In
                   </h1>
 
-                  <p className="mt-3 text-sm text-gray-400">
-                    Secure access to your dashboard
+                  <p className="mt-3 text-center text-sm text-slate-500">
+                    Employee Management Portal
                   </p>
                 </div>
 
@@ -269,7 +266,7 @@ export const LoginScreen = () => {
                       opacity: 1,
                       y: 0,
                     }}
-                    className="mb-5 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300"
+                    className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600"
                   >
                     {loginError}
                   </motion.div>
@@ -282,7 +279,7 @@ export const LoginScreen = () => {
                 >
                   {/* USERNAME */}
                   <div>
-                    <label className="mb-3 block text-sm font-semibold text-gray-200">
+                    <label className="mb-3 block text-sm font-semibold text-slate-700">
                       Username
                     </label>
 
@@ -300,13 +297,13 @@ export const LoginScreen = () => {
                       disabled={
                         loginMutation.isPending
                       }
-                      className="h-14 w-full rounded-2xl border border-white/10 bg-white/5 px-5 text-white placeholder:text-gray-500 outline-none transition-all duration-300 focus:border-red-500 focus:bg-white/10 focus:ring-4 focus:ring-red-500/10"
+                      className="h-14 w-full rounded-2xl border border-slate-200 bg-white px-5 text-slate-800 placeholder:text-slate-400 outline-none transition-all duration-300 focus:border-red-500 focus:ring-4 focus:ring-red-100"
                     />
                   </div>
 
                   {/* PASSWORD */}
                   <div>
-                    <label className="mb-3 block text-sm font-semibold text-gray-200">
+                    <label className="mb-3 block text-sm font-semibold text-slate-700">
                       Password
                     </label>
 
@@ -329,7 +326,7 @@ export const LoginScreen = () => {
                         disabled={
                           loginMutation.isPending
                         }
-                        className="h-14 w-full rounded-2xl border border-white/10 bg-white/5 px-5 pr-14 text-white placeholder:text-gray-500 outline-none transition-all duration-300 focus:border-red-500 focus:bg-white/10 focus:ring-4 focus:ring-red-500/10"
+                        className="h-14 w-full rounded-2xl border border-slate-200 bg-white px-5 pr-14 text-slate-800 placeholder:text-slate-400 outline-none transition-all duration-300 focus:border-red-500 focus:ring-4 focus:ring-red-100"
                       />
 
                       <button
@@ -339,7 +336,7 @@ export const LoginScreen = () => {
                             !showPassword
                           )
                         }
-                        className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-500 transition hover:text-red-400"
+                        className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-red-500"
                       >
                         {showPassword ? (
                           <EyeOff size={22} />
@@ -362,7 +359,7 @@ export const LoginScreen = () => {
                     disabled={
                       loginMutation.isPending
                     }
-                    className="relative mt-3 h-14 w-full overflow-hidden rounded-2xl bg-gradient-to-r from-red-600 via-red-500 to-rose-500 font-bold text-white shadow-[0_10px_30px_rgba(239,68,68,0.35)] transition-all duration-300 hover:shadow-[0_15px_40px_rgba(239,68,68,0.45)] disabled:cursor-not-allowed disabled:opacity-70"
+                    className="relative mt-2 h-14 w-full overflow-hidden rounded-2xl bg-gradient-to-r from-red-600 to-rose-500 font-bold text-white shadow-[0_10px_25px_rgba(239,68,68,0.25)] transition-all duration-300 hover:shadow-[0_15px_35px_rgba(239,68,68,0.35)] disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     <span className="relative z-10">
                       {loginMutation.isPending
@@ -376,7 +373,7 @@ export const LoginScreen = () => {
 
                 {/* FOOTER */}
                 <div className="mt-10 text-center">
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-slate-400">
                     © 2026 3PL Business Solutions
                   </p>
                 </div>
