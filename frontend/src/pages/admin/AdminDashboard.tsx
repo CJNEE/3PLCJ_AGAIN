@@ -260,34 +260,6 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
   }
 
   return (
-  <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
-    
-    <Sidebar
-      open={sidebarOpen}
-      onToggle={() => setSidebarOpen(!sidebarOpen)}
-    />  
-
-    <div className="p-4 lg:p-6 lg:ml-64 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            {employee?.role === 'HR'
-              ? '3PL BUSINESS SOLUTIONS | HR overview'
-              : '3PL BUSINESS SOLUTIONS | Admin overview'}
-          </p>
-        </div>
-        
-      </div>
-
-      {/* Top Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
-        {/* Total Employees */}
-        <Card className="flex flex-col items-center justify-center p-6 h-44 text-center">
-          <p className="text-gray-600 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider">Total Employees</p>
-          <p className="text-7xl font-black text-red-700 dark:text-white mt-4 leading-none text-center w-full">{totalEmployees}</p>
-        </Card>
 
         {/* Total Hubs */}
         <Card className="flex flex-col items-center justify-center p-6 h-44 text-center">
