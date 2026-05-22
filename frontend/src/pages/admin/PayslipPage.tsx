@@ -24,6 +24,30 @@ export const PayslipPage = () => {
   const [selectedPayslip, setSelectedPayslip] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const handleStartDateChange = (val: string) => {
+    setStartDate(val);
+    if (!val) {
+      setEndDate('');
+      return;
+    }
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return;
+    
+    const y = d.getFullYear();
+    const m = d.getMonth();
+    const day = d.getDate();
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    
+    if (day <= 15) {
+      setStartDate(`${y}-${pad(m + 1)}-01`);
+      setEndDate(`${y}-${pad(m + 1)}-15`);
+    } else {
+      setStartDate(`${y}-${pad(m + 1)}-16`);
+      const lastDay = new Date(y, m + 1, 0).getDate();
+      setEndDate(`${y}-${pad(m + 1)}-${pad(lastDay)}`);
+    }
+  };
+
   // Fetch data
   const { data: payrollData, isLoading: payrollLoading } = useGetPayroll();
   const { data: hubsData, isLoading: hubsLoading } = useGetHubs();
@@ -362,7 +386,7 @@ export const PayslipPage = () => {
           <div className="flex flex-col lg:flex-row gap-3 items-end">
             <div className="flex-1">
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
-              <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="input-field w-full" />
+              <input type="date" value={startDate} onChange={(e) => handleStartDateChange(e.target.value)} className="input-field w-full" />
             </div>
             <div className="flex-1">
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">End Date</label>
@@ -433,12 +457,14 @@ export const PayslipPage = () => {
                             <td className="px-4 py-3">
                               <Badge variant={getStatusBadgeVariant(record.status)}>{record.status || 'N/A'}</Badge>
                             </td>
-                            <td className="px-4 py-3 text-center flex flex-col gap-1 items-center">
-                              <button onClick={() => { setSelectedPayslip(record); setIsModalOpen(true); }} className="btn btn-primary">View</button>
-                              {isAdmin && (
-                                <button onClick={async () => { const updated = { ...record, status: 'approved' }; await handleSave(updated); }} className="btn btn-success mt-1">Approve</button>
-                              )}
-                              <button onClick={() => handleDownload(hubName)} className="btn btn-secondary mt-1">Download</button>
+                            <td className="px-4 py-3">
+                              <div className="flex flex-row flex-wrap gap-2 justify-center items-center">
+                                <button onClick={() => { setSelectedPayslip(record); setIsModalOpen(true); }} className="btn btn-primary !py-1.5 !px-3 text-xs">View</button>
+                                {isAdmin && (
+                                  <button onClick={async () => { const updated = { ...record, status: 'approved' }; await handleSave(updated); }} className="btn btn-success !py-1.5 !px-3 text-xs">Approve</button>
+                                )}
+                                <button onClick={() => handleDownload(hubName)} className="btn btn-secondary !py-1.5 !px-3 text-xs">Download</button>
+                              </div>
                             </td>
                           </tr>
                         ))}
