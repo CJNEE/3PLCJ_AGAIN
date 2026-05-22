@@ -7,6 +7,7 @@ import {
   User,
   Lock,
   ArrowRight,
+  Loader2,
 } from 'lucide-react';
 
 import { useAuth } from '@/hooks/useAuth';
@@ -42,10 +43,15 @@ export const LoginScreen = () => {
   const [loginError, setLoginError] =
     useState<string | null>(null);
 
+  const [isLoading, setIsLoading] =
+    useState<boolean>(false);
+
   const handleLogin = async (
     e: React.FormEvent<HTMLFormElement>
   ) => {
     e.preventDefault();
+
+    if (isLoading) return;
 
     setLoginError(null);
 
@@ -57,6 +63,8 @@ export const LoginScreen = () => {
     }
 
     try {
+      setIsLoading(true);
+
       const response =
         await loginMutation.mutateAsync({
           username,
@@ -155,11 +163,13 @@ export const LoginScreen = () => {
 
       setLoginError(errorMessage);
       error(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#fdf8f8]">
+    <div className="relative h-screen overflow-hidden bg-[#fdf8f8]">
       {/* ================= BACKGROUND ================= */}
       <div className="absolute inset-0 overflow-hidden">
         {/* LEFT BG */}
@@ -285,7 +295,7 @@ export const LoginScreen = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-[#ff2746] via-[#ff1238] to-[#d00024] lg:hidden" />
 
         {/* MOBILE TOP WHITE */}
-        <div className="absolute left-0 top-0 h-[42%] w-full overflow-hidden rounded-b-[55px] bg-[#f7f2f2] lg:hidden">
+        <div className="absolute left-0 top-0 h-[34%] min-h-[240px] w-full overflow-hidden rounded-b-[55px] bg-[#f7f2f2] lg:hidden">
           {/* CURVED BOTTOM */}
           <svg
             className="absolute bottom-[-1px] left-0 w-full"
@@ -302,11 +312,11 @@ export const LoginScreen = () => {
           </svg>
 
           {/* MOBILE LOGO */}
-          <div className="absolute left-1/2 top-[16%] -translate-x-1/2">
+          <div className="absolute left-1/2 top-[14%] -translate-x-1/2">
             <img
               src={mobileLogoLogin}
               alt="3PL"
-              className="w-[170px] object-contain opacity-95"
+              className="w-[140px] object-contain opacity-95"
             />
           </div>
 
@@ -367,11 +377,9 @@ export const LoginScreen = () => {
             }}
             className="mx-auto w-full max-w-[560px]"
           >
-            {/* KEEP DESKTOP EXACTLY SAME */}
             <div className="rounded-[38px] bg-transparent px-0 py-0 shadow-none">
               {/* ================= DESKTOP UI ================= */}
               <div className="hidden rounded-[38px] bg-transparent lg:block">
-                {/* LOCK */}
                 <motion.div
                   animate={{
                     y: [0, -10, 0],
@@ -388,7 +396,6 @@ export const LoginScreen = () => {
                   />
                 </motion.div>
 
-                {/* TITLE */}
                 <div className="mt-8 text-center">
                   <h1 className="text-5xl font-black tracking-tight text-white sm:text-6xl">
                     Sign In
@@ -401,14 +408,12 @@ export const LoginScreen = () => {
                   <div className="mx-auto mt-5 h-1 w-16 rounded-full bg-white" />
                 </div>
 
-                {/* ERROR */}
                 {loginError && (
                   <div className="mt-8 rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-white backdrop-blur-md">
                     {loginError}
                   </div>
                 )}
 
-                {/* FORM */}
                 <form
                   onSubmit={handleLogin}
                   className="mt-10 space-y-7"
@@ -493,7 +498,7 @@ export const LoginScreen = () => {
                     </div>
                   </div>
 
-                  {/* BUTTON */}
+                  {/* DESKTOP BUTTON */}
                   <motion.button
                     whileHover={{
                       scale: 1.02,
@@ -502,22 +507,42 @@ export const LoginScreen = () => {
                       scale: 0.98,
                     }}
                     type="submit"
-                    className="group relative mt-4 flex h-[76px] w-full items-center justify-center overflow-hidden rounded-full bg-white text-xl font-bold text-red-600 shadow-[0_12px_35px_rgba(255,255,255,0.25)]"
+                    disabled={isLoading}
+                    className={`group relative mt-4 flex h-[76px] w-full items-center justify-center overflow-hidden rounded-full text-xl font-bold shadow-[0_12px_35px_rgba(255,255,255,0.25)] transition-all duration-300 ${
+                      isLoading
+                        ? 'bg-white/80 text-red-400'
+                        : 'bg-white text-red-600'
+                    }`}
                   >
-                    <span className="mr-4">
-                      Login
-                    </span>
+                    {isLoading ? (
+                      <>
+                        <Loader2
+                          size={26}
+                          className="mr-3 animate-spin"
+                        />
 
-                    <ArrowRight
-                      size={28}
-                      className="transition-all duration-300 group-hover:translate-x-2"
-                    />
+                        <span>
+                          Logging in...
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="mr-4">
+                          Login
+                        </span>
+
+                        <ArrowRight
+                          size={28}
+                          className="transition-all duration-300 group-hover:translate-x-2"
+                        />
+                      </>
+                    )}
                   </motion.button>
                 </form>
               </div>
 
               {/* ================= MOBILE UI ================= */}
-              <div className="relative pt-[270px] lg:hidden">
+              <div className="relative flex min-h-screen flex-col justify-center pt-[180px] pb-5 lg:hidden">
                 {/* LOCK */}
                 <motion.div
                   animate={{
@@ -527,30 +552,30 @@ export const LoginScreen = () => {
                     duration: 4,
                     repeat: Infinity,
                   }}
-                  className="mx-auto flex h-[78px] w-[78px] items-center justify-center rounded-full border border-white/20 bg-white/20 backdrop-blur-xl"
+                  className="mx-auto flex h-[74px] w-[74px] items-center justify-center rounded-full border border-white/20 bg-white/20 backdrop-blur-xl"
                 >
                   <Lock
-                    size={28}
+                    size={26}
                     className="text-white"
                   />
                 </motion.div>
 
                 {/* TITLE */}
-                <div className="mt-6 text-center">
-                  <h1 className="text-[58px] font-black leading-none tracking-tight text-white">
+                <div className="mt-5 text-center">
+                  <h1 className="text-[46px] font-black leading-none tracking-tight text-white">
                     Sign In
                   </h1>
 
-                  <p className="mt-3 text-[17px] text-red-100">
+                  <p className="mt-2 text-[15px] text-red-100">
                     Welcome back! Please login to continue
                   </p>
 
-                  <div className="mx-auto mt-5 h-1 w-14 rounded-full bg-white" />
+                  <div className="mx-auto mt-4 h-1 w-14 rounded-full bg-white" />
                 </div>
 
                 {/* ERROR */}
                 {loginError && (
-                  <div className="mt-7 rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-white backdrop-blur-md">
+                  <div className="mt-5 rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white backdrop-blur-md">
                     {loginError}
                   </div>
                 )}
@@ -558,19 +583,19 @@ export const LoginScreen = () => {
                 {/* FORM */}
                 <form
                   onSubmit={handleLogin}
-                  className="mt-10 space-y-6"
+                  className="mt-7 space-y-5"
                 >
                   {/* USERNAME */}
                   <div>
-                    <label className="mb-3 block text-sm font-semibold text-white">
+                    <label className="mb-2 block text-sm font-semibold text-white">
                       Username
                     </label>
 
                     <div className="overflow-hidden rounded-[22px] bg-white shadow-[0_10px_30px_rgba(255,255,255,0.15)]">
-                      <div className="flex h-[70px] items-center">
-                        <div className="flex h-full w-[68px] items-center justify-center border-r border-red-100 bg-[#fff5f5]">
+                      <div className="flex h-[62px] items-center">
+                        <div className="flex h-full w-[62px] items-center justify-center border-r border-red-100 bg-[#fff5f5]">
                           <User
-                            size={22}
+                            size={20}
                             className="text-red-500"
                           />
                         </div>
@@ -584,7 +609,7 @@ export const LoginScreen = () => {
                             )
                           }
                           placeholder="Enter your username"
-                          className="h-full w-full bg-white px-5 text-[16px] font-medium text-[#222] placeholder:text-gray-400 outline-none"
+                          className="h-full w-full bg-white px-4 text-[15px] font-medium text-[#222] placeholder:text-gray-400 outline-none"
                         />
                       </div>
                     </div>
@@ -592,15 +617,15 @@ export const LoginScreen = () => {
 
                   {/* PASSWORD */}
                   <div>
-                    <label className="mb-3 block text-sm font-semibold text-white">
+                    <label className="mb-2 block text-sm font-semibold text-white">
                       Password
                     </label>
 
                     <div className="overflow-hidden rounded-[22px] bg-white shadow-[0_10px_30px_rgba(255,255,255,0.15)]">
-                      <div className="flex h-[70px] items-center">
-                        <div className="flex h-full w-[68px] items-center justify-center border-r border-red-100 bg-[#fff5f5]">
+                      <div className="flex h-[62px] items-center">
+                        <div className="flex h-full w-[62px] items-center justify-center border-r border-red-100 bg-[#fff5f5]">
                           <Lock
-                            size={22}
+                            size={20}
                             className="text-red-500"
                           />
                         </div>
@@ -618,7 +643,7 @@ export const LoginScreen = () => {
                             )
                           }
                           placeholder="Enter your password"
-                          className="h-full w-full bg-white px-5 text-[16px] font-medium text-[#222] placeholder:text-gray-400 outline-none"
+                          className="h-full w-full bg-white px-4 text-[15px] font-medium text-[#222] placeholder:text-gray-400 outline-none"
                         />
 
                         <button
@@ -628,40 +653,60 @@ export const LoginScreen = () => {
                               !showPassword
                             )
                           }
-                          className="mr-5 text-red-500"
+                          className="mr-4 text-red-500"
                         >
                           {showPassword ? (
-                            <EyeOff size={22} />
+                            <EyeOff size={20} />
                           ) : (
-                            <Eye size={22} />
+                            <Eye size={20} />
                           )}
                         </button>
                       </div>
                     </div>
                   </div>
 
-                  {/* BUTTON */}
+                  {/* MOBILE BUTTON */}
                   <motion.button
                     whileTap={{
                       scale: 0.98,
                     }}
                     type="submit"
-                    className="group mt-3 flex h-[74px] w-full items-center justify-center rounded-full bg-white text-[32px] font-black text-red-600 shadow-[0_14px_40px_rgba(255,255,255,0.25)]"
+                    disabled={isLoading}
+                    className={`group mt-2 flex h-[64px] w-full items-center justify-center rounded-full text-[24px] font-black shadow-[0_14px_40px_rgba(255,255,255,0.25)] transition-all duration-300 ${
+                      isLoading
+                        ? 'bg-white/80 text-red-400'
+                        : 'bg-white text-red-600'
+                    }`}
                   >
-                    <span className="mr-4">
-                      Login
-                    </span>
+                    {isLoading ? (
+                      <>
+                        <Loader2
+                          size={24}
+                          className="mr-3 animate-spin"
+                        />
 
-                    <ArrowRight
-                      size={32}
-                      className="transition-all duration-300 group-active:translate-x-2"
-                    />
+                        <span>
+                          Logging in...
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="mr-4">
+                          Login
+                        </span>
+
+                        <ArrowRight
+                          size={28}
+                          className="transition-all duration-300 group-active:translate-x-2"
+                        />
+                      </>
+                    )}
                   </motion.button>
                 </form>
 
                 {/* FOOTER */}
-                <div className="mt-10 text-center">
-                  <p className="text-xs text-red-100">
+                <div className="mt-6 text-center">
+                  <p className="text-[11px] text-red-100">
                     © 2026{' '}
                     <span className="font-bold text-white">
                       3PL Business Solutions
