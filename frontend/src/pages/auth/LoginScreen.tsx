@@ -1,7 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff } from 'lucide-react';
+import {
+  Eye,
+  EyeOff,
+  User,
+  Lock,
+  ArrowRight,
+} from 'lucide-react';
 
 import { useAuth } from '@/hooks/useAuth';
 import { useLogin } from '@/hooks/useQueries';
@@ -157,143 +163,182 @@ export const LoginScreen = () => {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#f6f8fc]">
-      {/* MAIN BACKGROUND */}
-      <div className="absolute inset-0">
-        {/* TOP LIGHT */}
+    <div className="relative min-h-screen overflow-hidden bg-[#f8f4f4]">
+      {/* BACKGROUND */}
+      <div className="absolute inset-0 overflow-hidden">
+        {/* LEFT TOP CIRCLE */}
         <motion.div
           animate={{
-            x: [0, 40, 0],
-            y: [0, -30, 0],
+            y: [0, -20, 0],
           }}
           transition={{
-            duration: 14,
+            duration: 8,
             repeat: Infinity,
           }}
-          className="absolute -top-40 -left-32 h-[500px] w-[500px] rounded-full bg-red-100 blur-3xl"
+          className="absolute left-[-80px] top-[-80px] h-[240px] w-[240px] rounded-full bg-red-100 blur-2xl"
         />
 
-        {/* BOTTOM LIGHT */}
+        {/* LEFT BOTTOM */}
         <motion.div
           animate={{
-            x: [0, -50, 0],
-            y: [0, 40, 0],
+            y: [0, 25, 0],
           }}
           transition={{
-            duration: 16,
+            duration: 10,
             repeat: Infinity,
           }}
-          className="absolute bottom-[-200px] right-[-100px] h-[500px] w-[500px] rounded-full bg-rose-100 blur-3xl"
+          className="absolute bottom-[-140px] left-[-140px] h-[320px] w-[320px] rounded-full bg-red-100 blur-3xl"
         />
 
-        {/* GRID */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(15,23,42,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.03)_1px,transparent_1px)] bg-[size:60px_60px]" />
+        {/* RED RIGHT SIDE */}
+        <div className="absolute right-0 top-0 h-full w-full lg:w-[58%] overflow-hidden bg-gradient-to-br from-[#ff2d2d] via-[#f21d2f] to-[#c40018]">
+          {/* WAVES */}
+          <div className="absolute right-[-200px] top-[-100px] h-[600px] w-[600px] rounded-full border border-white/10" />
+          <div className="absolute right-[-160px] top-[-60px] h-[520px] w-[520px] rounded-full border border-white/10" />
+          <div className="absolute right-[-120px] top-[-20px] h-[440px] w-[440px] rounded-full border border-white/10" />
+
+          {/* BOTTOM WAVE */}
+          <div className="absolute bottom-[-140px] left-[-60px] h-[320px] w-[700px] rounded-[100%] bg-black/10 blur-2xl" />
+
+          {/* WHITE CURVE */}
+          <div className="absolute left-[-120px] top-0 hidden h-full w-[240px] rounded-r-[100px] bg-[#f8f4f4] lg:block" />
+        </div>
+
+        {/* DOTS */}
+        <div className="absolute left-[28%] top-[12%] grid grid-cols-4 gap-4">
+          {Array.from({ length: 16 }).map(
+            (_, index) => (
+              <div
+                key={index}
+                className="h-1.5 w-1.5 rounded-full bg-red-400"
+              />
+            )
+          )}
+        </div>
+
+        <div className="absolute bottom-[14%] left-[24%] grid grid-cols-4 gap-4">
+          {Array.from({ length: 12 }).map(
+            (_, index) => (
+              <div
+                key={index}
+                className="h-1.5 w-1.5 rounded-full bg-red-400"
+              />
+            )
+          )}
+        </div>
       </div>
 
-      {/* MAIN CONTAINER */}
-      <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-8">
-        <motion.div
-          initial={{
-            opacity: 0,
-            y: 20,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            duration: 0.7,
-          }}
-          className="grid w-full max-w-6xl overflow-hidden rounded-[36px] bg-white shadow-[0_25px_70px_rgba(15,23,42,0.08)] lg:grid-cols-2"
-        >
+      {/* MAIN */}
+      <div className="relative z-10 flex min-h-screen items-center justify-center px-6 py-10">
+        <div className="grid w-full max-w-7xl items-center lg:grid-cols-2">
           {/* LEFT SIDE */}
-          <div className="hidden items-center justify-center bg-white p-10 lg:flex">
+          <motion.div
+            initial={{
+              opacity: 0,
+              x: -30,
+            }}
+            animate={{
+              opacity: 1,
+              x: 0,
+            }}
+            transition={{
+              duration: 0.7,
+            }}
+            className="hidden items-center justify-center lg:flex"
+          >
             <img
               src={logo3pl}
               alt="3PL Business Solutions"
-              className="w-[370px] object-contain"
+              className="w-[440px] object-contain"
             />
-          </div>
+          </motion.div>
 
           {/* RIGHT SIDE */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-red-600 via-red-500 to-rose-500 px-8 py-12 sm:px-14 lg:px-16">
-            {/* DESIGN CIRCLES */}
-            <div className="absolute top-[-100px] right-[-100px] h-72 w-72 rounded-full bg-white/10 blur-3xl" />
-
-            <div className="absolute bottom-[-120px] left-[-120px] h-80 w-80 rounded-full bg-white/10 blur-3xl" />
-
+          <motion.div
+            initial={{
+              opacity: 0,
+              x: 40,
+            }}
+            animate={{
+              opacity: 1,
+              x: 0,
+            }}
+            transition={{
+              duration: 0.8,
+            }}
+            className="relative mx-auto w-full max-w-xl lg:ml-auto"
+          >
             {/* MOBILE LOGO */}
-            <div className="mb-10 flex justify-center lg:hidden">
+            <div className="mb-8 flex justify-center lg:hidden">
               <img
                 src={mobileLogoLogin}
                 alt="Mobile Logo"
-                className="w-[150px] object-contain"
+                className="w-[160px]"
               />
             </div>
 
-            {/* CONTENT */}
+            {/* LOCK ICON */}
             <motion.div
-              initial={{
-                opacity: 0,
-                x: 30,
-              }}
               animate={{
-                opacity: 1,
-                x: 0,
+                y: [0, -8, 0],
               }}
               transition={{
-                duration: 0.7,
-                delay: 0.2,
+                duration: 3,
+                repeat: Infinity,
               }}
-              className="relative z-10 mx-auto flex min-h-full w-full max-w-md flex-col justify-center"
+              className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full border border-white/20 bg-white/10 backdrop-blur-md"
             >
-              {/* HEADER */}
-              <div className="mb-10">
-                <h1 className="text-center text-5xl font-black tracking-tight text-white">
-                  Sign In
-                </h1>
+              <Lock
+                size={36}
+                className="text-white"
+              />
+            </motion.div>
 
-                <p className="mt-3 text-center text-sm font-medium text-red-100">
-                  Secure access to your dashboard
-                </p>
+            {/* TITLE */}
+            <div className="mb-10 text-center">
+              <h1 className="text-5xl font-black tracking-tight text-white sm:text-6xl">
+                Sign In
+              </h1>
+
+              <p className="mt-4 text-lg text-red-100">
+                Welcome back! Please login to continue
+              </p>
+
+              <div className="mx-auto mt-5 h-1 w-16 rounded-full bg-white" />
+            </div>
+
+            {/* ERROR */}
+            {loginError && (
+              <div className="mb-5 rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-white backdrop-blur-md">
+                {loginError}
               </div>
+            )}
 
-              {/* ERROR */}
-              {loginError && (
-                <motion.div
-                  initial={{
-                    opacity: 0,
-                    y: -10,
-                  }}
-                  animate={{
-                    opacity: 1,
-                    y: 0,
-                  }}
-                  className="mb-5 rounded-2xl border border-white/20 bg-white/15 px-4 py-3 text-sm text-white backdrop-blur-sm"
-                >
-                  {loginError}
-                </motion.div>
-              )}
+            {/* FORM */}
+            <form
+              onSubmit={handleLogin}
+              className="space-y-7"
+            >
+              {/* USERNAME */}
+              <div>
+                <label className="mb-3 block text-base font-semibold text-white">
+                  Username
+                </label>
 
-              {/* FORM */}
-              <form
-                onSubmit={handleLogin}
-                className="space-y-6"
-              >
-                {/* USERNAME */}
                 <motion.div
                   whileFocus={{
                     scale: 1.01,
                   }}
-                  className="group"
+                  className="group relative"
                 >
-                  <label className="mb-3 block text-sm font-semibold tracking-wide text-white">
-                    Username
-                  </label>
+                  {/* GLOW */}
+                  <div className="absolute inset-0 rounded-2xl bg-white/20 opacity-0 blur-xl transition-all duration-500 group-focus-within:opacity-100" />
 
-                  <div className="relative">
-                    {/* GLOW */}
-                    <div className="absolute inset-0 rounded-2xl bg-white/20 opacity-0 blur-xl transition-all duration-500 group-focus-within:opacity-100" />
+                  <div className="relative flex h-16 items-center rounded-2xl border border-white/20 bg-white/10 px-5 backdrop-blur-md transition-all duration-300 focus-within:border-white focus-within:bg-white/15">
+                    <User
+                      size={22}
+                      className="mr-4 text-white"
+                    />
 
                     <input
                       type="text"
@@ -309,25 +354,32 @@ export const LoginScreen = () => {
                       disabled={
                         loginMutation.isPending
                       }
-                      className="relative h-14 w-full rounded-2xl border border-white/20 bg-white/95 px-5 text-base font-medium text-gray-800 placeholder:text-gray-400 outline-none transition-all duration-300 focus:-translate-y-[2px] focus:border-white focus:bg-white focus:ring-4 focus:ring-white/20"
+                      className="h-full w-full bg-transparent text-lg text-white placeholder:text-red-100 outline-none"
                     />
                   </div>
                 </motion.div>
+              </div>
 
-                {/* PASSWORD */}
+              {/* PASSWORD */}
+              <div>
+                <label className="mb-3 block text-base font-semibold text-white">
+                  Password
+                </label>
+
                 <motion.div
                   whileFocus={{
                     scale: 1.01,
                   }}
-                  className="group"
+                  className="group relative"
                 >
-                  <label className="mb-3 block text-sm font-semibold tracking-wide text-white">
-                    Password
-                  </label>
+                  {/* GLOW */}
+                  <div className="absolute inset-0 rounded-2xl bg-white/20 opacity-0 blur-xl transition-all duration-500 group-focus-within:opacity-100" />
 
-                  <div className="relative">
-                    {/* GLOW */}
-                    <div className="absolute inset-0 rounded-2xl bg-white/20 opacity-0 blur-xl transition-all duration-500 group-focus-within:opacity-100" />
+                  <div className="relative flex h-16 items-center rounded-2xl border border-white/20 bg-white/10 px-5 backdrop-blur-md transition-all duration-300 focus-within:border-white focus-within:bg-white/15">
+                    <Lock
+                      size={22}
+                      className="mr-4 text-white"
+                    />
 
                     <input
                       type={
@@ -347,7 +399,7 @@ export const LoginScreen = () => {
                       disabled={
                         loginMutation.isPending
                       }
-                      className="relative h-14 w-full rounded-2xl border border-white/20 bg-white/95 px-5 pr-14 text-base font-medium text-gray-800 placeholder:text-gray-400 outline-none transition-all duration-300 focus:-translate-y-[2px] focus:border-white focus:bg-white focus:ring-4 focus:ring-white/20"
+                      className="h-full w-full bg-transparent text-lg text-white placeholder:text-red-100 outline-none"
                     />
 
                     <button
@@ -357,52 +409,60 @@ export const LoginScreen = () => {
                           !showPassword
                         )
                       }
-                      className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 transition-all duration-300 hover:scale-110 hover:text-red-500"
+                      className="text-white transition-all duration-300 hover:scale-110"
                     >
                       {showPassword ? (
-                        <EyeOff size={22} />
+                        <EyeOff size={24} />
                       ) : (
-                        <Eye size={22} />
+                        <Eye size={24} />
                       )}
                     </button>
                   </div>
                 </motion.div>
-
-                {/* BUTTON */}
-                <motion.button
-                  whileHover={{
-                    scale: 1.02,
-                    y: -2,
-                  }}
-                  whileTap={{
-                    scale: 0.98,
-                  }}
-                  type="submit"
-                  disabled={
-                    loginMutation.isPending
-                  }
-                  className="group relative mt-4 h-14 w-full overflow-hidden rounded-2xl bg-white text-base font-bold text-red-600 shadow-[0_18px_40px_rgba(255,255,255,0.18)] transition-all duration-300 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70"
-                >
-                  <span className="relative z-10">
-                    {loginMutation.isPending
-                      ? 'Signing In...'
-                      : 'Login'}
-                  </span>
-
-                  {/* SHINE EFFECT */}
-                  <div className="absolute inset-0 translate-x-[-120%] bg-gradient-to-r from-transparent via-red-100 to-transparent transition-transform duration-1000 group-hover:translate-x-[120%]" />
-                </motion.button>
-              </form>
-
-              {/* FOOTER */}
-              <div className="mt-10 text-center">
-                <p className="text-xs tracking-wide text-red-100">
-                  © 2026 3PL Business Solutions
-                </p>
               </div>
-            </motion.div>
-          </div>
-        </motion.div>
+
+              {/* BUTTON */}
+              <motion.button
+                whileHover={{
+                  scale: 1.02,
+                }}
+                whileTap={{
+                  scale: 0.98,
+                }}
+                type="submit"
+                disabled={
+                  loginMutation.isPending
+                }
+                className="group relative mt-4 flex h-16 w-full items-center justify-center overflow-hidden rounded-full bg-white text-xl font-bold text-red-600 shadow-[0_15px_40px_rgba(255,255,255,0.2)] transition-all duration-300 hover:bg-red-50"
+              >
+                <span className="mr-3">
+                  {loginMutation.isPending
+                    ? 'Signing In...'
+                    : 'Login'}
+                </span>
+
+                <ArrowRight
+                  size={26}
+                  className="transition-all duration-300 group-hover:translate-x-1"
+                />
+
+                {/* SHINE */}
+                <div className="absolute inset-0 translate-x-[-120%] bg-gradient-to-r from-transparent via-red-100 to-transparent transition-transform duration-1000 group-hover:translate-x-[120%]" />
+              </motion.button>
+            </form>
+
+            {/* FOOTER */}
+            <div className="mt-10 text-center">
+              <p className="text-sm text-red-100">
+                © 2026{' '}
+                <span className="font-bold text-white">
+                  3PL Business Solutions
+                </span>
+                . All rights reserved.
+              </p>
+            </div>
+          </motion.div>
+        </div>
       </div>
     </div>
   );
