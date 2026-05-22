@@ -49,10 +49,9 @@ export const AdminDashboard = () => {
     error: string | null;
   };
 
-  const [selectedEmployee, setSelectedEmployee] = useState<
-    | (Partial<Employee> & { id?: string | number })
-    | null
-  >(null);
+  type SelectedEmployee = (Omit<Partial<Employee>, 'id'> & { id?: string | number }) | null;
+
+  const [selectedEmployee, setSelectedEmployee] = useState<SelectedEmployee>(null);
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
   const [directions, setDirections] = useState<DirectionsState>({
     userLocation: null,
@@ -128,7 +127,7 @@ function FitBoundsComponent({
 // Process data
   const employees = useMemo(() => {
     const normalized = normalizeApiResponse(employeesQuery.data) as Array<{
-      id?: number | string;
+      id?: string | number;
       full_name: string;
       employee_id: string;
       position?: string;
@@ -141,7 +140,7 @@ function FitBoundsComponent({
       (emp) =>
         emp.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         emp.employee_id.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    ) as Array<Omit<Partial<Employee>, 'id'> & { id?: string | number }>;
   }, [employeesQuery.data, searchTerm]);
 
   const hubs = normalizeApiResponse(hubsQuery.data) as Hub[];
