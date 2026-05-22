@@ -15,8 +15,27 @@ export const PayslipPage = () => {
 
   // Sidebar should render even on desktop
 
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startDate, setStartDate] = useState(() => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = d.getMonth();
+    const day = d.getDate();
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return day <= 15 ? `${y}-${pad(m + 1)}-01` : `${y}-${pad(m + 1)}-16`;
+  });
+  const [endDate, setEndDate] = useState(() => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = d.getMonth();
+    const day = d.getDate();
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    if (day <= 15) {
+      return `${y}-${pad(m + 1)}-15`;
+    } else {
+      const lastDay = new Date(y, m + 1, 0).getDate();
+      return `${y}-${pad(m + 1)}-${pad(lastDay)}`;
+    }
+  });
   const [year, setYear] = useState('All');
   const [hubFilter, setHubFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -461,7 +480,7 @@ export const PayslipPage = () => {
                               <div className="flex flex-row flex-wrap gap-2 justify-center items-center">
                                 <button onClick={() => { setSelectedPayslip(record); setIsModalOpen(true); }} className="btn btn-primary !py-1.5 !px-3 text-xs">View</button>
                                 {isAdmin && (
-                                  <button onClick={async () => { const updated = { ...record, status: 'approved' }; await handleSave(updated); }} className="btn btn-success !py-1.5 !px-3 text-xs">Approve</button>
+                                  <button onClick={async () => { const updated = { ...record, status: 'approved' }; await handleSave(updated); }} className="btn btn-success bg-green-600 hover:bg-green-700 text-white !py-1.5 !px-3 text-xs">Approve</button>
                                 )}
                                 <button onClick={() => handleDownload(hubName)} className="btn btn-secondary !py-1.5 !px-3 text-xs">Download</button>
                               </div>
