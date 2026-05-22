@@ -5,23 +5,23 @@ import { useAuth } from '@/hooks/useAuth';
 
 // Re‑use the navigation definition from Sidebar for consistency
 const navItems = [
-  { label: 'Dashboard', icon: Home, path: (role) => role === 'admin' ? '/admin' : role === 'hr' ? '/hr' : '/employee', roles: ['admin', 'hr'] },
-  { label: 'Employees', icon: Users, path: (role) => role === 'admin' ? '/admin/employees' : role === 'hr' ? '/hr/employees' : '/employee', roles: ['admin', 'hr'] },
+  { label: 'Dashboard', icon: Home, path: (role: string) => role === 'admin' ? '/admin' : role === 'hr' ? '/hr' : '/employee', roles: ['admin', 'hr'] },
+  { label: 'Employees', icon: Users, path: (role: string) => role === 'admin' ? '/admin/employees' : role === 'hr' ? '/hr/employees' : '/employee', roles: ['admin', 'hr'] },
   {
     label: 'Employee Request',
     icon: FileText,
     roles: ['admin', 'hr'],
     children: [
-      { label: 'Edit Request', path: (role) => role === 'admin' ? '/admin/edit-requests' : '/hr/edit-requests' },
-      { label: 'Leave Request', path: (role) => role === 'admin' ? '/admin/leave-requests' : '/hr/leave-requests' },
+      { label: 'Edit Request', path: (role: string) => role === 'admin' ? '/admin/edit-requests' : '/hr/edit-requests' },
+      { label: 'Leave Request', path: (role: string) => role === 'admin' ? '/admin/leave-requests' : '/hr/leave-requests' },
     ],
   },
-  { label: 'Hubs', icon: MapPin, path: (role) => role === 'admin' ? '/admin/hubs' : role === 'hr' ? '/hr/hubs' : '/employee', roles: ['admin', 'hr'] },
-  { label: 'Access Control', icon: Lock, path: (role) => role === 'admin' ? '/admin/access-control' : role === 'hr' ? '/hr/access-control' : '/employee', roles: ['admin', 'hr'] },
-  { label: 'Attendance', icon: Clock, path: (role) => role === 'employee' ? '/employee/attendance' : role === 'hr' ? '/hr/attendance' : '/admin/attendance', roles: ['admin', 'hr'] },
-  { label: 'Payroll', icon: DollarSign, path: (role) => role === 'admin' ? '/admin/payslip' : role === 'hr' ? '/hr/payslip' : '/employee', roles: ['admin', 'hr'] },
-  { label: 'Activity Logs', icon: Activity, path: (role) => role === 'admin' ? '/admin/activity-logs' : role === 'hr' ? '/hr/activity-logs' : '/employee', roles: ['admin', 'hr'] },
-  { label: 'Security Alerts', icon: AlertTriangle, path: (role) => role === 'admin' ? '/admin/security-alerts' : role === 'hr' ? '/hr/security-alerts' : '/employee', roles: ['admin', 'hr'] },
+  { label: 'Hubs', icon: MapPin, path: (role: string) => role === 'admin' ? '/admin/hubs' : role === 'hr' ? '/hr/hubs' : '/employee', roles: ['admin', 'hr'] },
+  { label: 'Access Control', icon: Lock, path: (role: string) => role === 'admin' ? '/admin/access-control' : role === 'hr' ? '/hr/access-control' : '/employee', roles: ['admin', 'hr'] },
+  { label: 'Attendance', icon: Clock, path: (role: string) => role === 'employee' ? '/employee/attendance' : role === 'hr' ? '/hr/attendance' : '/admin/attendance', roles: ['admin', 'hr'] },
+  { label: 'Payroll', icon: DollarSign, path: (role: string) => role === 'admin' ? '/admin/payslip' : role === 'hr' ? '/hr/payslip' : '/employee', roles: ['admin', 'hr'] },
+  { label: 'Activity Logs', icon: Activity, path: (role: string) => role === 'admin' ? '/admin/activity-logs' : role === 'hr' ? '/hr/activity-logs' : '/employee', roles: ['admin', 'hr'] },
+  { label: 'Security Alerts', icon: AlertTriangle, path: (role: string) => role === 'admin' ? '/admin/security-alerts' : role === 'hr' ? '/hr/security-alerts' : '/employee', roles: ['admin', 'hr'] },
 ];
 
 export const MobileBottomNav: React.FC = () => {
@@ -40,7 +40,7 @@ export const MobileBottomNav: React.FC = () => {
     <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-gray-700 bg-[#081120]/80 backdrop-blur-md md:hidden">
       {tabs.map((item) => {
         const Icon = item.icon as any;
-        const path = typeof item.path === 'function' ? item.path(normalizedRole) : item.path;
+        const path = (typeof item.path === 'function' ? item.path(normalizedRole) : item.path) as string;
         const active = isActive(path);
         return (
           <button

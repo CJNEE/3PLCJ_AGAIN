@@ -861,6 +861,8 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
             </div>
 
           </div>
-        </>
-);
+        </div>
+      )}
+    </>
+  );
 };

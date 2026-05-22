@@ -89,7 +89,7 @@ export const AdminDashboardMobile = () => {
               <LoadingSpinner />
             ) : activityLogsQuery.data && activityLogsQuery.data.length > 0 ? (
               <ul className="space-y-2 overflow-y-auto max-h-48">
-                {activityLogsQuery.data.map((log: any, idx) => (
+                {activityLogsQuery.data.map((log: any, idx: number) => (
                   <li key={idx} className="text-xs text-gray-200">
                     <span className="font-medium">{log.action}</span> – {log.description}
                   </li>
