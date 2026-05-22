@@ -260,7 +260,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
     );
   }
 
-  return ( <> <> <div className="hidden lg:block">
+  return ( <> <div className="hidden lg:block">
 
         {/* Total Hubs */}
         <Card className="flex flex-col items-center justify-center p-6 h-44 text-center">
@@ -861,11 +861,6 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
             </div>
 
           </div>
-        </div>
-      )}
-      </div>
-  </div>
-  );
+        </>
+);
 };
-
-
