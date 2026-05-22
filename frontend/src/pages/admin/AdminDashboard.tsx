@@ -12,6 +12,7 @@ import 'leaflet/dist/leaflet.css';
 import HubsEmployeeChart from '@/components/HubsEmployeeChart';
 import { calculateDistance, calculateTravelTime, formatTravelTime, getUserLocation } from '@/utils/locationUtils';
 import { Sidebar } from '@/components/Sidebar';
+import { AdminDashboardMobile } from '@/pages/admin/AdminDashboardMobile';
 // Color mappings for status
 const STATUS_COLORS: Record<string, string> = {
   'Active': '#10B981',      // green
@@ -259,7 +260,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
     );
   }
 
-  return (
+  return ( <> <> <div className="hidden lg:block">
 
         {/* Total Hubs */}
         <Card className="flex flex-col items-center justify-center p-6 h-44 text-center">
@@ -567,6 +568,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
       </Card>
 
       {/* Employee Details Modal */}
+    <div className="lg:hidden"><AdminDashboardMobile /></div>
       {showEmployeeModal && selectedEmployee && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && setShowEmployeeModal(false)}>
           
