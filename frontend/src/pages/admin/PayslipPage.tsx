@@ -76,6 +76,8 @@ export const PayslipPage = () => {
   const createPayrollMutation = useCreatePayroll();
 
   const payroll = normalizeApiResponse(payrollData);
+
+  
   const hubs = normalizeApiResponse(hubsData);
   const employees = normalizeApiResponse(employeesData);
 
@@ -122,27 +124,20 @@ export const PayslipPage = () => {
         // Try to update existing record
         try {
           const updatedPayroll = await updatePayrollMutation.mutateAsync({ id: payload.id, data: payload });
-          // success('Payroll updated successfully');
           setSelectedPayslip(updatedPayroll);
         } catch (updateErr: any) {
           if (updateErr?.response?.status === 404) {
-            // Fallback to create if not found
             const created = await createPayrollMutation.mutateAsync(payload);
-            // success('Payroll created successfully');
             setSelectedPayslip(created);
           } else {
             throw updateErr;
           }
         }
       } else {
-        // No ID, create new payroll
         const created = await createPayrollMutation.mutateAsync(payload);
-        // success('Payroll created successfully');
         setSelectedPayslip(created);
       }
       setIsModalOpen(false);
-    } catch (err: any) {
-      // error(err?.response?.data?.detail || err?.message || 'Failed to save payroll');
     } finally {
       setIsLoading(false);
     }
@@ -408,8 +403,8 @@ export const PayslipPage = () => {
               <input type="date" value={startDate} onChange={(e) => handleStartDateChange(e.target.value)} className="input-field w-full" />
             </div>
             <div className="flex-1">
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">End Date</label>
-              <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="input-field w-full" />
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">End Date (auto)</label>
+              <input type="date" value={endDate} readOnly className="input-field w-full bg-gray-100 dark:bg-gray-800" />
             </div>
             <div className="flex-1">
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Year</label>
@@ -479,9 +474,7 @@ export const PayslipPage = () => {
                             <td className="px-4 py-3">
                               <div className="flex flex-row flex-wrap gap-2 justify-center items-center">
                                 <button onClick={() => { setSelectedPayslip(record); setIsModalOpen(true); }} className="btn btn-primary !py-1.5 !px-3 text-xs">View</button>
-                                {isAdmin && (
-                                  <button onClick={async () => { const updated = { ...record, status: 'approved' }; await handleSave(updated); }} className="btn btn-success bg-green-600 hover:bg-green-700 text-white !py-1.5 !px-3 text-xs">Approve</button>
-                                )}
+
                                 <button onClick={() => handleDownload(hubName)} className="btn btn-secondary !py-1.5 !px-3 text-xs">Download</button>
                               </div>
                             </td>

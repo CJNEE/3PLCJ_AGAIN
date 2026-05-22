@@ -137,7 +137,7 @@ export const Sidebar = ({ open, onToggle, hideThemeToggle = false }: SidebarProp
     },
 
     {
-      label: 'Payslip',
+      label: 'Payroll',
       icon: DollarSign,
       path:
         normalizedRole === 'admin'
