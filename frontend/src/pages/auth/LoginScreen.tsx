@@ -89,7 +89,7 @@ export const LoginScreen = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-200 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-indigo-100 via-indigo-200 to-indigo-300 flex items-center justify-center p-4">
       <div className="w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row">
         {/* Left Side - Logo (desktop) */}
         <div className="hidden md:flex w-1/2 bg-white items-center justify-center p-8">
@@ -101,8 +101,8 @@ export const LoginScreen = () => {
         </div>
 
         {/* Right Side - Login Form */}
-        <div className="w-full md:w-1/2 bg-red-700 flex flex-col items-center justify-center p-8 md:p-12">
-          <div className="w-full max-w-sm">
+        <div className="w-full md:w-1/2 bg-white flex flex-col items-center justify-center p-8 md:p-12">
+          <div className="w-full max-w-sm bg-white rounded-lg shadow-lg p-6">
             {/* Mobile logo — same asset as desktop */}
             <div className="flex md:hidden justify-center mb-6">
               <img
@@ -111,11 +111,10 @@ export const LoginScreen = () => {
                 className="max-w-[200px] h-auto object-contain"
               />
             </div>
-            <h1 className="text-4xl font-bold text-white text-center mb-8">LOGIN</h1>
-
+            <h1 className="text-3xl font-bold text-gray-800 text-center mb-6">Login</h1>
             <form onSubmit={handleLogin} className="space-y-5" autoComplete="on">
               {loginError && (
-                <div className="bg-red-900 border border-red-500 text-white px-4 py-3 rounded">
+                <div className="bg-red-100 border border-red-200 text-red-800 px-4 py-3 rounded">
                   {loginError}
                 </div>
               )}
