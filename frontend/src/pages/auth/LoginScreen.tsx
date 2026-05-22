@@ -14,7 +14,7 @@ import { useLogin } from '@/hooks/useQueries';
 import { useToast } from '@/hooks/useToast';
 
 import logo3pl from '@/images/3pl1.png';
-import mobileLogoLogin from '@/images/MOBILELOGOLOGIN.png';
+import mobileLogoLogin from '@/images/3pl1.png';
 
 export const LoginScreen = () => {
   const navigate = useNavigate();
