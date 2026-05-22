@@ -13,6 +13,7 @@ import HubsEmployeeChart from '@/components/HubsEmployeeChart';
 import { calculateDistance, calculateTravelTime, formatTravelTime, getUserLocation } from '@/utils/locationUtils';
 import { Sidebar } from '@/components/Sidebar';
 import { AdminDashboardMobile } from '@/pages/admin/AdminDashboardMobile';
+import type { Employee, Hub } from '@/types';
 // Color mappings for status
 const STATUS_COLORS: Record<string, string> = {
   'Active': '#10B981',      // green
@@ -34,9 +35,26 @@ export const AdminDashboard = () => {
   const [searchHubTerm, setSearchHubTerm] = useState('');
   const [hubFilter, setHubFilter] = useState<number | null>(null);
   const [searchLocationTerm, setSearchLocationTerm] = useState('');
-  const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
+
+  type DirectionsState = {
+    userLocation: [number, number] | null;
+    selectedHub: (Hub & { coordinates: [number, number] }) | null;
+    distance: number | null;
+    travelTimes: {
+      walk: number;
+      ride: number;
+      car: number;
+    } | null;
+    isLoadingLocation: boolean;
+    error: string | null;
+  };
+
+  const [selectedEmployee, setSelectedEmployee] = useState<
+    | (Partial<Employee> & { id?: string | number })
+    | null
+  >(null);
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
-  const [directions, setDirections] = useState<any>({
+  const [directions, setDirections] = useState<DirectionsState>({
     userLocation: null,
     selectedHub: null,
     distance: null,
@@ -88,7 +106,13 @@ export const AdminDashboard = () => {
   // Loading state
   const isLoading = employeesQuery.isLoading || hubsQuery.isLoading;
 
-function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords: (hub: any) => [number, number] }) {
+function FitBoundsComponent({
+  mapHubs,
+  getCoords,
+}: {
+  mapHubs: Hub[];
+  getCoords: (hub: Hub) => [number, number];
+}) {
   const map = useMap();
   useEffect(() => {
     if (mapHubs && mapHubs.length > 0) {
@@ -103,25 +127,37 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
 
 // Process data
   const employees = useMemo(() => {
-    const normalized = normalizeApiResponse(employeesQuery.data);
-    return normalized.filter((emp: any) =>
-      emp.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.employee_id.toLowerCase().includes(searchTerm.toLowerCase())
+    const normalized = normalizeApiResponse(employeesQuery.data) as Array<{
+      id?: number | string;
+      full_name: string;
+      employee_id: string;
+      position?: string;
+      hub_name?: string;
+      status?: string;
+      hub?: number | string;
+    }>;
+
+    return normalized.filter(
+      (emp) =>
+        emp.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        emp.employee_id.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [employeesQuery.data, searchTerm]);
 
-  const hubs = normalizeApiResponse(hubsQuery.data);
+  const hubs = normalizeApiResponse(hubsQuery.data) as Hub[];
 
   // Calculate stats
-  const allEmployees = normalizeApiResponse(employeesQuery.data);
+  const allEmployees = normalizeApiResponse(employeesQuery.data) as Employee[];
   const totalEmployees = allEmployees.length;
-  const activeEmployees = allEmployees.filter((emp: any) => emp.status === 'Active').length;
+  const activeEmployees = allEmployees.filter((emp) => emp.status === 'Active').length;
 
   // Employment type distribution
   const employmentTypeData = useMemo(() => {
     const types = {} as Record<string, number>;
-    allEmployees.forEach((emp: any) => {
-      types[emp.employment_type] = (types[emp.employment_type] || 0) + 1;
+    allEmployees.forEach((emp) => {
+      const key = emp.employment_type;
+      if (!key) return;
+      types[key] = (types[key] || 0) + 1;
     });
     return Object.entries(types).map(([name, value]) => ({ name, value }));
   }, [allEmployees]);
@@ -129,42 +165,49 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
   // Employee status distribution
   const statusData = useMemo(() => {
     const statuses = {} as Record<string, number>;
-    allEmployees.forEach((emp: any) => {
-      statuses[emp.status] = (statuses[emp.status] || 0) + 1;
+    allEmployees.forEach((emp) => {
+      const status = emp.status;
+      if (!status) return;
+      statuses[status] = (statuses[status] || 0) + 1;
     });
     return Object.entries(statuses).map(([name, value]) => ({ name, value }));
   }, [allEmployees]);
 
   // Hub-specific employee distribution with status breakdown
   const hubEmployeeData = useMemo(() => {
-    const hubMap = {} as Record<string, { Active: number; AWOL: number; Blacklist: number; Resign: number }>;
-    
-    allEmployees.forEach((emp: any) => {
+    const hubMap: Record<
+      string,
+      { Active: number; AWOL: number; Blacklist: number; Resign: number }
+    > = {};
+
+    allEmployees.forEach((emp) => {
       const hubName = emp.hub_name || 'Unknown Hub';
       if (!hubMap[hubName]) {
         hubMap[hubName] = { Active: 0, AWOL: 0, Blacklist: 0, Resign: 0 };
       }
       const status = emp.status || 'Active';
       if (status !== 'Inactive') {
-        hubMap[hubName][status as keyof typeof hubMap[string]] = (hubMap[hubName][status as keyof typeof hubMap[string]] || 0) + 1;
+        const key = status as 'Active' | 'AWOL' | 'Blacklist' | 'Resign';
+        hubMap[hubName][key] = (hubMap[hubName][key] || 0) + 1;
       }
     });
 
-    return Object.entries(hubMap)
-      .map(([name, statuses]) => ({
-        name: name.split(' ').slice(0, 3).join(' '),
-        Active: statuses.Active || 0,
-        AWOL: statuses.AWOL || 0,
-        Blacklist: statuses.Blacklist || 0,
-        Resign: statuses.Resign || 0,
-      }));
+    return Object.entries(hubMap).map(([name, statuses]) => ({
+      name: name.split(' ').slice(0, 3).join(' '),
+      Active: statuses.Active || 0,
+      AWOL: statuses.AWOL || 0,
+      Blacklist: statuses.Blacklist || 0,
+      Resign: statuses.Resign || 0,
+    }));
   }, [allEmployees]);
 
   // Workforce status distribution
   const workforceStatusData = useMemo(() => {
     const positions = {} as Record<string, number>;
-    allEmployees.forEach((emp: any) => {
-      positions[emp.position] = (positions[emp.position] || 0) + 1;
+    allEmployees.forEach((emp) => {
+      const key = emp.position;
+      if (!key) return;
+      positions[key] = (positions[key] || 0) + 1;
     });
     return Object.entries(positions).map(([name, value]) => ({ name, count: value }));
   }, [allEmployees]);
@@ -183,7 +226,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
     'batangas': [13.7563, 121.0437],
   };
 
-  const getHubCoordinates = (hub: any): [number, number] => {
+  const getHubCoordinates = (hub: Hub): [number, number] => {
     if (hub.latitude && hub.longitude) {
       return [hub.latitude, hub.longitude];
     }
@@ -197,11 +240,11 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
   };
 
   // Direction handlers
-  const handleMarkerClick = (hub: any) => {
+  const handleMarkerClick = (hub: Hub) => {
     const coords = getHubCoordinates(hub);
-    setDirections((prev: any) => ({
+    setDirections((prev) => ({
       ...prev,
-      selectedHub: { ...hub, coordinates: coords },
+      selectedHub: { ...(hub as Hub), coordinates: coords },
       distance: null,
       travelTimes: null,
       error: null,
@@ -209,7 +252,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
   };
 
   const handleGetDirection = async () => {
-    setDirections((prev: any) => ({
+    setDirections((prev) => ({
       ...prev,
       isLoadingLocation: true,
       error: null,
@@ -217,6 +260,9 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
 
     try {
       const userLoc = await getUserLocation();
+      if (!directions.selectedHub) {
+        throw new Error('No hub selected');
+      }
       const hubCoords = directions.selectedHub.coordinates;
       const dist = calculateDistance(userLoc[0], userLoc[1], hubCoords[0], hubCoords[1]);
       const times = {
@@ -225,18 +271,21 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
         car: calculateTravelTime(dist, 'car'),
       };
 
-      setDirections((prev: any) => ({
+      setDirections((prev) => ({
         ...prev,
         userLocation: userLoc,
         distance: dist,
         travelTimes: times,
         isLoadingLocation: false,
+        error: null,
       }));
-    } catch (error: any) {
-      setDirections((prev: any) => ({
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to get location. Please enable location services.';
+      setDirections((prev) => ({
         ...prev,
         isLoadingLocation: false,
-        error: error.message || 'Failed to get location. Please enable location services.',
+        error: message,
       }));
     }
   };
@@ -270,8 +319,8 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
       <div className="lg:ml-64">
         <div className="hidden lg:block">
 
-          {/* Total Hubs */}
-          <Card className="flex flex-col items-center justify-center p-6 h-44 text-center">
+        {/* Total Hubs */}
+        <Card className="flex flex-col items-center justify-center p-6 h-44 text-center">
           <p className="text-gray-600 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider">Total Hubs</p>
           <p className="text-7xl font-black text-red-700 dark:text-white mt-4 leading-none text-center w-full">{hubs.length}</p>
         </Card>
@@ -396,13 +445,13 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 />
                 {hubs
-                  .filter((hub: any) => 
+                  .filter((hub) => 
                     !searchLocationTerm || 
                     hub.name?.toLowerCase().includes(searchLocationTerm.toLowerCase()) ||
                     hub.location?.toLowerCase().includes(searchLocationTerm.toLowerCase()) ||
                     hub.city?.toLowerCase().includes(searchLocationTerm.toLowerCase())
                   )
-                  .map((hub: any) => {
+                  .map((hub) => {
                     // Use hub coordinates if available, otherwise use a default based on city
                     let lat = hub.latitude || 12.5797;
                     let lng = hub.longitude || 124.0758;
@@ -437,7 +486,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
                             <p className="font-semibold">{hub.name}</p>
                             <p className="text-gray-600 dark:text-gray-300">{hub.location || hub.city}</p>
                             <p className="text-xs text-gray-500 mt-1">
-                              {allEmployees.filter((emp: any) => emp.hub === hub.id).length} employees
+                              {allEmployees.filter((emp) => emp.hub === hub.id).length} employees
                             </p>
                           </div>
                         </Popup>
@@ -491,7 +540,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
                   </tr>
                 </thead>
                 <tbody>
-                  {employees.slice(0, 10).map((emp: any) => (
+                  {employees.slice(0, 10).map((emp) => (
                     <tr key={emp.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
                       <td className="px-4 py-3 font-medium">{emp.full_name}</td>
                       <td className="px-4 py-3">{emp.position}</td>
@@ -550,14 +599,14 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
                 </thead>
                 <tbody>
                   {hubs
-                    .filter((hub: any) =>
+                    .filter((hub) =>
                       !searchHubTerm ||
                       hub.name?.toLowerCase().includes(searchHubTerm.toLowerCase()) ||
                       hub.location?.toLowerCase().includes(searchHubTerm.toLowerCase()) ||
                       hub.city?.toLowerCase().includes(searchHubTerm.toLowerCase())
                     )
-                    .map((hub: any) => {
-                      const hubEmployeeCount = allEmployees.filter((emp: any) => emp.hub === hub.id).length;
+                    .map((hub) => {
+                      const hubEmployeeCount = allEmployees.filter((emp) => emp.hub === hub.id).length;
                       return (
                         <tr key={hub.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
                           <td className="px-4 py-3 font-medium">{hub.name}</td>
@@ -575,6 +624,8 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
         </div>
       </Card>
 
+      </div> {/* close hidden lg:block */}
+      
       {/* Employee Details Modal */}
     <div className="lg:hidden"><AdminDashboardMobile /></div>
       {showEmployeeModal && selectedEmployee && (
