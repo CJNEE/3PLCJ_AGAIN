@@ -21,7 +21,15 @@ body {
 ::-webkit-scrollbar-track {
   @apply bg-light-card dark:bg-dark-card;
 }
+/* Hide Scrollbar */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
 
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 ::-webkit-scrollbar-thumb {
   @apply bg-gray-400 dark:bg-gray-600 rounded-full hover:bg-gray-500 dark:hover:bg-gray-500;
 }

@@ -1,69 +1,123 @@
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import {
-  LayoutDashboard,
+  Home,
   Users,
-  Building2,
-  ClipboardList,
-  Settings,
+  MapPin,
+  FileText,
+  CalendarDays,
+  Lock,
+  Clock,
+  DollarSign,
+  Activity,
+  AlertTriangle,
 } from 'lucide-react';
 
 type BottomNavigationProps = {
   className?: string;
 };
 
-const navItems = [
-  {
-    label: 'Dashboard',
-    icon: LayoutDashboard,
-    path: '/admin/dashboard',
-  },
-  {
-    label: 'Employees',
-    icon: Users,
-    path: '/admin/employees',
-  },
-  {
-    label: 'Hubs',
-    icon: Building2,
-    path: '/admin/hubs',
-  },
-  {
-    label: 'Requests',
-    icon: ClipboardList,
-    path: '/admin/requests',
-  },
-  {
-    label: 'Settings',
-    icon: Settings,
-    path: '/admin/settings',
-  },
-];
-
 export const BottomNavigation = ({
   className = '',
 }: BottomNavigationProps) => {
+  const { user } = useAuth();
+
+  const rawRole = (user?.role || '').toString().trim().toLowerCase();
+
+  const normalizedRole =
+    rawRole.includes('admin')
+      ? 'admin'
+      : rawRole.includes('hr')
+      ? 'hr'
+      : rawRole;
+
+  const basePath =
+    normalizedRole === 'admin'
+      ? '/admin'
+      : normalizedRole === 'hr'
+      ? '/hr'
+      : '/employee';
+
+  const navItems = [
+    {
+      label: 'Dashboard',
+      icon: Home,
+      path: basePath,
+    },
+    {
+      label: 'Employees',
+      icon: Users,
+      path: `${basePath}/employees`,
+    },
+    {
+      label: 'Hubs',
+      icon: MapPin,
+      path: `${basePath}/hubs`,
+    },
+    {
+      label: 'Edit',
+      icon: FileText,
+      path: `${basePath}/edit-requests`,
+    },
+    {
+      label: 'Leave',
+      icon: CalendarDays,
+      path: `${basePath}/leave-requests`,
+    },
+    {
+      label: 'Access',
+      icon: Lock,
+      path: `${basePath}/access-control`,
+    },
+    {
+      label: 'Attendance',
+      icon: Clock,
+      path: `${basePath}/attendance`,
+    },
+    {
+      label: 'Payroll',
+      icon: DollarSign,
+      path: `${basePath}/payslip`,
+    },
+    {
+      label: 'Logs',
+      icon: Activity,
+      path: `${basePath}/activity-logs`,
+    },
+    {
+      label: 'Alerts',
+      icon: AlertTriangle,
+      path: `${basePath}/security-alerts`,
+    },
+  ];
+
   return (
     <>
-      {/* Mobile Bottom Navigation */}
+      {/* MOBILE ONLY */}
       <div
         className={`
-          fixed bottom-0 left-0 right-0 z-[9999]
-          md:hidden
-          px-3 pb-3
+          fixed bottom-0 left-0 right-0
+          z-[9999]
+          lg:hidden
           ${className}
         `}
       >
         <div
           className="
-            bg-white/90 dark:bg-gray-900/90
-            backdrop-blur-xl
-            border border-gray-200 dark:border-gray-800
+            bg-white/95 dark:bg-gray-900/95
+            backdrop-blur-2xl
+            border-t border-gray-200 dark:border-gray-800
             shadow-2xl
-            rounded-3xl
-            px-2 py-2
           "
         >
-          <div className="grid grid-cols-5 items-center">
+          <div
+            className="
+              flex items-center
+              overflow-x-auto
+              scrollbar-hide
+              px-2 py-2 gap-2
+            "
+          >
             {navItems.map((item) => {
               const Icon = item.icon;
 
@@ -71,17 +125,18 @@ export const BottomNavigation = ({
                 <NavLink
                   key={item.path}
                   to={item.path}
+                  end={item.path === basePath}
                   className={({ isActive }) =>
                     `
+                      relative
                       flex flex-col items-center justify-center
-                      gap-1
-                      py-2 px-1
+                      min-w-[72px]
+                      px-3 py-2
                       rounded-2xl
                       transition-all duration-300
-                      relative
                       ${
                         isActive
-                          ? 'text-red-700 dark:text-red-500'
+                          ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
                           : 'text-gray-500 dark:text-gray-400'
                       }
                     `
@@ -89,46 +144,22 @@ export const BottomNavigation = ({
                 >
                   {({ isActive }) => (
                     <>
-                      {/* Active Background */}
-                      {isActive && (
-                        <div
-                          className="
-                            absolute inset-0
-                            rounded-2xl
-                            bg-red-50 dark:bg-red-900/20
-                            border border-red-100 dark:border-red-800/40
-                          "
-                        />
-                      )}
-
-                      {/* Icon */}
-                      <div className="relative z-10">
-                        <Icon
-                          size={22}
-                          className={`
-                            transition-all duration-300
-                            ${isActive ? 'scale-110' : 'scale-100'}
-                          `}
-                        />
-                      </div>
-
-                      {/* Label */}
-                      <span
+                      <Icon
+                        size={20}
                         className={`
-                          relative z-10
-                          text-[10px]
-                          font-bold
-                          tracking-wide
+                          mb-1 transition-all duration-300
+                          ${isActive ? 'scale-110' : ''}
                         `}
-                      >
+                      />
+
+                      <span className="text-[10px] font-bold whitespace-nowrap">
                         {item.label}
                       </span>
 
-                      {/* Active Indicator */}
                       {isActive && (
                         <div
                           className="
-                            absolute -top-1
+                            absolute top-1
                             w-1.5 h-1.5
                             rounded-full
                             bg-red-600
@@ -144,8 +175,8 @@ export const BottomNavigation = ({
         </div>
       </div>
 
-      {/* Spacer so content won't be hidden */}
-      <div className="h-24 md:hidden" />
+      {/* SPACER */}
+      <div className="h-24 lg:hidden" />
     </>
   );
 };

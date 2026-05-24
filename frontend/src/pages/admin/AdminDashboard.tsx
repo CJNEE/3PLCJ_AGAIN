@@ -262,13 +262,16 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
 
   return (
   <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
-    
+
+  {/* DESKTOP SIDEBAR ONLY */}
+  <div className="hidden lg:block">
     <Sidebar
       open={sidebarOpen}
       onToggle={() => setSidebarOpen(!sidebarOpen)}
-    />  
+    />
+  </div>
 
-    <div className="p-4 lg:p-6 lg:ml-64 space-y-6 pb-24 lg:pb-6">
+    <div className="p-4 lg:p-6 lg:ml-64 space-y-6 pb-32 lg:pb-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
