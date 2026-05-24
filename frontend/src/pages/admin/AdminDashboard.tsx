@@ -12,6 +12,7 @@ import 'leaflet/dist/leaflet.css';
 import HubsEmployeeChart from '@/components/HubsEmployeeChart';
 import { calculateDistance, calculateTravelTime, formatTravelTime, getUserLocation } from '@/utils/locationUtils';
 import { Sidebar } from '@/components/Sidebar';
+import BottomNavigation from '@/components/BottomNavigation';
 // Color mappings for status
 const STATUS_COLORS: Record<string, string> = {
   'Active': '#10B981',      // green
@@ -267,7 +268,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
       onToggle={() => setSidebarOpen(!sidebarOpen)}
     />  
 
-    <div className="p-4 lg:p-6 lg:ml-64 space-y-6">
+    <div className="p-4 lg:p-6 lg:ml-64 space-y-6 pb-24 lg:pb-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -343,8 +344,8 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
           {employmentTypeData.length > 0 ? (
             <div className="space-y-4">
               {employmentTypeData.map((entry, index) => {
-                  const maxVal = Math.max(...employmentTypeData.map((d) => d.value), 1);
-                  const barPct = (entry.value / maxVal) * 100;
+                  const total = employmentTypeData.reduce((sum, d) => sum + d.value, 0);
+                  const barPct = total ? (entry.value / total) * 100 : 0;
                   return (
                 <div key={index} className="flex flex-col gap-2">
                   <div className="flex justify-between items-center">
@@ -498,7 +499,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
           </div>
 
           {employees.length > 0 ? (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
               <table className="w-full text-sm">
                 <thead className="bg-red-700 text-white">
                   <tr>
@@ -558,7 +559,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
           </div>
 
           {hubs.length > 0 ? (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
               <table className="w-full text-sm">
                 <thead className="bg-red-700 text-white">
                   <tr>
@@ -678,35 +679,35 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">First Name</p>
-                        <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.firstname || 'N/A'}</p>
+                        <p className="text-sm font-semibold text-gray-800 dark:text-white">{selectedEmployee.firstname || 'N/A'}</p>
                       </div>
                       <div>
                         <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Last Name</p>
-                        <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.lastname || 'N/A'}</p>
+                        <p className="text-sm font-semibold text-gray-800 dark:text-white">{selectedEmployee.lastname || 'N/A'}</p>
                       </div>
                       <div>
                         <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Middle Initial</p>
-                        <p className="text-sm font-semibold text-gray-850 dark:text-white">{selectedEmployee.middle_initial || 'N/A'}</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">{selectedEmployee.middle_initial || 'N/A'}</p>
                       </div>
                       <div>
                         <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Gender</p>
-                        <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.gender || 'N/A'}</p>
+                        <p className="text-sm font-semibold text-gray-800 dark:text-white">{selectedEmployee.gender || 'N/A'}</p>
                       </div>
                       <div>
                         <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Date of Birth</p>
-                        <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.date_of_birth || 'N/A'}</p>
+                        <p className="text-sm font-semibold text-gray-800 dark:text-white">{selectedEmployee.date_of_birth || 'N/A'}</p>
                       </div>
                       <div>
                         <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Place of Birth</p>
-                        <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.place_of_birth || 'N/A'}</p>
+                        <p className="text-sm font-semibold text-gray-800 dark:text-white">{selectedEmployee.place_of_birth || 'N/A'}</p>
                       </div>
                       <div>
                         <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Nationality</p>
-                        <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.nationality || 'N/A'}</p>
+                        <p className="text-sm font-semibold text-gray-800 dark:text-white">{selectedEmployee.nationality || 'N/A'}</p>
                       </div>
                       <div>
                         <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Marital Status</p>
-                        <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.marital_status || 'N/A'}</p>
+                        <p className="text-sm font-semibold text-gray-800 dark:text-white">{selectedEmployee.marital_status || 'N/A'}</p>
                       </div>
                     </div>
                   </div>
@@ -721,29 +722,29 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Email Address</p>
-                          <p className="text-sm font-semibold text-gray-805 dark:text-white break-all">{selectedEmployee.email_address || 'N/A'}</p>
+                          <p className="text-sm font-semibold text-gray-800 dark:text-white break-all">{selectedEmployee.email_address || 'N/A'}</p>
                         </div>
                         <div>
                           <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Phone Number</p>
-                          <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.phone_number || 'N/A'}</p>
+                          <p className="text-sm font-semibold text-gray-800 dark:text-white">{selectedEmployee.phone_number || 'N/A'}</p>
                         </div>
                       </div>
                       <div>
                         <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Current Address</p>
-                        <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.current_address || 'N/A'}</p>
+                        <p className="text-sm font-semibold text-gray-800 dark:text-white">{selectedEmployee.current_address || 'N/A'}</p>
                       </div>
                       <div>
                         <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Permanent Address</p>
-                        <p className="text-sm font-semibold text-gray-850 dark:text-white">{selectedEmployee.permanent_address || 'N/A'}</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">{selectedEmployee.permanent_address || 'N/A'}</p>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-gray-100 dark:border-gray-800">
                         <div>
                           <p className="text-[10px] font-black text-gray-400 dark:text-gray-505 uppercase tracking-widest">Emergency Contact Name</p>
-                          <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.emergency_contact_name || 'N/A'}</p>
+                          <p className="text-sm font-semibold text-gray-800 dark:text-white">{selectedEmployee.emergency_contact_name || 'N/A'}</p>
                         </div>
                         <div>
                           <p className="text-[10px] font-black text-gray-400 dark:text-gray-550 uppercase tracking-widest">Emergency Contact Phone</p>
-                          <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.emergency_contact_phone || 'N/A'}</p>
+                          <p className="text-sm font-semibold text-gray-800 dark:text-white">{selectedEmployee.emergency_contact_phone || 'N/A'}</p>
                         </div>
                       </div>
                     </div>
@@ -761,27 +762,27 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Position</p>
-                        <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.position || 'N/A'}</p>
+                        <p className="text-sm font-semibold text-gray-800 dark:text-white">{selectedEmployee.position || 'N/A'}</p>
                       </div>
                       <div>
                         <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Employment Type</p>
-                        <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.employment_type || 'N/A'}</p>
+                        <p className="text-sm font-semibold text-gray-800 dark:text-white">{selectedEmployee.employment_type || 'N/A'}</p>
                       </div>
                       <div>
                         <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Hub</p>
-                        <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.hub_name || 'N/A'}</p>
+                        <p className="text-sm font-semibold text-gray-800 dark:text-white">{selectedEmployee.hub_name || 'N/A'}</p>
                       </div>
                       <div>
                         <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Hired Date</p>
-                        <p className="text-sm font-semibold text-gray-855 dark:text-white">{selectedEmployee.hired_date || 'N/A'}</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">{selectedEmployee.hired_date || 'N/A'}</p>
                       </div>
                       <div>
                         <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Employee ID</p>
-                        <p className="text-sm font-semibold text-gray-850 dark:text-white">{selectedEmployee.employee_id || 'N/A'}</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">{selectedEmployee.employee_id || 'N/A'}</p>
                       </div>
                       <div>
                         <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">JTP Code</p>
-                        <p className="text-sm font-semibold text-gray-850 dark:text-white">{selectedEmployee.jtp_code || 'N/A'}</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">{selectedEmployee.jtp_code || 'N/A'}</p>
                       </div>
                     </div>
                   </div>
@@ -795,19 +796,19 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">TIN</p>
-                        <p className="text-sm font-semibold text-gray-850 dark:text-white">{selectedEmployee.tin || 'N/A'}</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">{selectedEmployee.tin || 'N/A'}</p>
                       </div>
                       <div>
                         <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">SSS</p>
-                        <p className="text-sm font-semibold text-gray-850 dark:text-white">{selectedEmployee.sss || 'N/A'}</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">{selectedEmployee.sss || 'N/A'}</p>
                       </div>
                       <div>
                         <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">PhilHealth</p>
-                        <p className="text-sm font-semibold text-gray-850 dark:text-white">{selectedEmployee.philhealth || 'N/A'}</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">{selectedEmployee.philhealth || 'N/A'}</p>
                       </div>
                       <div>
                         <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">PAG-IBIG</p>
-                        <p className="text-sm font-semibold text-gray-850 dark:text-white">{selectedEmployee.pagibig || 'N/A'}</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">{selectedEmployee.pagibig || 'N/A'}</p>
                       </div>
                     </div>
                   </div>
@@ -872,11 +873,11 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Clock In Time</p>
-                          <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.latest_clock_in_out.clock_in || 'N/A'}</p>
+                          <p className="text-sm font-semibold text-gray-800 dark:text-white">{selectedEmployee.latest_clock_in_out.clock_in || 'N/A'}</p>
                         </div>
                         <div>
                           <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Clock Out Time</p>
-                          <p className="text-sm font-semibold text-gray-805 dark:text-white">{selectedEmployee.latest_clock_in_out.clock_out || 'N/A'}</p>
+                          <p className="text-sm font-semibold text-gray-800 dark:text-white">{selectedEmployee.latest_clock_in_out.clock_out || 'N/A'}</p>
                         </div>
                       </div>
                     </div>
@@ -888,7 +889,10 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
 
           </div>
         </div>
-      )}
+            )}
+
+      <BottomNavigation />
+
       </div>
   </div>
   );
