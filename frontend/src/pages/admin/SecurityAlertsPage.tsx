@@ -114,10 +114,13 @@ export const SecurityAlertsPage = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
-        <Sidebar
-          open={sidebarOpen}
-          onToggle={() => setSidebarOpen(!sidebarOpen)}
-        />
+        {/* DESKTOP SIDEBAR ONLY */}
+        <div className="hidden lg:block">
+          <Sidebar
+            open={sidebarOpen}
+            onToggle={() => setSidebarOpen(!sidebarOpen)}
+          />
+        </div>
 
         <div className="p-4 lg:p-6 lg:ml-64 flex items-center justify-center min-h-screen">
           <LoadingSpinner />
@@ -128,12 +131,15 @@ export const SecurityAlertsPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
-      <Sidebar
-        open={sidebarOpen}
-        onToggle={() => setSidebarOpen(!sidebarOpen)}
-      />
+      {/* DESKTOP SIDEBAR ONLY */}
+      <div className="hidden lg:block">
+        <Sidebar
+          open={sidebarOpen}
+          onToggle={() => setSidebarOpen(!sidebarOpen)}
+        />
+      </div>
 
-      <div className="p-4 lg:p-6 lg:ml-64 space-y-6">
+      <div className="p-4 lg:p-6 lg:ml-64 space-y-6 pb-32 lg:pb-6">
         {/* Header */}
         <div className="flex items-center gap-3">
           <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg">
@@ -398,7 +404,9 @@ export const SecurityAlertsPage = () => {
           description="All is secure! No alerts match your current filters."
         />
       )}
+      </div>
+
+      {/* Mobile bottom navigation */}
     </div>
-  </div>
   );
 };

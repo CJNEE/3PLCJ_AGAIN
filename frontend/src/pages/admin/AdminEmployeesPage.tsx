@@ -14,9 +14,14 @@ export const AdminEmployeesPage = () => {
   if (showAdd) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
-        <Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+        {/* DESKTOP SIDEBAR ONLY */}
+        <div className="hidden lg:block">
+          <Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+        </div>
 
-        <div className="p-4 lg:p-6 lg:ml-64">
+        <div className="p-4 lg:p-6 lg:ml-64 pb-32 lg:pb-6">
+          {/* Mobile bottom navigation */}
+
           <AddEmployee onClose={() => setShowAdd(false)} onCancel={() => setShowAdd(false)} onCreated={() => setShowAdd(false)} />
         </div>
       </div>
@@ -25,11 +30,17 @@ export const AdminEmployeesPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
-      <Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+      {/* DESKTOP SIDEBAR ONLY */}
+      <div className="hidden lg:block">
+        <Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+      </div>
 
-      <div className="p-4 lg:p-6 lg:ml-64 space-y-6">
+      <div className="p-4 lg:p-6 lg:ml-64 space-y-6 pb-32 lg:pb-6">
+        {/* Mobile bottom navigation */}
+
         <div className="flex items-center justify-between">
           <div>
+
             <h1 className="text-3xl font-bold mb-2">Employee Management</h1>
             <p className="text-gray-600 dark:text-gray-400">Manage employees and their information</p>
           </div>
