@@ -98,146 +98,93 @@ export const BottomNavigation = ({
       {/* MOBILE NAV */}
       <div
         className={`
-          fixed bottom-0 left-0 right-0
+          fixed bottom-4 left-0 right-0
           z-[9999]
           lg:hidden
-          px-3 pb-3
+          flex justify-center
+          px-3
           ${className}
         `}
       >
         <div
           className="
             relative
+            w-full max-w-[540px]
             overflow-x-auto
             scrollbar-hide
-            rounded-[28px]
-            border border-white/10
-            bg-white/75 dark:bg-[#111827]/80
-            backdrop-blur-2xl
-            shadow-[0_8px_30px_rgba(0,0,0,0.15)]
+            rounded-[32px]
+            border border-white/20
+            bg-white/70 dark:bg-[#111827]/70
+            backdrop-blur-3xl
+            shadow-[0_8px_40px_rgba(0,0,0,0.15)]
+            px-2 py-3
           "
         >
-          {/* Top Gradient Line */}
-          <div
-            className="
-              absolute top-0 inset-x-0 h-[1px]
-              bg-gradient-to-r
-              from-transparent
-              via-red-400/50
-              to-transparent
-            "
-          />
-
-          <div
-            className="
-              relative
-              flex items-center
-              gap-1.5
-              px-2 py-2
-              overflow-x-auto
-              scrollbar-hide
-            "
-          >
+          <div className="flex items-center gap-1 min-w-max">
             {navItems.map((item) => {
               const Icon = item.icon;
 
               const isActive =
-                location.pathname === item.path ||
-                (item.path !== basePath &&
-                  location.pathname.startsWith(item.path));
+                item.path === basePath
+                  ? location.pathname === item.path
+                  : location.pathname.startsWith(item.path);
 
               return (
                 <NavLink
                   key={item.path}
                   to={item.path}
-                  end={item.path === basePath}
-                  className="relative shrink-0"
+                  className="
+                    relative
+                    flex flex-col items-center justify-center
+                    min-w-[72px]
+                    h-[64px]
+                  "
                 >
                   <motion.div
-                    whileTap={{ scale: 0.92 }}
+                    whileTap={{ scale: 0.9 }}
+                    animate={{
+                      y: isActive ? -16 : 0,
+                    }}
                     transition={{
                       type: 'spring',
                       stiffness: 400,
-                      damping: 18,
+                      damping: 22,
                     }}
-                    className={`
-                      relative
-                      flex flex-col items-center justify-center
-                      min-w-[64px]
-                      px-2.5 py-2
-                      rounded-2xl
-                      transition-all duration-300
-                    `}
+                    className="relative flex flex-col items-center"
                   >
-                    {/* Sliding Active Background */}
+                    {/* ACTIVE BACKGROUND */}
                     {isActive && (
                       <motion.div
                         layoutId="bottom-nav-pill"
                         transition={{
                           type: 'spring',
-                          stiffness: 380,
-                          damping: 30,
+                          stiffness: 500,
+                          damping: 35,
                         }}
                         className="
-                          absolute inset-0
+                          absolute
+                          -top-1
+                          w-[58px]
+                          h-[58px]
                           rounded-2xl
                           bg-gradient-to-b
                           from-red-500
                           to-red-700
-                          shadow-[0_10px_25px_rgba(239,68,68,0.35)]
+                          shadow-[0_10px_25px_rgba(220,38,38,0.45)]
+                          border border-white/20
                         "
                       />
                     )}
 
-                    {/* Floating Circle */}
-                    <motion.div
-                      animate={{
-                        y: isActive ? -10 : 0,
-                        scale: isActive ? 1.08 : 1,
-                      }}
-                      transition={{
-                        type: 'spring',
-                        stiffness: 400,
-                        damping: 18,
-                      }}
+                    {/* ICON */}
+                    <div
                       className={`
                         relative z-10
                         flex items-center justify-center
-                        w-10 h-10
+                        w-[58px]
+                        h-[58px]
                         rounded-2xl
                         transition-all duration-300
-                        ${
-                          isActive
-                            ? `
-                              bg-white text-red-600
-                              shadow-[0_8px_20px_rgba(255,255,255,0.35)]
-                            `
-                            : `
-                              bg-transparent
-                              text-gray-500 dark:text-gray-400
-                            `
-                        }
-                      `}
-                    >
-                      <Icon size={19} strokeWidth={2.4} />
-                    </motion.div>
-
-                    {/* Label */}
-                    <motion.span
-                      animate={{
-                        opacity: isActive ? 1 : 0.7,
-                        y: isActive ? 2 : 0,
-                      }}
-                      transition={{
-                        duration: 0.25,
-                      }}
-                      className={`
-                        relative z-10
-                        text-[9px]
-                        font-extrabold
-                        tracking-wide
-                        mt-1
-                        whitespace-nowrap
                         ${
                           isActive
                             ? 'text-white'
@@ -245,19 +192,41 @@ export const BottomNavigation = ({
                         }
                       `}
                     >
-                      {item.label}
-                    </motion.span>
+                      <Icon
+                        size={22}
+                        className={`
+                          transition-all duration-300
+                          ${isActive ? 'scale-110' : ''}
+                        `}
+                      />
+                    </div>
 
-                    {/* Active Dot */}
+                    {/* LABEL */}
+                    <span
+                      className={`
+                        mt-1 text-[10px]
+                        font-bold tracking-wide
+                        transition-all duration-300
+                        ${
+                          isActive
+                            ? 'text-red-600 dark:text-red-400'
+                            : 'text-gray-500 dark:text-gray-400'
+                        }
+                      `}
+                    >
+                      {item.label}
+                    </span>
+
+                    {/* GLOW DOT */}
                     {isActive && (
                       <motion.div
-                        layoutId="bottom-nav-dot"
+                        layoutId="bottom-dot"
                         className="
                           absolute
-                          -bottom-1
+                          -bottom-2
                           w-1.5 h-1.5
                           rounded-full
-                          bg-white
+                          bg-red-500
                         "
                       />
                     )}
@@ -266,11 +235,23 @@ export const BottomNavigation = ({
               );
             })}
           </div>
+
+          {/* GLASS SHINE */}
+          <div
+            className="
+              pointer-events-none
+              absolute inset-0
+              rounded-[32px]
+              bg-gradient-to-b
+              from-white/30
+              to-transparent
+            "
+          />
         </div>
       </div>
 
-      {/* Spacer */}
-      <div className="h-24 lg:hidden" />
+      {/* SPACER */}
+      <div className="h-28 lg:hidden" />
     </>
   );
 };
