@@ -111,13 +111,17 @@ export const ActivityLogsPage = () => {
 }
 
   return (
-  <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
-    <Sidebar
-      open={sidebarOpen}
-      onToggle={() => setSidebarOpen(!sidebarOpen)}
-    />
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
+      {/* DESKTOP SIDEBAR ONLY */}
+      <div className="hidden lg:block">
+        <Sidebar
+          open={sidebarOpen}
+          onToggle={() => setSidebarOpen(!sidebarOpen)}
+        />
+      </div>
 
-    <div className="p-4 lg:p-6 lg:ml-64 space-y-6">
+      <div className="p-4 lg:p-6 lg:ml-64 space-y-6 pb-32 lg:pb-6">
+
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">

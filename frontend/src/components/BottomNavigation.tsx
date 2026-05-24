@@ -106,39 +106,35 @@ export const BottomNavigation = ({
         <div
           className="
             relative
-            overflow-hidden
-            rounded-[30px]
-
+            overflow-x-auto
+            scrollbar-hide
+            rounded-[2rem]
             border border-white/20
-            dark:border-gray-700/50
-
-            bg-white/80
-            dark:bg-gray-900/85
-
+            bg-white/80 dark:bg-gray-900/80
             backdrop-blur-2xl
-
-            shadow-[0_-10px_40px_rgba(0,0,0,0.18)]
-
-            before:absolute
-            before:inset-0
-            before:bg-gradient-to-r
-            before:from-red-500/5
-            before:via-transparent
-            before:to-red-500/5
+            shadow-[0_10px_40px_rgba(0,0,0,0.18)]
           "
         >
-          {/* TOP GLOW */}
-          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-red-500/60 to-transparent" />
+          {/* Gradient Glow */}
+          <div
+            className="
+              pointer-events-none
+              absolute inset-0
+              bg-gradient-to-r
+              from-red-500/5
+              via-transparent
+              to-red-500/5
+            "
+          />
 
-          {/* NAV ITEMS */}
           <div
             className="
               relative
-              flex items-center
+              flex items-end
               gap-2
-              overflow-x-auto
-              scrollbar-hide
-              px-2 py-3
+              px-3
+              py-3
+              min-w-max
             "
           >
             {navItems.map((item) => {
@@ -151,45 +147,20 @@ export const BottomNavigation = ({
                   end={item.path === basePath}
                   className={({ isActive }) =>
                     `
-                      group
                       relative
-                      flex flex-col items-center justify-center
-
-                      min-w-[76px]
-                      px-3 py-2.5
-
-                      rounded-2xl
-
-                      transition-all duration-300 ease-out
-
-                      active:scale-95
-
+                      flex
+                      flex-col
+                      items-center
+                      justify-end
+                      min-w-[74px]
+                      transition-all
+                      duration-500
+                      ease-out
+                      group
                       ${
                         isActive
-                          ? `
-                            bg-gradient-to-b
-                            from-red-500
-                            to-red-700
-
-                            text-white
-
-                            shadow-lg
-                            shadow-red-700/30
-
-                            scale-[1.02]
-                          `
-                          : `
-                            text-gray-500
-                            dark:text-gray-400
-
-                            hover:bg-gray-100/80
-                            dark:hover:bg-gray-800/70
-
-                            hover:text-red-600
-                            dark:hover:text-red-400
-
-                            hover:-translate-y-1
-                          `
+                          ? '-translate-y-3'
+                          : 'translate-y-0'
                       }
                     `
                   }
@@ -198,56 +169,75 @@ export const BottomNavigation = ({
                     <>
                       {/* ACTIVE GLOW */}
                       {isActive && (
-                        <div
-                          className="
-                            absolute inset-0
-                            rounded-2xl
+                        <>
+                          <div
+                            className="
+                              absolute
+                              top-0
+                              w-16
+                              h-16
+                              rounded-full
+                              bg-red-500/20
+                              blur-2xl
+                              animate-pulse
+                            "
+                          />
 
-                            bg-gradient-to-br
-                            from-red-400/20
-                            to-red-900/20
-
-                            blur-xl
-                            opacity-80
-                          "
-                        />
+                          <div
+                            className="
+                              absolute
+                              -bottom-1
+                              w-10
+                              h-1
+                              rounded-full
+                              bg-red-500
+                              blur-sm
+                            "
+                          />
+                        </>
                       )}
 
-                      {/* ICON */}
+                      {/* ICON CONTAINER */}
                       <div
                         className={`
-                          relative z-10
-
-                          flex items-center justify-center
-
-                          w-10 h-10
-                          rounded-xl
-
-                          transition-all duration-300
-
+                          relative
+                          z-10
+                          flex
+                          items-center
+                          justify-center
+                          transition-all
+                          duration-500
+                          rounded-2xl
+                          border
                           ${
                             isActive
                               ? `
-                                bg-white/15
-                                backdrop-blur-md
-                                shadow-inner
+                                w-14 h-14
+                                bg-gradient-to-br
+                                from-red-500
+                                to-red-700
+                                border-red-400/40
+                                shadow-[0_12px_30px_rgba(239,68,68,0.45)]
                               `
                               : `
-                                group-hover:bg-red-50
-                                dark:group-hover:bg-red-900/20
+                                w-12 h-12
+                                bg-white/70 dark:bg-gray-800/70
+                                border-gray-200 dark:border-gray-700
+                                group-hover:-translate-y-1
+                                group-hover:shadow-lg
                               `
                           }
                         `}
                       >
                         <Icon
-                          size={20}
+                          size={isActive ? 24 : 21}
                           className={`
-                            transition-all duration-300
-
+                            transition-all
+                            duration-500
                             ${
                               isActive
-                                ? 'scale-110'
-                                : 'group-hover:scale-110'
+                                ? 'text-white scale-110'
+                                : 'text-gray-500 dark:text-gray-400 group-hover:scale-110'
                             }
                           `}
                         />
@@ -255,57 +245,38 @@ export const BottomNavigation = ({
 
                       {/* LABEL */}
                       <span
-                        className="
-                          relative z-10
-                          mt-1.5
-
+                        className={`
+                          mt-2
                           text-[10px]
                           font-extrabold
                           tracking-wide
+                          transition-all
+                          duration-300
                           whitespace-nowrap
-
-                          transition-all duration-300
-                        "
+                          ${
+                            isActive
+                              ? 'text-red-600 dark:text-red-400 scale-105'
+                              : 'text-gray-500 dark:text-gray-400'
+                          }
+                        `}
                       >
                         {item.label}
                       </span>
 
                       {/* ACTIVE DOT */}
-                      {isActive && (
-                        <div
-                          className="
-                            absolute top-1.5
-
-                            w-1.5 h-1.5
-                            rounded-full
-
-                            bg-white
-
-                            shadow-[0_0_10px_rgba(255,255,255,0.9)]
-                          "
-                        />
-                      )}
-
-                      {/* HOVER LIGHT */}
-                      {!isActive && (
-                        <div
-                          className="
-                            absolute inset-0
-                            rounded-2xl
-
-                            opacity-0
-                            group-hover:opacity-100
-
-                            transition-opacity duration-300
-
-                            bg-gradient-to-b
-                            from-white/40
-                            to-transparent
-
-                            pointer-events-none
-                          "
-                        />
-                      )}
+                      <div
+                        className={`
+                          mt-1
+                          transition-all
+                          duration-300
+                          rounded-full
+                          ${
+                            isActive
+                              ? 'w-5 h-1 bg-red-500'
+                              : 'w-1 h-1 bg-transparent'
+                          }
+                        `}
+                      />
                     </>
                   )}
                 </NavLink>
@@ -316,7 +287,7 @@ export const BottomNavigation = ({
       </div>
 
       {/* SPACER */}
-      <div className="h-28 lg:hidden" />
+      <div className="h-32 lg:hidden" />
     </>
   );
 };
