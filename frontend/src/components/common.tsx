@@ -82,7 +82,7 @@ export const Button = ({
   );
 };
 
-export const Badge = ({ variant = 'info', children }: any) => {
+export const Badge = ({ variant = 'info', className = '', children }: any) => {
   const styles = {
     success:
       'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
@@ -96,8 +96,10 @@ export const Badge = ({ variant = 'info', children }: any) => {
 
   type BadgeVariant = 'success' | 'warning' | 'error' | 'info';
 
+  const baseClasses = className || 'px-3 py-1 text-xs';
+
   return (
-    <span className={`px-3 py-1 rounded-full text-xs ${styles[variant as BadgeVariant]}`}>
+    <span className={`rounded-full ${styles[variant as BadgeVariant]} ${baseClasses}`}>
       {children}
     </span>
   );

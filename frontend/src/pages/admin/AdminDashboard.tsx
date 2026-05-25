@@ -271,7 +271,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
     />
   </div>
 
-    <div className="p-4 lg:p-6 lg:ml-64 space-y-6 pb-32 lg:pb-6">
+    <div className="p-4 lg:p-6 lg:ml-64 space-y-6 pb-20 lg:pb-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -397,16 +397,16 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
       <div className="grid grid-cols-2 lg:grid-cols-2 gap-2 md:gap-4">
         {/* Hub Locations Map */}
         <Card className="p-0 overflow-hidden border border-gray-200 dark:border-gray-700 flex flex-col min-h-[150px] md:min-h-[500px] bg-white dark:bg-gray-900">
-          <div className="flex justify-between items-center p-2 md:p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 z-10">
+          <div className="flex justify-between items-center p-2 md:p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 relative z-[1001]">
             <h2 className="text-[9px] md:text-lg font-semibold">Hub Locations</h2>
-            <div className="relative flex-1 max-w-[80px] md:max-w-xs ml-2 md:ml-4">
+            <div className="relative flex-1 max-w-[120px] md:max-w-xs ml-2 md:ml-4">
               <Search className="absolute left-1.5 md:left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none w-2 h-2 md:w-4 md:h-4" />
               <input 
                 type="text" 
                 placeholder="Search..." 
                 value={searchLocationTerm}
                 onChange={(e) => setSearchLocationTerm(e.target.value)}
-                className="input-field text-[7px] md:text-sm !pl-4 md:!pl-10 w-full py-1 md:py-2 bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700 rounded md:rounded-lg focus:ring-2 focus:ring-red-500/20"
+                className="input-field text-[8px] md:text-sm !pl-4 md:!pl-10 w-full !py-0.5 md:!py-2 h-5 md:h-10 bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700 rounded md:rounded-lg focus:ring-2 focus:ring-red-500/20"
               />
             </div>
           </div>
@@ -504,7 +504,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
               placeholder="Search..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="input-field text-[8px] md:text-sm flex-1 max-w-[100px] md:max-w-md py-1 md:py-2"
+              className="input-field text-[8px] md:text-sm flex-1 max-w-[120px] md:max-w-md !py-0.5 md:!py-2 h-5 md:h-10"
             />
           </div>
 
@@ -564,7 +564,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
               placeholder="Search..." 
               value={searchHubTerm}
               onChange={(e) => setSearchHubTerm(e.target.value)}
-              className="input-field text-[8px] md:text-sm flex-1 max-w-[100px] md:max-w-md py-1 md:py-2"
+              className="input-field text-[8px] md:text-sm flex-1 max-w-[120px] md:max-w-md !py-0.5 md:!py-2 h-5 md:h-10"
             />
           </div>
 
