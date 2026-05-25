@@ -66,99 +66,111 @@ export const BottomNavigation = ({
           ${className}
         `}
       >
-        <div
-          className="
-            relative
-            w-full max-w-[540px]
-            overflow-x-auto
-            scrollbar-hide
-            rounded-3xl
-            border border-white/20 dark:border-gray-800/50
-            bg-white/80 dark:bg-gray-900/80
-            backdrop-blur-xl
-            shadow-[0_8px_32px_rgba(0,0,0,0.12)]
-            px-2 py-2
-          "
-        >
-          <div className="flex items-center gap-1 min-w-max">
-            {navItems.map((item) => {
-              const Icon = item.icon;
+        <div className="relative w-full max-w-[540px]">
+          {/* BACKGROUND LAYER */}
+          <div
+            className="
+              absolute
+              bottom-0 left-0 right-0
+              h-[80px]
+              rounded-3xl
+              border border-white/20 dark:border-gray-800/50
+              bg-white/80 dark:bg-gray-900/80
+              backdrop-blur-xl
+              shadow-[0_8px_32px_rgba(0,0,0,0.12)]
+            "
+          />
 
-              const isActive =
-                item.path === basePath
-                  ? location.pathname === item.path
-                  : location.pathname.startsWith(item.path);
+          {/* SCROLL CONTAINER WITH TOP PADDING TO PREVENT CLIPPING */}
+          <div
+            className="
+              relative
+              w-full
+              overflow-x-auto
+              scrollbar-hide
+              px-2 pb-2 pt-6
+            "
+          >
+            <div className="flex items-center gap-1 min-w-max">
+              {navItems.map((item) => {
+                const Icon = item.icon;
 
-              return (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  className="
-                    relative
-                    flex flex-col items-center justify-center
-                    min-w-[70px]
-                    h-[64px]
-                    group
-                  "
-                >
-                  <motion.div
-                    whileTap={{ scale: 0.9 }}
-                    className="relative flex flex-col items-center justify-center w-full h-full z-20"
+                const isActive =
+                  item.path === basePath
+                    ? location.pathname === item.path
+                    : location.pathname.startsWith(item.path);
+
+                return (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    className="
+                      relative
+                      flex flex-col items-center justify-center
+                      min-w-[70px]
+                      h-[64px]
+                      group
+                    "
                   >
-                    {/* FLOATING CIRCLE BACKGROUND */}
-                    {isActive && (
-                      <motion.div
-                        layoutId="nav-circle"
-                        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                        className="
-                          absolute
-                          -top-5
-                          left-1/2 -translate-x-1/2
-                          w-[56px]
-                          h-[56px]
-                          rounded-full
-                          bg-gradient-to-tr from-red-600 to-red-500
-                          shadow-[0_10px_20px_rgba(220,38,38,0.4)]
-                          border-[6px] border-gray-50 dark:border-gray-950
-                          z-0
-                        "
-                      />
-                    )}
-
-                    {/* ICON */}
                     <motion.div
-                      animate={{ y: isActive ? -26 : 0 }}
-                      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                      className={`
-                        relative z-10
-                        flex items-center justify-center
-                        w-[40px] h-[40px]
-                        transition-colors duration-300
-                        ${isActive ? 'text-white' : 'text-gray-500 dark:text-gray-400 group-hover:text-red-500'}
-                      `}
+                      whileTap={{ scale: 0.9 }}
+                      className="relative flex flex-col items-center justify-center w-full h-full z-20"
                     >
-                      <Icon size={24} className={isActive ? 'scale-110' : ''} />
-                    </motion.div>
+                      {/* FLOATING CIRCLE BACKGROUND */}
+                      {isActive && (
+                        <motion.div
+                          layoutId="nav-circle"
+                          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                          className="
+                            absolute
+                            -top-6
+                            left-1/2 -translate-x-1/2
+                            w-[58px]
+                            h-[58px]
+                            rounded-full
+                            bg-gradient-to-tr from-red-600 to-red-500
+                            shadow-[0_4px_12px_rgba(220,38,38,0.4)]
+                            border-[6px] border-gray-50 dark:border-gray-950
+                            z-0
+                          "
+                        />
+                      )}
 
-                    {/* LABEL */}
-                    <motion.span
-                      animate={{
-                        y: isActive ? 6 : 0,
-                        opacity: isActive ? 1 : 0.7,
-                      }}
-                      className={`
-                        absolute bottom-1
-                        text-[10px] font-bold tracking-wide
-                        transition-colors duration-300
-                        ${isActive ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}
-                      `}
-                    >
-                      {item.label}
-                    </motion.span>
-                  </motion.div>
-                </NavLink>
-              );
-            })}
+                      {/* ICON */}
+                      <motion.div
+                        animate={{ y: isActive ? -27 : 0 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                        className={`
+                          relative z-10
+                          flex items-center justify-center
+                          w-[40px] h-[40px]
+                          transition-colors duration-300
+                          ${isActive ? 'text-white' : 'text-gray-500 dark:text-gray-400 group-hover:text-red-500'}
+                        `}
+                      >
+                        <Icon size={24} className={isActive ? 'scale-110' : ''} />
+                      </motion.div>
+
+                      {/* LABEL */}
+                      <motion.span
+                        animate={{
+                          y: isActive ? 4 : 0,
+                          opacity: isActive ? 1 : 0.7,
+                        }}
+                        className={`
+                          absolute bottom-1
+                          text-[10px] font-bold tracking-wide
+                          transition-colors duration-300
+                          ${isActive ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}
+                        `}
+                      >
+                        {item.label}
+                      </motion.span>
+                    </motion.div>
+                  </NavLink>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
