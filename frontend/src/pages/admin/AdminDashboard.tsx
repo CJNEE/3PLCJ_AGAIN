@@ -286,52 +286,56 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
       </div>
 
       {/* Top Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-6 lg:grid-cols-5 gap-2 md:gap-3">
         {/* Total Employees */}
-        <Card className="flex flex-col items-center justify-center p-6 h-44 text-center">
-          <p className="text-gray-600 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider">Total Employees</p>
-          <p className="text-7xl font-black text-red-700 dark:text-white mt-4 leading-none text-center w-full">{totalEmployees}</p>
+        <Card className="col-span-3 lg:col-span-1 flex flex-col items-center justify-center p-3 md:p-6 h-28 md:h-44 text-center">
+          <p className="text-gray-600 dark:text-gray-400 text-[9px] md:text-xs font-semibold uppercase tracking-wider">Total Employees</p>
+          <p className="text-5xl md:text-7xl font-black text-red-700 dark:text-white mt-2 md:mt-4 leading-none text-center w-full">{totalEmployees}</p>
         </Card>
 
         {/* Total Hubs */}
-        <Card className="flex flex-col items-center justify-center p-6 h-44 text-center">
-          <p className="text-gray-600 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider">Total Hubs</p>
-          <p className="text-7xl font-black text-red-700 dark:text-white mt-4 leading-none text-center w-full">{hubs.length}</p>
+        <Card className="col-span-3 lg:col-span-1 flex flex-col items-center justify-center p-3 md:p-6 h-28 md:h-44 text-center">
+          <p className="text-gray-600 dark:text-gray-400 text-[9px] md:text-xs font-semibold uppercase tracking-wider">Total Hubs</p>
+          <p className="text-5xl md:text-7xl font-black text-red-700 dark:text-white mt-2 md:mt-4 leading-none text-center w-full">{hubs.length}</p>
         </Card>
 
         {/* Employee Status Pie Chart with Percentages */}
-        <Card className="p-4">
-          <p className="text-gray-600 dark:text-gray-400 text-xs font-medium mb-2">Employee Status</p>
+        <Card className="col-span-2 lg:col-span-1 p-2 md:p-4">
+          <p className="text-gray-600 dark:text-gray-400 text-[8px] md:text-xs font-medium mb-1 md:mb-2">Employee Status</p>
           {statusData.length > 0 ? (
-            <div className="flex items-center justify-between">
-              <ResponsiveContainer width="60%" height={100}>
-                <PieChart>
-                  <Pie
-                    data={statusData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={20}
-                    outerRadius={40}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {statusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.name] || '#3B82F6'} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="flex flex-col gap-1 text-xs">
+            <div className="flex flex-col md:flex-row items-center justify-between md:h-auto">
+              <div className="w-full h-16 md:h-auto md:w-[60%] flex items-center justify-center">
+                <ResponsiveContainer width="100%" height={80} className="md:h-[100px]">
+                  <PieChart>
+                    <Pie
+                      data={statusData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={15}
+                      outerRadius={30}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {statusData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.name] || '#3B82F6'} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex flex-col gap-0.5 md:gap-1 text-[7px] md:text-xs mt-1 md:mt-0 w-full md:w-auto px-1 md:px-0">
                 {statusData.map((entry, index) => {
                   const total = statusData.reduce((sum, item) => sum + item.value, 0);
                   const percentage = Math.round((entry.value / total) * 100);
                   return (
-                    <div key={index} className="flex items-center gap-2">
-                      <div 
-                        className="w-3 h-3 rounded-full" 
-                        style={{ backgroundColor: STATUS_COLORS[entry.name] || '#3B82F6' }}
-                      />
-                      <span className="text-gray-600 dark:text-gray-400">{entry.name}</span>
+                    <div key={index} className="flex items-center justify-between md:justify-start md:gap-2">
+                      <div className="flex items-center gap-1 md:gap-2">
+                        <div 
+                          className="w-1.5 h-1.5 md:w-3 md:h-3 rounded-full" 
+                          style={{ backgroundColor: STATUS_COLORS[entry.name] || '#3B82F6' }}
+                        />
+                        <span className="text-gray-600 dark:text-gray-400">{entry.name}</span>
+                      </div>
                       <span className="font-semibold text-gray-900 dark:text-white">{percentage}%</span>
                     </div>
                   );
@@ -342,22 +346,22 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
         </Card>
 
         {/* Employment Type Horizontal Bar */}
-        <Card className="p-4">
-          <p className="text-gray-600 dark:text-gray-400 text-xs font-medium mb-4">Employment Type</p>
+        <Card className="col-span-2 lg:col-span-1 p-2 md:p-4">
+          <p className="text-gray-600 dark:text-gray-400 text-[8px] md:text-xs font-medium mb-2 md:mb-4">Employment Type</p>
           {employmentTypeData.length > 0 ? (
-            <div className="space-y-4">
+            <div className="space-y-2 md:space-y-4">
               {employmentTypeData.map((entry, index) => {
                   const total = employmentTypeData.reduce((sum, d) => sum + d.value, 0);
                   const barPct = total ? (entry.value / total) * 100 : 0;
                   return (
-                <div key={index} className="flex flex-col gap-2">
+                <div key={index} className="flex flex-col gap-1 md:gap-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{entry.name}</span>
-                    <span className="text-sm text-gray-600 dark:text-gray-400 tabular-nums">
+                    <span className="text-[7px] md:text-sm font-medium text-gray-700 dark:text-gray-300">{entry.name}</span>
+                    <span className="text-[7px] md:text-sm text-gray-600 dark:text-gray-400 tabular-nums">
                       {entry.value} <span className="text-gray-400">({Math.round(barPct)}%)</span>
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-6 overflow-hidden">
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 md:h-6 overflow-hidden">
                     <div 
                       className="h-full rounded-full transition-all duration-300"
                       style={{ 
@@ -374,13 +378,13 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
         </Card>
 
         {/* Workforce Status */}
-        <Card className="p-4">
-          <p className="text-gray-600 dark:text-gray-400 text-xs font-medium mb-3">Workforce Status</p>
-          <div className="space-y-2 text-sm">
+        <Card className="col-span-2 lg:col-span-1 p-2 md:p-4">
+          <p className="text-gray-600 dark:text-gray-400 text-[8px] md:text-xs font-medium mb-2 md:mb-3">Workforce Status</p>
+          <div className="space-y-1 md:space-y-2 text-[7px] md:text-sm">
             {statusData.slice(0, 5).map((item, idx) => (
               <div key={idx} className="flex justify-between items-center">
                 <span className="text-gray-600 dark:text-gray-400">{item.name}</span>
-                <span className="font-semibold text-lg" style={{ color: STATUS_COLORS[item.name] }}>
+                <span className="font-semibold text-[9px] md:text-lg" style={{ color: STATUS_COLORS[item.name] }}>
                   {item.value}
                 </span>
               </div>
@@ -390,23 +394,23 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
       </div>
 
         {/* Hub Locations Map & Hub Chart */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-2 gap-2 md:gap-4">
         {/* Hub Locations Map */}
-        <Card className="p-0 overflow-hidden border border-gray-200 dark:border-gray-700 flex flex-col min-h-[500px] bg-white dark:bg-gray-900">
-          <div className="flex justify-between items-center p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 z-10">
-            <h2 className="text-lg font-semibold">Hub Locations</h2>
-            <div className="relative flex-1 max-w-xs ml-4">
-              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+        <Card className="p-0 overflow-hidden border border-gray-200 dark:border-gray-700 flex flex-col min-h-[150px] md:min-h-[500px] bg-white dark:bg-gray-900">
+          <div className="flex justify-between items-center p-2 md:p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 z-10">
+            <h2 className="text-[9px] md:text-lg font-semibold">Hub Locations</h2>
+            <div className="relative flex-1 max-w-[80px] md:max-w-xs ml-2 md:ml-4">
+              <Search className="absolute left-1.5 md:left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none w-2 h-2 md:w-4 md:h-4" />
               <input 
                 type="text" 
-                placeholder="Search Locations..." 
+                placeholder="Search..." 
                 value={searchLocationTerm}
                 onChange={(e) => setSearchLocationTerm(e.target.value)}
-                className="input-field text-sm !pl-10 w-full py-2 bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-red-500/20"
+                className="input-field text-[7px] md:text-sm !pl-4 md:!pl-10 w-full py-1 md:py-2 bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700 rounded md:rounded-lg focus:ring-2 focus:ring-red-500/20"
               />
             </div>
           </div>
-          <div className="flex-1 w-full relative z-0 min-h-[400px]">
+          <div className="flex-1 w-full relative z-0 min-h-[120px] md:min-h-[400px]">
             {hubs.length > 0 ? (
               <MapContainer 
                 center={[12.5797, 124.0758]} 
@@ -477,63 +481,65 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
         </Card>
 
         {/* Hub Employee Distribution */}
-        <Card className="p-4">
-          <h2 className="text-lg font-semibold mb-4">Hub Employee Distribution</h2>
-          {hubEmployeeData.length > 0 && allEmployees.length > 0 ? (
-            <HubsEmployeeChart hubsData={hubs} employees={allEmployees} />
-          ) : (
-            <EmptyState title="No hub data" />
-          )}
+        <Card className="p-2 md:p-4">
+          <h2 className="text-[9px] md:text-lg font-semibold mb-1 md:mb-4">Hub Employee Distribution</h2>
+          <div className="h-[120px] md:h-auto">
+            {hubEmployeeData.length > 0 && allEmployees.length > 0 ? (
+              <HubsEmployeeChart hubsData={hubs} employees={allEmployees} />
+            ) : (
+              <EmptyState title="No hub data" />
+            )}
+          </div>
         </Card>
       </div>
 
       {/* Employees Table */}
-      <Card className="p-4">
-        <div className="space-y-4">
+      <Card className="p-2 md:p-4">
+        <div className="space-y-2 md:space-y-4">
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-semibold">Employees</h2>
+            <h2 className="text-[10px] md:text-lg font-semibold">Employees</h2>
             <input 
               type="text" 
-              placeholder="Search employees..." 
+              placeholder="Search..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="input-field text-sm flex-1 max-w-md"
+              className="input-field text-[8px] md:text-sm flex-1 max-w-[100px] md:max-w-md py-1 md:py-2"
             />
           </div>
 
           {employees.length > 0 ? (
-            <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
-              <table className="w-full text-sm">
+            <div className="overflow-x-auto rounded md:rounded-xl border border-gray-200 dark:border-gray-700">
+              <table className="w-full text-[7px] md:text-sm">
                 <thead className="bg-red-700 text-white">
                   <tr>
-                    <th className="px-4 py-3 text-left">Name</th>
-                    <th className="px-4 py-3 text-left">Position</th>
-                    <th className="px-4 py-3 text-left">Hub</th>
-                    <th className="px-4 py-3 text-left">Status</th>
-                    <th className="px-4 py-3 text-center">Actions</th>
+                    <th className="px-1 md:px-4 py-1 md:py-3 text-left">Name</th>
+                    <th className="px-1 md:px-4 py-1 md:py-3 text-left">Position</th>
+                    <th className="px-1 md:px-4 py-1 md:py-3 text-left">Hub</th>
+                    <th className="px-1 md:px-4 py-1 md:py-3 text-left">Status</th>
+                    <th className="px-1 md:px-4 py-1 md:py-3 text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {employees.slice(0, 10).map((emp: any) => (
                     <tr key={emp.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
-                      <td className="px-4 py-3 font-medium">{emp.full_name}</td>
-                      <td className="px-4 py-3">{emp.position}</td>
-                      <td className="px-4 py-3">{emp.hub_name || 'N/A'}</td>
-                      <td className="px-4 py-3">
-                        <Badge variant={emp.status === 'Active' ? 'success' : 'warning'}>
+                      <td className="px-1 md:px-4 py-1 md:py-3 font-medium">{emp.full_name}</td>
+                      <td className="px-1 md:px-4 py-1 md:py-3">{emp.position}</td>
+                      <td className="px-1 md:px-4 py-1 md:py-3">{emp.hub_name || 'N/A'}</td>
+                      <td className="px-1 md:px-4 py-1 md:py-3">
+                        <Badge variant={emp.status === 'Active' ? 'success' : 'warning'} className="text-[6px] md:text-xs px-1 py-0 md:px-2 md:py-0.5">
                           {emp.status}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-1 md:px-4 py-1 md:py-3 text-center">
                         <button 
                           onClick={() => {
                             setSelectedEmployee(emp);
                             setShowEmployeeModal(true);
                           }}
-                          className="text-blue-600 hover:text-blue-800 font-medium text-xs flex items-center gap-1 justify-center"
+                          className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 justify-center mx-auto"
                         >
-                          <Eye size={14} />
-                          View
+                          <Eye className="w-2 h-2 md:w-3.5 md:h-3.5" />
+                          <span className="hidden md:inline">View</span>
                         </button>
                       </td>
                     </tr>
@@ -548,27 +554,27 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
       </Card>
 
       {/* Hubs Table */}
-      <Card className="p-4">
-        <div className="space-y-4">
+      <Card className="p-2 md:p-4">
+        <div className="space-y-2 md:space-y-4">
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-semibold">Hubs</h2>
+            <h2 className="text-[10px] md:text-lg font-semibold">Hubs</h2>
             <input 
               type="text" 
-              placeholder="Search Hubs..." 
+              placeholder="Search..." 
               value={searchHubTerm}
               onChange={(e) => setSearchHubTerm(e.target.value)}
-              className="input-field text-sm flex-1 max-w-md"
+              className="input-field text-[8px] md:text-sm flex-1 max-w-[100px] md:max-w-md py-1 md:py-2"
             />
           </div>
 
           {hubs.length > 0 ? (
-            <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
-              <table className="w-full text-sm">
+            <div className="overflow-x-auto rounded md:rounded-xl border border-gray-200 dark:border-gray-700">
+              <table className="w-full text-[7px] md:text-sm">
                 <thead className="bg-red-700 text-white">
                   <tr>
-                    <th className="px-4 py-3 text-left">Hub Name</th>
-                    <th className="px-4 py-3 text-left">Location</th>
-                    <th className="px-4 py-3 text-left">Employees</th>
+                    <th className="px-1 md:px-4 py-1 md:py-3 text-left">Hub Name</th>
+                    <th className="px-1 md:px-4 py-1 md:py-3 text-left">Location</th>
+                    <th className="px-1 md:px-4 py-1 md:py-3 text-left">Employees</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -583,9 +589,9 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
                       const hubEmployeeCount = allEmployees.filter((emp: any) => emp.hub === hub.id).length;
                       return (
                         <tr key={hub.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
-                          <td className="px-4 py-3 font-medium">{hub.name}</td>
-                          <td className="px-4 py-3">{hub.location || hub.city || 'N/A'}</td>
-                          <td className="px-4 py-3 font-semibold text-red-700">{hubEmployeeCount}</td>
+                          <td className="px-1 md:px-4 py-1 md:py-3 font-medium">{hub.name}</td>
+                          <td className="px-1 md:px-4 py-1 md:py-3">{hub.location || hub.city || 'N/A'}</td>
+                          <td className="px-1 md:px-4 py-1 md:py-3 font-semibold text-red-700">{hubEmployeeCount}</td>
                         </tr>
                       );
                     })}
