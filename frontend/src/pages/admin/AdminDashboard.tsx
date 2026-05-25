@@ -416,6 +416,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
                 center={[12.5797, 124.0758]} 
                 zoom={6} 
                 style={{ width: '100%', height: '100%' }}
+                attributionControl={false}
               >
                 <FitBoundsComponent mapHubs={hubs} getCoords={getHubCoordinates} />
                 <TileLayer

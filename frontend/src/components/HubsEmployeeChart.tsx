@@ -44,8 +44,18 @@ export default function HubsEmployeeChart({ hubsData = [], employees = [] }: Pro
   const textColor = isDarkMode ? '#F3F4F6' : '#374151';
   const gridColor = isDarkMode ? '#4B5563' : '#E5E7EB';
 
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const chartHeight = isMobile ? 160 : 450;
+  const itemWidth = isMobile ? 40 : 100;
+  const chartWidth = Math.max(isMobile ? 150 : 300, filteredDataset.length * itemWidth);
+  const legendFontSize = isMobile ? 6 : 12;
+  const tickFontSize = isMobile ? 6 : 11;
+  const marginConfig = isMobile 
+    ? { top: 20, left: 30, bottom: 20, right: 10 } 
+    : { top: 40, left: 60 };
+
   return (
-    <div style={{ width: '100%', overflowX: 'auto' }}>
+    <div style={{ width: '100%', overflowX: 'auto', overflowY: 'hidden' }} className="scrollbar-hide">
       <BarChart
         dataset={filteredDataset}
 
@@ -56,7 +66,7 @@ export default function HubsEmployeeChart({ hubsData = [], employees = [] }: Pro
             tickLabelStyle: {
               angle: -40,
               textAnchor: 'end',
-              fontSize: 11,
+              fontSize: tickFontSize,
               fill: textColor,
             },
           },
@@ -71,20 +81,22 @@ export default function HubsEmployeeChart({ hubsData = [], employees = [] }: Pro
 
         yAxis={[
           {
-            label: 'Employee Count',
+            label: isMobile ? '' : 'Employee Count',
             labelStyle: {
               fill: textColor,
+              fontSize: legendFontSize,
             },
             tickLabelStyle: {
               fill: textColor,
+              fontSize: tickFontSize,
             },
           },
         ]}
 
-        height={450}
-        width={Math.max(300, filteredDataset.length * 100)}
+        height={chartHeight}
+        width={chartWidth}
 
-        margin={{ top: 40, left: 60 }}
+        margin={marginConfig}
 
         slotProps={{
           legend: {
@@ -104,25 +116,32 @@ export default function HubsEmployeeChart({ hubsData = [], employees = [] }: Pro
           // Tick labels (fallbacks)
           '& .MuiChartsAxis-tickLabel': {
             fill: `${textColor} !important`,
+            fontSize: `${tickFontSize}px !important`,
           },
           // Axis title/label (fallbacks)
           '& .MuiChartsAxis-label': {
             fill: `${textColor} !important`,
+            fontSize: `${legendFontSize}px !important`,
           },
-          // Legend texts (fallbacks)
-          '& .MuiChartsLegend-root text': {
-            fill: `${textColor} !important`,
-          },
-          '& .MuiChartsLegend-series text': {
-            fill: `${textColor} !important`,
-          },
-          '& .MuiChartsLegend-root tspan': {
-            fill: `${textColor} !important`,
-          },
-          // Legend marker border/colors if necessary
+          // Legend layout & text
           '& .MuiChartsLegend-root': {
-            fill: textColor,
-          }
+            gap: isMobile ? '4px !important' : '16px !important',
+            marginBlock: isMobile ? '2px !important' : '8px !important',
+            marginInline: isMobile ? '2px !important' : '8px !important',
+            paddingInlineStart: '0 !important',
+            justifyContent: 'center',
+          },
+          '& .MuiChartsLegend-series': {
+            gap: isMobile ? '2px !important' : '8px !important',
+          },
+          '& .MuiChartsLegend-mark': {
+            width: isMobile ? '6px !important' : '14px !important',
+            height: isMobile ? '6px !important' : '14px !important',
+          },
+          '& .MuiChartsLegend-label': {
+            fontSize: isMobile ? '6px !important' : '12px !important',
+            color: `${textColor} !important`,
+          },
         }}
       />
     </div>
