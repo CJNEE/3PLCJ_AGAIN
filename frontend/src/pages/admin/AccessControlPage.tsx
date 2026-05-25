@@ -5,7 +5,7 @@ import { useGetEmployees, useGetActivityLogs, useGetSecurityAlerts } from '@/hoo
 import { Search } from 'lucide-react';
 import { normalizeApiResponse } from '@/utils/apiResponseHandler';
 import { Sidebar } from '@/components/Sidebar';
-import BottomNavigation from '@/components/BottomNavigation';
+
 
 export const AccessControlPage = () => {
   const [roleFilter, setRoleFilter] = useState('All');
@@ -262,7 +262,7 @@ export const AccessControlPage = () => {
         />
       )}
 
-      <BottomNavigation />
+
     </div>
   );
 };

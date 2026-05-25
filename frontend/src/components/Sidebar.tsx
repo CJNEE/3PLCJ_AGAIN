@@ -179,23 +179,10 @@ export const Sidebar = ({ open, onToggle, hideThemeToggle = false }: SidebarProp
 
   return (
     <>
-      {/* Mobile Toggle */}
-      <div className="lg:hidden fixed top-4 left-4 z-50">
-        <button
-          onClick={onToggle}
-          className="p-2 bg-[#8B0000] text-white rounded-lg shadow-md hover:bg-[#6B0000] transition-colors"
-        >
-          {open ? <X size={20} /> : <Menu size={20} />}
-        </button>
-      </div>
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-full w-64 bg-white dark:bg-gray-900 shadow-lg border-r border-gray-100 dark:border-gray-700 transform transition-transform duration-300 z-40 ${
-          open
-            ? 'translate-x-0'
-            : '-translate-x-full lg:translate-x-0'
-        }`}
+        className={`hidden lg:flex flex-col fixed left-0 top-0 h-full w-64 bg-white dark:bg-gray-900 shadow-lg border-r border-gray-100 dark:border-gray-700 z-40`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
@@ -315,13 +302,6 @@ onClick={() => {
         </div>
       </aside>
 
-      {/* Mobile Overlay */}
-      {open && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-30"
-          onClick={onToggle}
-        />
-      )}
     </>
   );
 };

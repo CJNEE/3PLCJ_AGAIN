@@ -4,7 +4,7 @@ import { useToast } from '@/hooks/useToast';
 import { Check, X, Clock, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { useClearAllEditRequests } from '@/hooks/useQueries';
 import { Sidebar } from '@/components/Sidebar';
-import { BottomNavigation } from '@/components/BottomNavigation';
+
 import { apiUrl } from '@/constants/api';
 
 interface EditRequest {
@@ -155,7 +155,7 @@ export const EditRequestsPanel = () => {
           </Card>
         </div>
 
-        <BottomNavigation />
+
       </div>
     );
   }
@@ -346,7 +346,7 @@ export const EditRequestsPanel = () => {
         )}
       </div>
 
-      <BottomNavigation />
+
     </div>
   );
 };

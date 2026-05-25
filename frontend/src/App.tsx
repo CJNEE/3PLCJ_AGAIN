@@ -36,6 +36,7 @@ import { EmployeeLeaveRequestForm } from '@/components/EmployeeLeaveRequestForm'
 // Components
 import { Layout } from '@/components/common';
 import { ThemeProvider } from '@/context/ThemeContext';
+import BottomNavigation from '@/components/BottomNavigation';
 
 // Styles
 import '@/styles/globals.css';
@@ -84,7 +85,14 @@ interface DashboardLayoutProps {
 }
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
-  return <Layout>{children}</Layout>;
+  const { user, employee } = useAuth();
+  const userRole = user?.role || employee?.role;
+  return (
+    <Layout>
+      {children}
+      {(userRole === 'Admin' || userRole === 'HR') && <BottomNavigation />}
+    </Layout>
+  );
 };
 
 

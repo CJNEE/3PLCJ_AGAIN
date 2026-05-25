@@ -12,7 +12,7 @@ import 'leaflet/dist/leaflet.css';
 import HubsEmployeeChart from '@/components/HubsEmployeeChart';
 import { calculateDistance, calculateTravelTime, formatTravelTime, getUserLocation } from '@/utils/locationUtils';
 import { Sidebar } from '@/components/Sidebar';
-import BottomNavigation from '@/components/BottomNavigation';
+
 // Color mappings for status
 const STATUS_COLORS: Record<string, string> = {
   'Active': '#10B981',      // green
@@ -894,7 +894,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
         </div>
             )}
 
-      <BottomNavigation />
+
 
       </div>
   </div>

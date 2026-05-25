@@ -9,7 +9,7 @@ const HRSidebar: React.FC = () => {
   const isActive = (to: string) => pathname === to || pathname.startsWith(to + '/') || (to === '/hr' && pathname === '/hr');
 
   return (
-    <aside className="w-64 bg-[#0B1220] text-white h-full border-r border-black/10 flex flex-col">
+    <aside className="hidden lg:flex w-64 bg-[#0B1220] text-white h-full border-r border-black/10 flex-col">
       <div className="p-5 border-b border-black/10 shrink-0">
         <Link to="/hr" className="text-xl font-extrabold">HR Panel</Link>
       </div>
