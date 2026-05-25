@@ -41,56 +41,16 @@ export const BottomNavigation = ({
       : '/employee';
 
   const navItems = [
-    {
-      label: 'Home',
-      icon: Home,
-      path: basePath,
-    },
-    {
-      label: 'Employees',
-      icon: Users,
-      path: `${basePath}/employees`,
-    },
-    {
-      label: 'Hubs',
-      icon: MapPin,
-      path: `${basePath}/hubs`,
-    },
-    {
-      label: 'Edit',
-      icon: FileText,
-      path: `${basePath}/edit-requests`,
-    },
-    {
-      label: 'Leave',
-      icon: CalendarDays,
-      path: `${basePath}/leave-requests`,
-    },
-    {
-      label: 'Access',
-      icon: Lock,
-      path: `${basePath}/access-control`,
-    },
-    {
-      label: 'Attendance',
-      icon: Clock,
-      path: `${basePath}/attendance`,
-    },
-    {
-      label: 'Payroll',
-      icon: DollarSign,
-      path: `${basePath}/payslip`,
-    },
-    {
-      label: 'Logs',
-      icon: Activity,
-      path: `${basePath}/activity-logs`,
-    },
-    {
-      label: 'Alerts',
-      icon: AlertTriangle,
-      path: `${basePath}/security-alerts`,
-    },
+    { label: 'Home', icon: Home, path: basePath },
+    { label: 'Employees', icon: Users, path: `${basePath}/employees` },
+    { label: 'Hubs', icon: MapPin, path: `${basePath}/hubs` },
+    { label: 'Edit', icon: FileText, path: `${basePath}/edit-requests` },
+    { label: 'Leave', icon: CalendarDays, path: `${basePath}/leave-requests` },
+    { label: 'Access', icon: Lock, path: `${basePath}/access-control` },
+    { label: 'Attendance', icon: Clock, path: `${basePath}/attendance` },
+    { label: 'Payroll', icon: DollarSign, path: `${basePath}/payslip` },
+    { label: 'Logs', icon: Activity, path: `${basePath}/activity-logs` },
+    { label: 'Alerts', icon: AlertTriangle, path: `${basePath}/security-alerts` },
   ];
 
   return (
@@ -102,7 +62,7 @@ export const BottomNavigation = ({
           z-[9999]
           lg:hidden
           flex justify-center
-          px-3
+          px-4
           ${className}
         `}
       >
@@ -112,12 +72,12 @@ export const BottomNavigation = ({
             w-full max-w-[540px]
             overflow-x-auto
             scrollbar-hide
-            rounded-[32px]
-            border border-white/20
-            bg-white/70 dark:bg-[#111827]/70
-            backdrop-blur-3xl
-            shadow-[0_8px_40px_rgba(0,0,0,0.15)]
-            px-2 py-3
+            rounded-3xl
+            border border-white/20 dark:border-gray-800/50
+            bg-white/80 dark:bg-gray-900/80
+            backdrop-blur-xl
+            shadow-[0_8px_32px_rgba(0,0,0,0.12)]
+            px-2 py-2
           "
         >
           <div className="flex items-center gap-1 min-w-max">
@@ -136,117 +96,70 @@ export const BottomNavigation = ({
                   className="
                     relative
                     flex flex-col items-center justify-center
-                    min-w-[72px]
+                    min-w-[70px]
                     h-[64px]
+                    group
                   "
                 >
                   <motion.div
                     whileTap={{ scale: 0.9 }}
-                    animate={{
-                      y: isActive ? -16 : 0,
-                    }}
-                    transition={{
-                      type: 'spring',
-                      stiffness: 400,
-                      damping: 22,
-                    }}
-                    className="relative flex flex-col items-center"
+                    className="relative flex flex-col items-center justify-center w-full h-full z-20"
                   >
-                    {/* ACTIVE BACKGROUND */}
+                    {/* FLOATING CIRCLE BACKGROUND */}
                     {isActive && (
                       <motion.div
-                        layoutId="bottom-nav-pill"
-                        transition={{
-                          type: 'spring',
-                          stiffness: 500,
-                          damping: 35,
-                        }}
+                        layoutId="nav-circle"
+                        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                         className="
                           absolute
-                          -top-1
-                          w-[58px]
-                          h-[58px]
-                          rounded-2xl
-                          bg-gradient-to-b
-                          from-red-500
-                          to-red-700
-                          shadow-[0_10px_25px_rgba(220,38,38,0.45)]
-                          border border-white/20
+                          -top-5
+                          left-1/2 -translate-x-1/2
+                          w-[56px]
+                          h-[56px]
+                          rounded-full
+                          bg-gradient-to-tr from-red-600 to-red-500
+                          shadow-[0_10px_20px_rgba(220,38,38,0.4)]
+                          border-[6px] border-gray-50 dark:border-gray-950
+                          z-0
                         "
                       />
                     )}
 
                     {/* ICON */}
-                    <div
+                    <motion.div
+                      animate={{ y: isActive ? -26 : 0 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                       className={`
                         relative z-10
                         flex items-center justify-center
-                        w-[58px]
-                        h-[58px]
-                        rounded-2xl
-                        transition-all duration-300
-                        ${
-                          isActive
-                            ? 'text-white'
-                            : 'text-gray-500 dark:text-gray-400'
-                        }
+                        w-[40px] h-[40px]
+                        transition-colors duration-300
+                        ${isActive ? 'text-white' : 'text-gray-500 dark:text-gray-400 group-hover:text-red-500'}
                       `}
                     >
-                      <Icon
-                        size={22}
-                        className={`
-                          transition-all duration-300
-                          ${isActive ? 'scale-110' : ''}
-                        `}
-                      />
-                    </div>
+                      <Icon size={24} className={isActive ? 'scale-110' : ''} />
+                    </motion.div>
 
                     {/* LABEL */}
-                    <span
+                    <motion.span
+                      animate={{
+                        y: isActive ? 6 : 0,
+                        opacity: isActive ? 1 : 0.7,
+                      }}
                       className={`
-                        mt-1 text-[10px]
-                        font-bold tracking-wide
-                        transition-all duration-300
-                        ${
-                          isActive
-                            ? 'text-red-600 dark:text-red-400'
-                            : 'text-gray-500 dark:text-gray-400'
-                        }
+                        absolute bottom-1
+                        text-[10px] font-bold tracking-wide
+                        transition-colors duration-300
+                        ${isActive ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}
                       `}
                     >
                       {item.label}
-                    </span>
-
-                    {/* GLOW DOT */}
-                    {isActive && (
-                      <motion.div
-                        layoutId="bottom-dot"
-                        className="
-                          absolute
-                          -bottom-2
-                          w-1.5 h-1.5
-                          rounded-full
-                          bg-red-500
-                        "
-                      />
-                    )}
+                    </motion.span>
                   </motion.div>
                 </NavLink>
               );
             })}
           </div>
-
-          {/* GLASS SHINE */}
-          <div
-            className="
-              pointer-events-none
-              absolute inset-0
-              rounded-[32px]
-              bg-gradient-to-b
-              from-white/30
-              to-transparent
-            "
-          />
         </div>
       </div>
 
