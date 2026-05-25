@@ -41,7 +41,7 @@ export const BottomNavigation = ({
       : '/employee';
 
   const navItems = [
-    { label: 'Home', icon: Home, path: basePath },
+    { label: 'Dashboard', icon: Home, path: basePath },
     { label: 'Employees', icon: Users, path: `${basePath}/employees` },
     { label: 'Hubs', icon: MapPin, path: `${basePath}/hubs` },
     { label: 'Edit', icon: FileText, path: `${basePath}/edit-requests` },
@@ -74,10 +74,10 @@ export const BottomNavigation = ({
               bottom-0 left-0 right-0
               h-[80px]
               rounded-3xl
-              border border-white/20 dark:border-gray-800/50
-              bg-white/80 dark:bg-gray-900/80
-              backdrop-blur-xl
-              shadow-[0_8px_32px_rgba(0,0,0,0.12)]
+              border border-white/40 dark:border-white/10
+              bg-white/60 dark:bg-[#081120]/60
+              backdrop-blur-2xl
+              shadow-[0_8px_32px_rgba(0,0,0,0.2)]
             "
           />
 
@@ -119,18 +119,18 @@ export const BottomNavigation = ({
                       {/* FLOATING CIRCLE BACKGROUND */}
                       {isActive && (
                         <motion.div
-                          layoutId="nav-circle"
-                          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                          initial={{ scale: 0.5, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
                           className="
                             absolute
-                            -top-6
+                            -top-5
                             left-1/2 -translate-x-1/2
-                            w-[58px]
-                            h-[58px]
+                            w-[50px]
+                            h-[50px]
                             rounded-full
-                            bg-gradient-to-tr from-red-600 to-red-500
-                            shadow-[0_4px_12px_rgba(220,38,38,0.4)]
-                            border-[6px] border-gray-50 dark:border-gray-950
+                            bg-gradient-to-tr from-red-600/90 to-red-500/90
+                            backdrop-blur-md
+                            shadow-[0_4px_15px_rgba(220,38,38,0.5)]
                             z-0
                           "
                         />
