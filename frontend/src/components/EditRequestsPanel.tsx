@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, Badge, Button } from './common';
+import { Card, Button } from './common';
 import { useApproveEditRequest, useRejectEditRequest, useGetEditRequests } from '@/hooks/useQueries';
 import { useToast } from '@/hooks/useToast';
 import { ConfirmDialog } from './ConfirmDialog';

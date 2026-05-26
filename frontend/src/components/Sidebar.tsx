@@ -4,8 +4,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { ThemeToggle } from '@/context/ThemeContext';
 import {
   LogOut,
-  Menu,
-  X,
   Home,
   Users,
   MapPin,
@@ -27,7 +25,7 @@ interface SidebarProps {
   hideThemeToggle?: boolean;
 }
 
-export const Sidebar = ({ open, onToggle, hideThemeToggle = false }: SidebarProps) => {
+export const Sidebar = ({ open: _open, onToggle, hideThemeToggle = false }: SidebarProps) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 

@@ -2,16 +2,15 @@ import { useState, useMemo } from 'react';
 import { Card, Badge, LoadingSpinner, EmptyState } from '@/components/common';
 import { Sidebar } from '@/components/Sidebar';
 import { PayslipDetailModal } from '@/components/PayslipDetailModal';
-import { useGetPayroll, useGetHubs, useGetEmployees, useUpdatePayroll, useCreatePayroll } from '@/hooks/useQueries';
-import { Download, Search, Shield, Edit2 } from 'lucide-react';
+import { useGetPayroll, useGetHubs, useGetEmployees } from '@/hooks/useQueries';
+import { Download, Search } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { normalizeApiResponse } from '@/utils/apiResponseHandler';
 
 export const PayslipPage = () => {
-  const { canEditPayroll, isAdmin } = useAuth();
+  const { isAdmin } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+
 
   // Sidebar should render even on desktop
 
@@ -72,8 +71,7 @@ export const PayslipPage = () => {
   const { data: hubsData, isLoading: hubsLoading } = useGetHubs();
   const { data: employeesData, isLoading: employeesLoading } = useGetEmployees();
   
-  const updatePayrollMutation = useUpdatePayroll();
-  const createPayrollMutation = useCreatePayroll();
+
 
   const payroll = normalizeApiResponse(payrollData);
 
@@ -81,67 +79,9 @@ export const PayslipPage = () => {
   const hubs = normalizeApiResponse(hubsData);
   const employees = normalizeApiResponse(employeesData);
 
-  const formatPayrollPeriod = (startStr?: string, endStr?: string) => {
-    if (!startStr || !endStr) return 'N/A';
-    try {
-      const startDate = new Date(startStr);
-      const endDate = new Date(endStr);
-      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-        return `${startStr} - ${endStr}`;
-      }
-      const monthNames = [
-        'January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'
-      ];
-      const startMonth = monthNames[startDate.getMonth()];
-      const startDay = startDate.getDate();
-      const endMonth = monthNames[endDate.getMonth()];
-      const endDay = endDate.getDate();
-      const startYear = startDate.getFullYear();
-      const endYear = endDate.getFullYear();
 
-      if (startMonth === endMonth && startYear === endYear) {
-        if (startDay === endDay) {
-          return `${startMonth} ${startDay}, ${startYear}`;
-        }
-        return `${startMonth} ${startDay} to ${endDay}, ${startYear}`;
-      } else {
-        return `${startMonth} ${startDay}, ${startYear} to ${endMonth} ${endDay}, ${endYear}`;
-      }
-    } catch (e) {
-      return `${startStr} - ${endStr}`;
-    }
-  };
 
-  const handleSave = async (updated?: any) => {
-    try {
-      setIsLoading(true);
-      const payload = updated ?? selectedPayslip;
-      if (!payload) {
-        throw new Error('No payroll data provided');
-      }
-      if (payload.id) {
-        // Try to update existing record
-        try {
-          const updatedPayroll = await updatePayrollMutation.mutateAsync({ id: payload.id, data: payload });
-          setSelectedPayslip(updatedPayroll);
-        } catch (updateErr: any) {
-          if (updateErr?.response?.status === 404) {
-            const created = await createPayrollMutation.mutateAsync(payload);
-            setSelectedPayslip(created);
-          } else {
-            throw updateErr;
-          }
-        }
-      } else {
-        const created = await createPayrollMutation.mutateAsync(payload);
-        setSelectedPayslip(created);
-      }
-      setIsModalOpen(false);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
 
   // Calculate stats
   const stats = useMemo(() => {

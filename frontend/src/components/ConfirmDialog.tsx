@@ -1,5 +1,3 @@
-import { useState } from 'react';
-import { Dialog } from '@headlessui/react';
 import { Button } from './common';
 
 interface ConfirmDialogProps {

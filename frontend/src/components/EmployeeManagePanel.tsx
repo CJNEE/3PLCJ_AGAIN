@@ -27,7 +27,7 @@ interface Employee {
 
 export const EmployeeManagePanel = () => {
   const navigate = useNavigate();
-  const { user, isAdmin, isHR, canDeleteEmployees } = useAuth();
+  const { user, canDeleteEmployees } = useAuth();
   const { data, isLoading } = useGetEmployees();
   const deleteMutation = useDeleteEmployee();
   const bulkToggleMutation = useBulkToggleLogin();

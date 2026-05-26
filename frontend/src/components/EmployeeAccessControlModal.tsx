@@ -4,7 +4,7 @@ import { Modal } from './Modal';
 import { useToast } from '@/hooks/useToast';
 import { apiClient } from '@/api/apiService';
 import { normalizeApiResponse } from '@/utils/apiResponseHandler';
-import { AlertCircle, Lock, Unlock, Shield, Key, Eye, EyeOff, ShieldCheck, UserCheck, Trash2, FileText, UserPlus } from 'lucide-react';
+import { Lock, Unlock, Shield, Key, Eye, EyeOff, ShieldCheck, Trash2, FileText, UserPlus } from 'lucide-react';
 import { LoadingSpinner, Button } from './common';
 
 interface EmployeeAccessControlModalProps {
@@ -23,10 +23,8 @@ export const EmployeeAccessControlModal = ({
   const toast = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [accountLocked, setAccountLocked] = useState(!employee?.can_login);
-  const [tempPassword, setTempPassword] = useState<string | null>(null);
   
   // Manual Password State - Default to true as requested
-  const [showManualPassword, setShowManualPassword] = useState(true);
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [manualData, setManualData] = useState({

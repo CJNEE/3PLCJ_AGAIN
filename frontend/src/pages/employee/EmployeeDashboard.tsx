@@ -24,7 +24,6 @@ import {
   Briefcase,
   LogOut,
   Menu,
-  X,
   Pencil,
   Moon,
   Sun,
@@ -80,7 +79,7 @@ const navigation = [
 export const EmployeeDashboard = () => {
   const navigate = useNavigate();
 
-  const { employee, user, logout, setEmployee, setUser } =
+  const { employee, logout, setEmployee, setUser } =
     useAuth();
 
   const [activeSection, setActiveSection] =

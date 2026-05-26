@@ -5,11 +5,8 @@ import { useUpdatePayroll, useCreatePayroll } from '@/hooks/useQueries';
 import { useAuth } from '@/hooks/useAuth';
 import { 
   Download, 
-  Edit2, 
-  Check, 
   DollarSign, 
   Calendar, 
-  User, 
   Clock, 
   ShieldAlert, 
   Percent, 

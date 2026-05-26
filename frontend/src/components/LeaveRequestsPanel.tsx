@@ -350,7 +350,7 @@ export const LeaveRequestsPanel = ({ initialFilter = 'pending' }: { initialFilte
                         </p>
                         {request.notes && (
                           <div className="mt-2 p-2 bg-white dark:bg-gray-900 rounded-lg text-xs italic">
-                            "{request.notes}"
+                            &ldquo;{request.notes}&rdquo;
                           </div>
                         )}
                       </div>

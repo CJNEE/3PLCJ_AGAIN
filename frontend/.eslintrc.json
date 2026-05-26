@@ -3,6 +3,7 @@
     "browser": true,
     "es2021": true
   },
+  "ignorePatterns": ["dist/", "node_modules/", "*.min.js"],
   "extends": [
     "eslint:recommended",
     "plugin:react/recommended",
@@ -20,6 +21,11 @@
     "react",
     "@typescript-eslint"
   ],
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  },
   "rules": {
     "react/react-in-jsx-scope": "off",
     "react/prop-types": "off",
@@ -28,6 +34,7 @@
       {
         "argsIgnorePattern": "^_"
       }
-    ]
+    ],
+    "@typescript-eslint/no-explicit-any": "off"
   }
 }

@@ -1,7 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
 import Sidebar from '@/components/Sidebar';
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyRecord = Record<string, any>;
 
 
 import { Card, Badge, LoadingSpinner, EmptyState } from '@/components/common';
@@ -306,28 +304,28 @@ export const AttendancePage = () => {
 
       {/* Filters */}
       <Card className="max-md:p-3">
-        <div className="flex flex-col lg:flex-row gap-3 items-end">
-          <div className="flex-1">
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 max-md:gap-2.5">
+          <div>
+            <label className="block text-sm max-md:text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5 max-md:mb-1">
               Date
             </label>
             <input
               type="date"
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
-              className="input-field w-full"
+              className="input-field w-full max-md:text-xs max-md:py-2 max-md:px-3"
             />
           </div>
 
-          <div className="flex-1">
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+          <div>
+            <label className="block text-sm max-md:text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5 max-md:mb-1">
               Hub Name
             </label>
             <select
               value={hubFilter}
               onChange={(e) => setHubFilter(e.target.value)}
               aria-label="Filter by hub name"
-              className="input-field w-full"
+              className="input-field w-full max-md:text-xs max-md:py-2 max-md:px-3"
             >
               <option value="All">All Hubs</option>
               {hubs.map((hub: any) => (
@@ -338,15 +336,15 @@ export const AttendancePage = () => {
             </select>
           </div>
 
-          <div className="flex-1">
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+          <div>
+            <label className="block text-sm max-md:text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5 max-md:mb-1">
               Status
             </label>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               aria-label="Filter by status"
-              className="input-field w-full"
+              className="input-field w-full max-md:text-xs max-md:py-2 max-md:px-3"
             >
               <option value="All">All Status</option>
               <option value="Present">Present</option>
@@ -355,18 +353,18 @@ export const AttendancePage = () => {
             </select>
           </div>
 
-          <div className="flex-1">
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+          <div>
+            <label className="block text-sm max-md:text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5 max-md:mb-1">
               Search
             </label>
             <div className="relative">
-              <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 max-md:w-3.5 max-md:h-3.5" size={18} />
               <input
                 type="text"
                 placeholder="Search user here..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="input-field !pl-10 w-full"
+                className="input-field !pl-10 max-md:!pl-8 w-full max-md:text-xs max-md:py-2 max-md:px-3"
               />
             </div>
           </div>

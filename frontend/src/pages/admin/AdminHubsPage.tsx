@@ -1,15 +1,15 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Card, Badge, LoadingSpinner, EmptyState } from '@/components/common';
+import { Card, LoadingSpinner } from '@/components/common';
 import { GlassCard } from '@/components/GlassCard';
 import { useGetHubs, useGetEmployees, useCreateHub, useDeleteHub, useUpdateHub } from '@/hooks/useQueries';
-import { MapPin, X, Search, Navigation, ChevronLeft, ChevronRight, Users, Footprints, Bike, Car, Plus, Trash2, Edit2, CloudRain, Sun, Cloud, Thermometer, Route, Shield } from 'lucide-react';
+import { MapPin, X, Search, Navigation, ChevronLeft, ChevronRight, Users, Footprints, Bike, Car, Plus, Trash2, Edit2, Route, Shield } from 'lucide-react';
 import { normalizeApiResponse } from '@/utils/apiResponseHandler';
 import { MapContainer, TileLayer, Marker, Polyline, Popup } from 'react-leaflet';
 import L from 'leaflet';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
 import 'leaflet/dist/leaflet.css';
 import Sidebar from '@/components/Sidebar';
-import { ThemeToggle } from '@/context/ThemeContext';
+
 import { fetchWeather } from '@/utils/weather';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -81,16 +81,7 @@ async function fetchOsrmProfile(
   return parseOsrmResponse(data);
 }
 
-function formatTravelTime(seconds: number): string {
-  if (!seconds || seconds < 0) return '0 min';
-  const minutes = Math.round(seconds / 60);
-  if (minutes < 60) {
-    return `${minutes} min`;
-  }
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
-  return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
-}
+
 
 function formatDistance(meters: number): string {
   if (!meters || meters < 0) return '0 km';
@@ -355,16 +346,7 @@ export const AdminHubsPage = () => {
     }
   };
 
-  // Best route logic
-  const bestRoute = useMemo(() => {
-    if (!routeData) return null;
-    const modes = [
-      { key: 'car', time: routeData.car.durationSec },
-      { key: 'riding', time: routeData.riding.durationSec },
-      { key: 'walking', time: routeData.walking.durationSec }
-    ];
-    return modes.sort((a, b) => a.time - b.time)[0].key;
-  }, [routeData]);
+
 
   if (isLoading) {
     return (

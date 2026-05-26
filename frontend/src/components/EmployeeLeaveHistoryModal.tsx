@@ -3,7 +3,7 @@ import { Modal } from './Modal';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
 import { apiClient } from '@/api/apiService';
-import { Card, Badge, LoadingSpinner } from './common';
+import { Badge, LoadingSpinner } from './common';
 import { Calendar, Clock, User, MessageSquare, Paperclip, Eye, Download, ChevronRight } from 'lucide-react';
 import { AttachmentPreviewModal } from './AttachmentPreviewModal';
 
@@ -153,7 +153,7 @@ export const EmployeeLeaveHistoryModal = ({ isOpen, onClose }: Props) => {
                     </h4>
                     <div className="bg-gray-50 dark:bg-gray-900/50 p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm">
                       <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed font-medium italic">
-                        "{selected.reason || 'No reason provided'}"
+                        &ldquo;{selected.reason || 'No reason provided'}&rdquo;
                       </p>
                     </div>
                   </div>

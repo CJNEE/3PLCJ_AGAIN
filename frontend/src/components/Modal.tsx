@@ -1,6 +1,5 @@
 import { useRef, ReactNode, useEffect } from 'react';
 import { X } from 'lucide-react';
-import { Button } from './common';
 
 interface ModalProps {
   isOpen: boolean;

@@ -1,15 +1,4 @@
-import { formatDate, formatTime, formatDateTime, capitalizeString, truncateString, getStatusColor } from '@/utils/helpers';
 
-interface AttendanceRecord {
-  id: number;
-  employee_name: string;
-  date: string;
-  clock_in_time?: string;
-  clock_out_time?: string;
-  clock_in_image?: string;
-  clock_out_image?: string;
-  status: string;
-}
 
 export const AttendanceHistoryScreen = () => {
   return (

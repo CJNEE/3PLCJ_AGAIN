@@ -1,20 +1,5 @@
 const devFallback = 'http://localhost:8000/api';
 
-/** Default backend when `VITE_API_URL` is unset. Same host as `vercel.json` rewrites. */
-const DEFAULT_PRODUCTION_API =
-  'https://threepl-backend-wf79.onrender.com/api';
-
-function looksLikeLocalBackend(url: string): boolean {
-  const t = url.trim();
-  try {
-    const proto = /^https?:\/\//i.test(t) ? '' : 'http://';
-    const u = new URL(proto + t.replace(/^\/\//, ''));
-    const h = u.hostname.toLowerCase();
-    return h === 'localhost' || h === '127.0.0.1';
-  } catch {
-    return /localhost|127\.0\.0\.1/i.test(t);
-  }
-}
 
 /** If VITE_API_URL is only scheme+host (e.g. Render root), normalize to `/api`. */
 function normalizeEnvApiBase(raw: string): string {

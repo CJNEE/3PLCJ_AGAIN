@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Users, MapPin, Lock, Clock, DollarSign, Activity, AlertTriangle, FileText, ChevronDown, ChevronRight } from 'lucide-react';
+import { Home, Users, MapPin, Lock, Clock, DollarSign, Activity, AlertTriangle, FileText } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 // Re‑use the navigation definition from Sidebar for consistency

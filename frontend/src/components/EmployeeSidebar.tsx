@@ -1,6 +1,4 @@
 import { AttendanceSidebar } from '@/components/AttendanceSidebar';
-import { FileText, Phone } from 'lucide-react';
-import { InfoItem } from '@/components/InfoCard';
 import { AttendanceHistoryModal } from '@/components/AttendanceHistoryModal';
 import { useState } from 'react';
 
@@ -12,7 +10,7 @@ type EmployeeSidebarProps = {
 };
 
 
-export const EmployeeSidebar = ({ employeeId, employee }: EmployeeSidebarProps) => {
+export const EmployeeSidebar = ({ employeeId, employee: _employee }: EmployeeSidebarProps) => {
   const [historyOpen, setHistoryOpen] = useState(false);
 
   return (

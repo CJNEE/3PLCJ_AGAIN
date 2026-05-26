@@ -88,7 +88,7 @@ export const authAPI = {
    EMPLOYEE API
 ========================= */
 export const employeeAPI = {
-  getEmployees: async (params?: Record<string, any>) => {
+  getEmployees: async (params?: Record<string, unknown>) => {
     const response = await apiClient.get(API_ENDPOINTS.EMPLOYEES, { params });
     return response.data;
   },
@@ -98,12 +98,12 @@ export const employeeAPI = {
     return response.data;
   },
 
-  createEmployee: async (data: any) => {
+  createEmployee: async (data: unknown) => {
     const response = await apiClient.post(API_ENDPOINTS.EMPLOYEES, data);
     return response.data;
   },
 
-  updateEmployee: async (id: number, data: any) => {
+  updateEmployee: async (id: number, data: unknown) => {
     const response = await apiClient.patch(API_ENDPOINTS.EMPLOYEE_DETAIL(id), data);
     return response.data;
   },
@@ -129,7 +129,7 @@ export const employeeAPI = {
    HUB API
 ========================= */
 export const hubAPI = {
-  getHubs: async (params?: Record<string, any>) => {
+  getHubs: async (params?: Record<string, unknown>) => {
     const response = await apiClient.get(API_ENDPOINTS.HUBS, { params });
     return response.data;
   },
@@ -139,7 +139,7 @@ export const hubAPI = {
     return response.data;
   },
 
-  createHub: async (data: any) => {
+  createHub: async (data: unknown) => {
     const response = await apiClient.post(API_ENDPOINTS.HUBS, data);
     return response.data;
   },
@@ -149,7 +149,7 @@ export const hubAPI = {
     return response.data;
   },
 
-  updateHub: async ({ id, data }: { id: number; data: any }) => {
+  updateHub: async ({ id, data }: { id: number; data: unknown }) => {
     const response = await apiClient.patch(API_ENDPOINTS.HUB_DETAIL(id), data);
     return response.data;
   },
@@ -159,7 +159,7 @@ export const hubAPI = {
    ATTENDANCE API
 ========================= */
 export const attendanceAPI = {
-  getAttendance: async (params?: Record<string, any>) => {
+  getAttendance: async (params?: Record<string, unknown>) => {
     const response = await apiClient.get(API_ENDPOINTS.ATTENDANCE, { params });
     return response.data;
   },
@@ -184,7 +184,7 @@ export const attendanceAPI = {
    PAYROLL API
 ========================= */
 export const payrollAPI = {
-  getPayroll: async (params?: Record<string, any>) => {
+  getPayroll: async (params?: Record<string, unknown>) => {
     const response = await apiClient.get(API_ENDPOINTS.PAYROLL, { params });
     return response.data;
   },
@@ -194,12 +194,12 @@ export const payrollAPI = {
     return response.data;
   },
 
-  updatePayroll: async (id: number, data: Record<string, any>) => {
+  updatePayroll: async (id: number, data: Record<string, unknown>) => {
     const response = await apiClient.patch(API_ENDPOINTS.PAYROLL_DETAIL(id), data);
     return response.data;
   },
 
-  createPayroll: async (data: Record<string, any>) => {
+  createPayroll: async (data: Record<string, unknown>) => {
     const response = await apiClient.post(API_ENDPOINTS.PAYROLL, data);
     return response.data;
   },
@@ -216,15 +216,15 @@ export const payrollAPI = {
    LEAVE REQUEST API
 ========================= */
 export const leaveRequestAPI = {
-  getLeaveRequests: async (params?: Record<string, any>) => {
+  getLeaveRequests: async (params?: Record<string, unknown>) => {
     const response = await apiClient.get(API_ENDPOINTS.LEAVE_REQUESTS, { params });
     return response.data;
   },
-  approveRequest: async (id: number, data?: any) => {
+  approveRequest: async (id: number, data?: unknown) => {
     const response = await apiClient.patch(`${API_ENDPOINTS.LEAVE_REQUESTS}${id}/approve/`, data || {});
     return response.data;
   },
-  rejectRequest: async (id: number, data?: any) => {
+  rejectRequest: async (id: number, data?: unknown) => {
     const response = await apiClient.patch(`${API_ENDPOINTS.LEAVE_REQUESTS}${id}/reject/`, data || {});
     return response.data;
   },
@@ -238,7 +238,7 @@ export const leaveRequestAPI = {
    EDIT REQUEST API
 ========================= */
 export const editRequestAPI = {
-  getEditRequests: async (params?: Record<string, any>) => {
+  getEditRequests: async (params?: Record<string, unknown>) => {
     const response = await apiClient.get(API_ENDPOINTS.EDIT_REQUESTS, { params });
     return response.data;
   },
@@ -253,7 +253,7 @@ export const editRequestAPI = {
     return response.data;
   },
 
-  rejectRequest: async (id: number, data?: Record<string, any>) => {
+  rejectRequest: async (id: number, data?: Record<string, unknown>) => {
     const response = await apiClient.patch(API_ENDPOINTS.EDIT_REQUEST_REJECT(id), data || {});
     return response.data;
   },
@@ -273,7 +273,7 @@ export const editRequestAPI = {
    LIVE LOCATION API
 ========================= */
 export const liveLocationAPI = {
-  getLiveLocations: async (params?: Record<string, any>) => {
+  getLiveLocations: async (params?: Record<string, unknown>) => {
     const response = await apiClient.get(API_ENDPOINTS.LIVE_LOCATIONS, { params });
     return response.data;
   },
@@ -283,7 +283,7 @@ export const liveLocationAPI = {
    STATS API
 ========================= */
 export const statsAPI = {
-  getStats: async (params?: Record<string, any>) => {
+  getStats: async (params?: Record<string, unknown>) => {
     const response = await apiClient.get(API_ENDPOINTS.STATS, { params });
     return response.data;
   },
@@ -293,7 +293,7 @@ export const statsAPI = {
    ACTIVITY LOG API
 ========================= */
 export const activityLogAPI = {
-  getActivityLogs: async (params?: Record<string, any>) => {
+  getActivityLogs: async (params?: Record<string, unknown>) => {
     const response = await apiClient.get(API_ENDPOINTS.ACTIVITY_LOGS, { params });
     return response.data;
   },
@@ -308,7 +308,7 @@ export const activityLogAPI = {
    SECURITY ALERT API
 ========================= */
 export const securityAlertAPI = {
-  getSecurityAlerts: async (params?: Record<string, any>) => {
+  getSecurityAlerts: async (params?: Record<string, unknown>) => {
     const response = await apiClient.get(API_ENDPOINTS.SECURITY_ALERTS, { params });
     return response.data;
   },
@@ -323,7 +323,7 @@ export const securityAlertAPI = {
    EMPLOYEE DOCUMENT API
 ========================= */
 export const documentAPI = {
-  getDocuments: async (params?: Record<string, any>) => {
+  getDocuments: async (params?: Record<string, unknown>) => {
     const response = await apiClient.get(API_ENDPOINTS.EMPLOYEE_DOCUMENTS_LIST, { params });
     return response.data;
   },

@@ -1,16 +1,14 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Card, Badge, Button, LoadingSpinner, ErrorMessage, EmptyState } from '@/components/common';
-import { Modal } from '@/components/Modal';
+import { Card, Badge, LoadingSpinner, EmptyState } from '@/components/common';
 import { useGetEmployees, useGetHubs, useGetAttendance, useGetSecurityAlerts, useGetActivityLogs } from '@/hooks/useQueries';
-import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { useAuth } from '@/hooks/useAuth';
-import { Search, Users, MapPin, AlertTriangle, Eye, Trash2, Edit, X, Navigation, Loader, User, Phone, Mail, Briefcase, Calendar, Shield, CreditCard, Clock, Landmark, FileText, CheckCircle, AlertCircle } from 'lucide-react';
-import { normalizeApiResponse, getApiResponseCount } from '@/utils/apiResponseHandler';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import { Search, Eye, X, User, Phone, Briefcase, Shield, Clock, Landmark } from 'lucide-react';
+import { normalizeApiResponse } from '@/utils/apiResponseHandler';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import HubsEmployeeChart from '@/components/HubsEmployeeChart';
-import { calculateDistance, calculateTravelTime, formatTravelTime, getUserLocation } from '@/utils/locationUtils';
 import { Sidebar } from '@/components/Sidebar';
 
 // Color mappings for status
@@ -32,18 +30,10 @@ export const AdminDashboard = () => {
   const { employee } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [searchHubTerm, setSearchHubTerm] = useState('');
-  const [hubFilter, setHubFilter] = useState<number | null>(null);
+  const [hubFilter] = useState<number | null>(null);
   const [searchLocationTerm, setSearchLocationTerm] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
-  const [directions, setDirections] = useState<any>({
-    userLocation: null,
-    selectedHub: null,
-    distance: null,
-    travelTimes: null,
-    isLoadingLocation: false,
-    error: null,
-  });
 
 
   // Create beautiful custom SVG markers for Leaflet (remove ugly black shadows)
@@ -62,28 +52,13 @@ export const AdminDashboard = () => {
     popupAnchor: [0, -16]
   });
 
-  // Create user location icon
-  const userIcon = L.divIcon({
-    className: 'custom-user-marker',
-    html: `
-      <div class="relative flex items-center justify-center" style="width: 32px; height: 32px;">
-        <div class="absolute w-8 h-8 bg-blue-500/30 rounded-full animate-pulse"></div>
-        <div class="relative w-7 h-7 bg-blue-600 rounded-full border-2 border-white shadow-md flex items-center justify-center">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
-        </div>
-      </div>
-    `,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-    popupAnchor: [0, -16]
-  });
 
   // Fetch data
   const employeesQuery = useGetEmployees({ hub_id: hubFilter });
   const hubsQuery = useGetHubs();
-  const attendanceQuery = useGetAttendance();
-  const securityAlertsQuery = useGetSecurityAlerts();
-  const activityLogsQuery = useGetActivityLogs({ limit: 5 });
+  useGetAttendance();
+  useGetSecurityAlerts();
+  useGetActivityLogs({ limit: 5 });
 
   // Loading state
   const isLoading = employeesQuery.isLoading || hubsQuery.isLoading;
@@ -115,7 +90,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
   // Calculate stats
   const allEmployees = normalizeApiResponse(employeesQuery.data);
   const totalEmployees = allEmployees.length;
-  const activeEmployees = allEmployees.filter((emp: any) => emp.status === 'Active').length;
+
 
   // Employment type distribution
   const employmentTypeData = useMemo(() => {
@@ -160,16 +135,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
       }));
   }, [allEmployees]);
 
-  // Workforce status distribution
-  const workforceStatusData = useMemo(() => {
-    const positions = {} as Record<string, number>;
-    allEmployees.forEach((emp: any) => {
-      positions[emp.position] = (positions[emp.position] || 0) + 1;
-    });
-    return Object.entries(positions).map(([name, value]) => ({ name, count: value }));
-  }, [allEmployees]);
 
-  const COLORS = ['#C41E3A', '#10B981', '#F59E0B', '#3B82F6', '#8B5CF6'];
 
   // Get hub coordinates
   const cityCoords: Record<string, [number, number]> = {
@@ -196,61 +162,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
     return [12.5797, 124.0758];
   };
 
-  // Direction handlers
-  const handleMarkerClick = (hub: any) => {
-    const coords = getHubCoordinates(hub);
-    setDirections((prev: any) => ({
-      ...prev,
-      selectedHub: { ...hub, coordinates: coords },
-      distance: null,
-      travelTimes: null,
-      error: null,
-    }));
-  };
 
-  const handleGetDirection = async () => {
-    setDirections((prev: any) => ({
-      ...prev,
-      isLoadingLocation: true,
-      error: null,
-    }));
-
-    try {
-      const userLoc = await getUserLocation();
-      const hubCoords = directions.selectedHub.coordinates;
-      const dist = calculateDistance(userLoc[0], userLoc[1], hubCoords[0], hubCoords[1]);
-      const times = {
-        walk: calculateTravelTime(dist, 'walk'),
-        ride: calculateTravelTime(dist, 'ride'),
-        car: calculateTravelTime(dist, 'car'),
-      };
-
-      setDirections((prev: any) => ({
-        ...prev,
-        userLocation: userLoc,
-        distance: dist,
-        travelTimes: times,
-        isLoadingLocation: false,
-      }));
-    } catch (error: any) {
-      setDirections((prev: any) => ({
-        ...prev,
-        isLoadingLocation: false,
-        error: error.message || 'Failed to get location. Please enable location services.',
-      }));
-    }
-  };
-
-  const handleCloseDirections = () => {
-    setDirections({
-      userLocation: null,
-      selectedHub: null,
-      distance: null,
-      travelTimes: null,
-      isLoadingLocation: false,
-      error: null,
-    });
-  };
 
   if (isLoading) {
     return (

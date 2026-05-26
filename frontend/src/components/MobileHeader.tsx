@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Bell, Menu, X } from 'lucide-react';
+import { Bell, Menu } from 'lucide-react';
 import logo from '@/images/3pl4.png';
 
 export const MobileHeader: React.FC<{ onMenuToggle?: () => void }> = ({ onMenuToggle }) => {

@@ -1,8 +1,5 @@
-import { useState } from 'react';
 import { Modal } from './Modal';
 import { Button } from './common';
-import { useUpdateEmployee } from '@/hooks/useQueries';
-import { useToast } from '@/hooks/useToast';
 
 interface Employee {
   id: number;
@@ -28,7 +25,6 @@ interface EmployeeProfileModalProps {
 }
 
 export const EmployeeProfileModal = ({ employee, isOpen, onClose }: EmployeeProfileModalProps) => {
-  const { success } = useToast();
 
   if (!employee) return null;
 

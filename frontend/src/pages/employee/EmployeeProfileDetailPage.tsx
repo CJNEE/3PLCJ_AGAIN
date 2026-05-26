@@ -87,7 +87,7 @@ export const EmployeeProfileDetailPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { success, error } = useToast();
-  const { employee: currentEmployee, user: currentUser } = useAuth();
+  const { employee: currentEmployee } = useAuth();
   
   const showAdminSidebar = location.pathname.startsWith('/admin') || location.pathname.startsWith('/hr');
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -103,12 +103,11 @@ export const EmployeeProfileDetailPage = () => {
   const [hasError, setHasError] = useState(false);
 
   const isOwnProfile = currentEmployee?.id === Number(id);
-  const { isAdmin, isHR, canEditEmployeeInfo, canResetPassword } = useAuth();
+  const { isAdmin, isHR, canEditEmployeeInfo } = useAuth();
   const isHRorAdmin = isAdmin || isHR;
   
   // HR can only edit if they have the permission
   const canEdit = isAdmin || (isHR && canEditEmployeeInfo) || isOwnProfile;
-  const canReset = isAdmin || (isHR && canResetPassword);
 
   useEffect(() => {
     if (id) {
@@ -150,12 +149,6 @@ export const EmployeeProfileDetailPage = () => {
   const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setProfileImage(e.target.files[0]);
-    }
-  };
-
-  const handleAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setAttachments(Array.from(e.target.files));
     }
   };
 

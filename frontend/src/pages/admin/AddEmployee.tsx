@@ -127,8 +127,7 @@ export const AddEmployee = ({ onCancel, onClose, onCreated }: AddEmployeeProps) 
   const [roles, setRoles] = useState<string[]>(['Employee', 'HR', 'Admin']);
   const [employmentTypes, setEmploymentTypes] = useState<string[]>(['Full-time', 'Full Time', 'Part Time', 'Contract', 'Intern', 'OCW']);
   const [statuses, setStatuses] = useState<string[]>(['Active', 'Resign', 'AWOL', 'Blacklist']);
-  const [genders, setGenders] = useState<string[]>(['Male', 'Female', 'Other']);
-  const [maritalStatuses, setMaritalStatuses] = useState<string[]>(['Single', 'Married', 'Divorced', 'Widowed']);
+  const [genders] = useState<string[]>(['Male', 'Female', 'Other']);
   const [positions, setPositions] = useState<string[]>([]);
   const [hubs, setHubs] = useState<HubOption[]>([]);
 
