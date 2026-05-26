@@ -2,13 +2,13 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import {
-  Home,
+  LayoutDashboard,
   Users,
   MapPin,
   FileText,
   CalendarDays,
   Lock,
-  Clock,
+ Clock,
   DollarSign,
   Activity,
   AlertTriangle,
@@ -41,7 +41,8 @@ export const BottomNavigation = ({
       : '/employee';
 
   const navItems = [
-    { label: 'Dashboard', icon: Home, path: basePath },
+    // CHANGED HOME -> LAYOUTDASHBOARD
+    { label: 'Dashboard', icon: LayoutDashboard, path: basePath },
     { label: 'Employees', icon: Users, path: `${basePath}/employees` },
     { label: 'Hubs', icon: MapPin, path: `${basePath}/hubs` },
     { label: 'Edit', icon: FileText, path: `${basePath}/edit-requests` },
@@ -67,28 +68,27 @@ export const BottomNavigation = ({
         `}
       >
         <div className="relative w-full max-w-[540px]">
-          {/* BACKGROUND LAYER */}
+          {/* GLASS BACKGROUND */}
           <div
             className="
-              absolute
-              bottom-0 left-0 right-0
-              h-[80px]
-              rounded-3xl
-              border border-white/40 dark:border-white/10
-              bg-white/60 dark:bg-[#081120]/60
-              backdrop-blur-2xl
-              shadow-[0_8px_32px_rgba(0,0,0,0.2)]
+              absolute inset-0
+              h-[82px]
+              rounded-[28px]
+              border border-white/20
+              bg-white/10 dark:bg-[#081120]/70
+              backdrop-blur-3xl
+              shadow-[0_8px_30px_rgba(0,0,0,0.25)]
             "
           />
 
-          {/* SCROLL CONTAINER WITH TOP PADDING TO PREVENT CLIPPING */}
+          {/* NAV CONTENT */}
           <div
             className="
               relative
               w-full
               overflow-x-auto
               scrollbar-hide
-              px-2 pb-2 pt-6
+              px-2 py-2
             "
           >
             <div className="flex items-center gap-1 min-w-max">
@@ -106,62 +106,82 @@ export const BottomNavigation = ({
                     to={item.path}
                     className="
                       relative
-                      flex flex-col items-center justify-center
-                      min-w-[70px]
+                      flex items-center justify-center
+                      min-w-[72px]
                       h-[72px]
-                      group
                     "
                   >
-                    <motion.div
-                      whileTap={{ scale: 0.9 }}
-                      className="relative flex flex-col items-center justify-center w-full h-full z-20"
-                    >
-                      {/* FLOATING CIRCLE BACKGROUND */}
-                      {isActive && (
-                        <motion.div
-                          initial={{ scale: 0.5, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          className="
-                            absolute
-                            top-[-10px]
-                            left-1/2 -translate-x-1/2
-                            w-[48px]
-                            h-[48px]
-                            rounded-full
-                            bg-gradient-to-tr from-red-600/90 to-red-500/90
-                            backdrop-blur-md
-                            shadow-[0_4px_15px_rgba(220,38,38,0.5)]
-                            z-0
-                          "
-                        />
-                      )}
+                    {/* ACTIVE INDICATOR */}
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeTab"
+                        transition={{
+                          type: 'spring',
+                          stiffness: 350,
+                          damping: 25,
+                        }}
+                        className="
+                          absolute
+                          top-1
+                          w-[52px]
+                          h-[52px]
+                          rounded-full
+                          bg-gradient-to-br
+                          from-red-500
+                          to-red-600
+                          shadow-[0_8px_20px_rgba(239,68,68,0.45)]
+                        "
+                      />
+                    )}
 
+                    {/* CONTENT */}
+                    <motion.div
+                      whileTap={{ scale: 0.92 }}
+                      className="
+                        relative z-10
+                        flex flex-col items-center justify-center
+                        gap-1
+                      "
+                    >
                       {/* ICON */}
                       <motion.div
-                        animate={{ y: isActive ? -22 : 0 }}
-                        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                        animate={{
+                          y: isActive ? -8 : 0,
+                          scale: isActive ? 1.08 : 1,
+                        }}
+                        transition={{
+                          type: 'spring',
+                          stiffness: 300,
+                          damping: 20,
+                        }}
                         className={`
-                          relative z-10
-                          flex items-center justify-center
-                          w-[40px] h-[40px]
                           transition-colors duration-300
-                          ${isActive ? 'text-white' : 'text-gray-500 dark:text-gray-400 group-hover:text-red-500'}
+                          ${
+                            isActive
+                              ? 'text-white'
+                              : 'text-gray-500 dark:text-gray-400'
+                          }
                         `}
                       >
-                        <Icon size={24} className={isActive ? 'scale-110' : ''} />
+                        <Icon size={22} strokeWidth={2.4} />
                       </motion.div>
 
                       {/* LABEL */}
                       <motion.span
                         animate={{
+                          opacity: isActive ? 1 : 0.65,
                           y: isActive ? 2 : 0,
-                          opacity: isActive ? 1 : 0.7,
                         }}
                         className={`
-                          absolute bottom-1
-                          text-[10px] font-bold tracking-wide
+                          text-[10px]
+                          font-semibold
+                          tracking-wide
                           transition-colors duration-300
-                          ${isActive ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}
+                          ${
+                            isActive
+                              ? 'text-red-500 dark:text-red-400'
+                              : 'text-gray-500 dark:text-gray-400'
+                          }
                         `}
                       >
                         {item.label}
