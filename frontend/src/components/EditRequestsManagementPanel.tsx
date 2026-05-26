@@ -167,11 +167,11 @@ export const EditRequestsPanel = () => {
         <Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
       </div>
 
-      <div className="p-4 lg:p-6 lg:ml-64 space-y-6 pb-32 lg:pb-6">
+      <div className="p-4 lg:p-6 lg:ml-64 space-y-6 pb-32 lg:pb-6 max-md:p-3 max-md:space-y-4 max-md:pb-32">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Edit Requests</h1>
-            <p className="text-gray-600 dark:text-gray-400">Review and approve/reject employee edit requests</p>
+            <h1 className="text-3xl max-md:text-2xl font-bold mb-2 max-md:mb-1">Edit Requests</h1>
+            <p className="text-gray-600 dark:text-gray-400 max-md:text-xs">Review and approve/reject employee edit requests</p>
           </div>
 
           {editRequests.length > 0 && (
@@ -193,13 +193,13 @@ export const EditRequestsPanel = () => {
         </div>
 
         {/* Filter Buttons */}
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap max-md:grid max-md:grid-cols-2">
           {(['all', 'pending', 'approved', 'rejected'] as const).map((status) => (
             <Button
               key={status}
               variant={filterStatus === status ? 'primary' : 'secondary'}
               onClick={() => setFilterStatus(status)}
-              className="capitalize"
+              className="capitalize max-md:w-full max-md:text-xs max-md:py-2 max-md:px-2"
             >
               {status}
             </Button>
@@ -217,16 +217,16 @@ export const EditRequestsPanel = () => {
           <div className="space-y-4">
             {editRequests.map((request) => (
               <Card key={request.id} className="p-0">
-                <div className="p-4 border-b dark:border-gray-700 flex justify-between items-start">
+                <div className="p-4 max-md:p-3 border-b dark:border-gray-700 flex justify-between items-start">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-bold">{request.employee_name}</h3>
+                    <div className="flex items-center gap-3 mb-2 flex-wrap">
+                      <h3 className="text-lg max-md:text-base font-bold">{request.employee_name}</h3>
                       <Badge variant={getStatusBadgeVariant(request.status)}>
                         {request.status}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{request.changes_preview}</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-sm max-md:text-xs text-gray-600 dark:text-gray-400 mb-2">{request.changes_preview}</p>
+                    <p className="text-xs max-md:text-[10px] text-gray-500">
                       <Clock size={14} className="inline mr-1" />
                       Requested: {new Date(request.created_at).toLocaleDateString()}
                     </p>
@@ -298,7 +298,7 @@ export const EditRequestsPanel = () => {
                             rows={3}
                           />
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 max-md:flex-col">
                           <Button
                             variant="success"
                             onClick={() => handleApprove(request.id)}

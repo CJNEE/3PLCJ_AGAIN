@@ -120,16 +120,16 @@ export const ActivityLogsPage = () => {
         />
       </div>
 
-      <div className="p-4 lg:p-6 lg:ml-64 space-y-6 pb-32 lg:pb-6">
+      <div className="p-4 lg:p-6 lg:ml-64 space-y-6 pb-32 lg:pb-6 max-md:p-3 max-md:space-y-4 max-md:pb-32">
 
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-          <Activity size={28} className="text-blue-600 dark:text-blue-400" />
+        <div className="p-3 max-md:p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+          <Activity size={28} className="text-blue-600 dark:text-blue-400 max-md:w-6 max-md:h-6" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold">Activity Logs</h1>
-          <p className="text-gray-600 dark:text-gray-400 text-sm">
+          <h1 className="text-3xl max-md:text-2xl font-bold">Activity Logs</h1>
+          <p className="text-gray-600 dark:text-gray-400 text-sm max-md:text-xs">
             Track all user activities and system events
           </p>
         </div>
@@ -153,46 +153,46 @@ export const ActivityLogsPage = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-md:gap-3">
+        <Card className="p-4 max-md:p-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 dark:text-gray-400 text-sm">Total Activities</p>
-              <p className="text-3xl font-bold text-blue-600">{filteredLogs.length}</p>
+              <p className="text-gray-600 dark:text-gray-400 text-sm max-md:text-xs">Total Activities</p>
+              <p className="text-3xl max-md:text-2xl font-bold text-blue-600">{filteredLogs.length}</p>
             </div>
-            <Activity size={40} className="text-blue-100 dark:text-blue-900/30" />
+            <Activity size={40} className="text-blue-100 dark:text-blue-900/30 max-md:w-8 max-md:h-8" />
           </div>
         </Card>
 
-        <Card className="p-4">
+        <Card className="p-4 max-md:p-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 dark:text-gray-400 text-sm">Unique Actions</p>
-              <p className="text-3xl font-bold text-green-600">{uniqueActions.length}</p>
+              <p className="text-gray-600 dark:text-gray-400 text-sm max-md:text-xs">Unique Actions</p>
+              <p className="text-3xl max-md:text-2xl font-bold text-green-600">{uniqueActions.length}</p>
             </div>
-            <FileText size={40} className="text-green-100 dark:text-green-900/30" />
+            <FileText size={40} className="text-green-100 dark:text-green-900/30 max-md:w-8 max-md:h-8" />
           </div>
         </Card>
 
-        <Card className="p-4">
+        <Card className="p-4 max-md:p-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 dark:text-gray-400 text-sm">Active Roles</p>
-              <p className="text-3xl font-bold text-purple-600">{uniqueRoles.length}</p>
+              <p className="text-gray-600 dark:text-gray-400 text-sm max-md:text-xs">Active Roles</p>
+              <p className="text-3xl max-md:text-2xl font-bold text-purple-600">{uniqueRoles.length}</p>
             </div>
-            <User size={40} className="text-purple-100 dark:text-purple-900/30" />
+            <User size={40} className="text-purple-100 dark:text-purple-900/30 max-md:w-8 max-md:h-8" />
           </div>
         </Card>
       </div>
 
       {/* Filters */}
-      <Card className="p-4 space-y-4">
-        <div className="flex items-center gap-2 mb-4">
-          <Filter size={20} className="text-gray-600 dark:text-gray-400" />
-          <h3 className="font-semibold text-lg">Filters</h3>
+      <Card className="p-4 max-md:p-3 space-y-4 max-md:space-y-3">
+        <div className="flex items-center gap-2 mb-4 max-md:mb-2">
+          <Filter size={20} className="text-gray-600 dark:text-gray-400 max-md:w-4 max-md:h-4" />
+          <h3 className="font-semibold text-lg max-md:text-base">Filters</h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-md:gap-3">
           {/* Search */}
           <div className="relative">
             <Search size={16} className="absolute left-3 top-3 text-gray-400" />
@@ -246,8 +246,8 @@ export const ActivityLogsPage = () => {
 
       {/* Activity Logs Table */}
       {paginatedLogs.length > 0 ? (
-        <Card className="overflow-hidden">
-          <div className="overflow-x-auto">
+        <Card className="overflow-hidden max-md:p-0 max-md:bg-transparent max-md:border-none max-md:shadow-none">
+          <div className="overflow-x-auto max-md:hidden">
             <table className="w-full">
               <thead className="bg-gray-900 dark:bg-gray-950 text-white sticky top-0">
                 <tr>
@@ -312,28 +312,63 @@ export const ActivityLogsPage = () => {
             </table>
           </div>
 
+          {/* MOBILE CARDS */}
+          <div className="hidden max-md:flex flex-col gap-3">
+            {paginatedLogs.map((log: any) => (
+              <div key={log.id} className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col gap-3">
+                <div className="flex justify-between items-start gap-2">
+                  <div className="flex flex-col gap-1 min-w-0">
+                    <span className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                      {log.user?.username || 'System'}
+                    </span>
+                    <Badge variant={log.role === 'Admin' ? 'error' : log.role === 'HR' ? 'warning' : 'success'} className="w-fit text-[10px]">
+                      {log.role}
+                    </Badge>
+                  </div>
+                  <div className="text-right flex flex-col items-end gap-1">
+                    <span className="text-[10px] text-gray-500 whitespace-nowrap">
+                      {new Date(log.created_at).toLocaleDateString()} {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                    <Badge variant={getActionColor(log.action)} className="text-[10px]">
+                      {formatAction(log.action)}
+                    </Badge>
+                  </div>
+                </div>
+                
+                <div className="bg-gray-50 dark:bg-gray-800/50 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700/50 text-sm text-gray-700 dark:text-gray-300 break-words">
+                  {log.details}
+                </div>
+                
+                <div className="flex justify-between items-center text-[10px] text-gray-500 border-t border-gray-50 dark:border-gray-700/50 pt-2 mt-1">
+                  <span>IP: {log.ip_address || 'N/A'}</span>
+                  <span>{formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="bg-gray-50 dark:bg-gray-800/50 px-6 py-4 flex items-center justify-between border-t border-gray-200 dark:border-gray-700">
-              <span className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="bg-gray-50 dark:bg-gray-800/50 px-6 py-4 max-md:px-3 max-md:py-3 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 max-md:flex-col max-md:gap-3 max-md:bg-transparent max-md:border-none">
+              <span className="text-sm max-md:text-xs text-gray-600 dark:text-gray-400">
                 Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
                 {Math.min(currentPage * itemsPerPage, filteredLogs.length)} of {filteredLogs.length}
               </span>
-              <div className="flex gap-2">
+              <div className="flex gap-2 max-md:w-full">
                 <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 max-md:flex-1 max-md:py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold max-md:text-sm"
                 >
                   Previous
                 </button>
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center px-3 py-2">
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center px-3 py-2 max-md:px-1">
                   {currentPage} / {totalPages}
                 </span>
                 <button
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
-                  className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 max-md:flex-1 max-md:py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold max-md:text-sm"
                 >
                   Next
                 </button>

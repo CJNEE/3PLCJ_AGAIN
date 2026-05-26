@@ -35,19 +35,19 @@ export const AdminEmployeesPage = () => {
         <Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
       </div>
 
-      <div className="p-4 lg:p-6 lg:ml-64 space-y-6 pb-32 lg:pb-6">
+      <div className="p-4 lg:p-6 lg:ml-64 space-y-6 max-md:space-y-4 pb-32 lg:pb-6 max-md:p-3">
         {/* Mobile bottom navigation */}
 
         <div className="flex items-center justify-between">
           <div>
 
-            <h1 className="text-3xl font-bold mb-2">Employee Management</h1>
-            <p className="text-gray-600 dark:text-gray-400">Manage employees and their information</p>
+            <h1 className="text-3xl max-md:text-2xl font-bold mb-2 max-md:mb-1">Employee Management</h1>
+            <p className="text-gray-600 dark:text-gray-400 max-md:text-xs">Manage employees and their information</p>
           </div>
 
           {canEditEmployeeInfo && (
             <div>
-              <button onClick={() => setShowAdd(true)} className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md">
+              <button onClick={() => setShowAdd(true)} className="inline-flex items-center px-4 py-2 max-md:px-3 max-md:py-1.5 max-md:text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md">
                 Add Employee
               </button>
             </div>

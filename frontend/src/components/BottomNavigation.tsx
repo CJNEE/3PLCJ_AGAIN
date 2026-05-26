@@ -108,7 +108,7 @@ export const BottomNavigation = ({
                       relative
                       flex flex-col items-center justify-center
                       min-w-[70px]
-                      h-[64px]
+                      h-[72px]
                       group
                     "
                   >
@@ -123,10 +123,10 @@ export const BottomNavigation = ({
                           animate={{ scale: 1, opacity: 1 }}
                           className="
                             absolute
-                            -top-5
+                            top-[-10px]
                             left-1/2 -translate-x-1/2
-                            w-[50px]
-                            h-[50px]
+                            w-[48px]
+                            h-[48px]
                             rounded-full
                             bg-gradient-to-tr from-red-600/90 to-red-500/90
                             backdrop-blur-md
@@ -138,7 +138,7 @@ export const BottomNavigation = ({
 
                       {/* ICON */}
                       <motion.div
-                        animate={{ y: isActive ? -27 : 0 }}
+                        animate={{ y: isActive ? -22 : 0 }}
                         transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                         className={`
                           relative z-10
@@ -154,7 +154,7 @@ export const BottomNavigation = ({
                       {/* LABEL */}
                       <motion.span
                         animate={{
-                          y: isActive ? 4 : 0,
+                          y: isActive ? 2 : 0,
                           opacity: isActive ? 1 : 0.7,
                         }}
                         className={`

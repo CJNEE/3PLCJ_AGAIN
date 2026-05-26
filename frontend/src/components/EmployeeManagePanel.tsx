@@ -118,80 +118,149 @@ export const EmployeeManagePanel = () => {
             </div>
           )}
 
-          {/* Employee Table */}
+          {/* Employee Table & Mobile Cards */}
           {employees.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-100 dark:bg-gray-800">
-                  <tr>
-                    <th className="px-4 py-3 text-left">
-                      <input
-                        type="checkbox"
-                        checked={selectedEmployees.length === employees.length && employees.length > 0}
-                        onChange={(e) => handleSelectAll(e.target.checked)}
-                        className="rounded"
-                      />
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold">Name</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold">ID</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold">Position</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold">Status</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold">Login</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {employees.map((emp: Employee) => (
-                    <tr key={emp.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
-                      <td className="px-4 py-3">
+            <>
+              {/* DESKTOP TABLE */}
+              <div className="overflow-x-auto max-md:hidden">
+                <table className="w-full">
+                  <thead className="bg-gray-100 dark:bg-gray-800">
+                    <tr>
+                      <th className="px-4 py-3 text-left">
+                        <input
+                          type="checkbox"
+                          checked={selectedEmployees.length === employees.length && employees.length > 0}
+                          onChange={(e) => handleSelectAll(e.target.checked)}
+                          className="rounded"
+                        />
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold">Name</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold">ID</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold">Position</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold">Status</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold">Login</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {employees.map((emp: Employee) => (
+                      <tr key={emp.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <td className="px-4 py-3">
+                          <input
+                            type="checkbox"
+                            checked={selectedEmployees.includes(emp.id)}
+                            onChange={(e) => handleSelectEmployee(emp.id, e.target.checked)}
+                            className="rounded"
+                          />
+                        </td>
+                        <td className="px-4 py-3 text-sm font-medium">{emp.full_name}</td>
+                        <td className="px-4 py-3 text-sm">{emp.employee_id}</td>
+                        <td className="px-4 py-3 text-sm">{emp.position}</td>
+                        <td className="px-4 py-3 text-sm">
+                          <Badge variant={emp.status === 'Active' ? 'success' : 'warning'}>
+                            {emp.status}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          <Badge variant={emp.can_login ? 'success' : 'error'}>
+                            {emp.can_login ? 'Enabled' : 'Disabled'}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3 text-sm space-x-2 flex">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              const rawRole = (user?.role || '').toString().trim().toLowerCase();
+                              const normalizedRole = rawRole.includes('admin') ? 'admin' : rawRole.includes('hr') ? 'hr' : rawRole;
+                              const base = normalizedRole === 'hr' ? '/hr' : normalizedRole === 'admin' ? '/admin' : '/employee';
+                              navigate(`${base}/employees/${emp.id}`);
+                            }}
+                          >
+                            <Eye size={16} />
+                          </Button>
+                          {canDeleteEmployees && (
+                            <Button
+                              variant="danger"
+                              size="sm"
+                              onClick={() => setDeleteConfirm({ isOpen: true, employeeId: emp.id })}
+                            >
+                              <Trash2 size={16} />
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* MOBILE CARDS */}
+              <div className="hidden max-md:flex flex-col gap-4">
+                {/* Mobile Select All */}
+                <div className="flex items-center gap-2 px-1">
+                  <input
+                    type="checkbox"
+                    checked={selectedEmployees.length === employees.length && employees.length > 0}
+                    onChange={(e) => handleSelectAll(e.target.checked)}
+                    className="rounded"
+                    id="mobile-select-all"
+                  />
+                  <label htmlFor="mobile-select-all" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Select All</label>
+                </div>
+                {employees.map((emp: Employee) => (
+                  <div key={emp.id} className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col gap-3">
+                    <div className="flex items-start gap-3">
+                      <div className="pt-1">
                         <input
                           type="checkbox"
                           checked={selectedEmployees.includes(emp.id)}
                           onChange={(e) => handleSelectEmployee(emp.id, e.target.checked)}
                           className="rounded"
                         />
-                      </td>
-                      <td className="px-4 py-3 text-sm font-medium">{emp.full_name}</td>
-                      <td className="px-4 py-3 text-sm">{emp.employee_id}</td>
-                      <td className="px-4 py-3 text-sm">{emp.position}</td>
-                      <td className="px-4 py-3 text-sm">
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-gray-900 dark:text-white truncate">{emp.full_name}</h4>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{emp.position}</p>
+                        <p className="text-[10px] font-mono text-gray-400 mt-1 uppercase">ID: {emp.employee_id}</p>
+                      </div>
+                      <div className="flex flex-col gap-1 items-end">
                         <Badge variant={emp.status === 'Active' ? 'success' : 'warning'}>
                           {emp.status}
                         </Badge>
-                      </td>
-                      <td className="px-4 py-3 text-sm">
                         <Badge variant={emp.can_login ? 'success' : 'error'}>
                           {emp.can_login ? 'Enabled' : 'Disabled'}
                         </Badge>
-                      </td>
-                      <td className="px-4 py-3 text-sm space-x-2 flex">
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 mt-2 pt-3 border-t border-gray-50 dark:border-gray-700/50">
+                      <Button
+                        variant="secondary"
+                        className="flex-1 text-xs py-1.5 h-auto"
+                        onClick={() => {
+                          const rawRole = (user?.role || '').toString().trim().toLowerCase();
+                          const normalizedRole = rawRole.includes('admin') ? 'admin' : rawRole.includes('hr') ? 'hr' : rawRole;
+                          const base = normalizedRole === 'hr' ? '/hr' : normalizedRole === 'admin' ? '/admin' : '/employee';
+                          navigate(`${base}/employees/${emp.id}`);
+                        }}
+                      >
+                        <Eye size={14} className="mr-1.5" /> View Profile
+                      </Button>
+                      {canDeleteEmployees && (
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            const rawRole = (user?.role || '').toString().trim().toLowerCase();
-                            const normalizedRole = rawRole.includes('admin') ? 'admin' : rawRole.includes('hr') ? 'hr' : rawRole;
-                            const base = normalizedRole === 'hr' ? '/hr' : normalizedRole === 'admin' ? '/admin' : '/employee';
-                            navigate(`${base}/employees/${emp.id}`);
-                          }}
+                          variant="danger"
+                          className="text-xs py-1.5 h-auto px-3"
+                          onClick={() => setDeleteConfirm({ isOpen: true, employeeId: emp.id })}
                         >
-                          <Eye size={16} />
+                          <Trash2 size={14} />
                         </Button>
-                        {canDeleteEmployees && (
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={() => setDeleteConfirm({ isOpen: true, employeeId: emp.id })}
-                          >
-                            <Trash2 size={16} />
-                          </Button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           ) : (
             <EmptyState title="No employees found" />
           )}

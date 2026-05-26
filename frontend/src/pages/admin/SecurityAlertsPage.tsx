@@ -139,15 +139,15 @@ export const SecurityAlertsPage = () => {
         />
       </div>
 
-      <div className="p-4 lg:p-6 lg:ml-64 space-y-6 pb-32 lg:pb-6">
+      <div className="p-4 lg:p-6 lg:ml-64 space-y-6 max-md:p-3 max-md:space-y-4 max-md:pb-32 pb-32 lg:pb-6">
         {/* Header */}
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-lg">
-            <AlertTriangle size={28} className="text-red-600 dark:text-red-400" />
+          <div className="p-3 max-md:p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+            <AlertTriangle size={28} className="text-red-600 dark:text-red-400 max-md:w-6 max-md:h-6" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold">Security Alerts</h1>
-          <p className="text-gray-600 dark:text-gray-400 text-sm">
+          <h1 className="text-3xl max-md:text-2xl font-bold">Security Alerts</h1>
+          <p className="text-gray-600 dark:text-gray-400 text-sm max-md:text-xs">
             Monitor and manage security events and suspicious activities
           </p>
         </div>
@@ -171,50 +171,50 @@ export const SecurityAlertsPage = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className={`p-4 border-l-4 ${unresolvedCount > 0 ? 'border-red-500' : 'border-green-500'}`}>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-md:gap-3">
+        <Card className={`p-4 max-md:p-3 border-l-4 ${unresolvedCount > 0 ? 'border-red-500' : 'border-green-500'}`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 dark:text-gray-400 text-sm">Unresolved Alerts</p>
-              <p className={`text-3xl font-bold ${unresolvedCount > 0 ? 'text-red-600' : 'text-green-600'}`}>
+              <p className="text-gray-600 dark:text-gray-400 text-sm max-md:text-xs">Unresolved Alerts</p>
+              <p className={`text-3xl max-md:text-2xl font-bold ${unresolvedCount > 0 ? 'text-red-600' : 'text-green-600'}`}>
                 {unresolvedCount}
               </p>
             </div>
-            <Shield size={40} className={unresolvedCount > 0 ? 'text-red-100' : 'text-green-100'} />
+            <Shield size={40} className={`max-md:w-8 max-md:h-8 ${unresolvedCount > 0 ? 'text-red-100' : 'text-green-100'}`} />
           </div>
         </Card>
 
-        <Card className={`p-4 border-l-4 border-purple-500`}>
+        <Card className={`p-4 max-md:p-3 border-l-4 border-purple-500`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 dark:text-gray-400 text-sm">Critical Alerts</p>
-              <p className={`text-3xl font-bold ${criticalCount > 0 ? 'text-red-600' : 'text-gray-600'}`}>
+              <p className="text-gray-600 dark:text-gray-400 text-sm max-md:text-xs">Critical Alerts</p>
+              <p className={`text-3xl max-md:text-2xl font-bold ${criticalCount > 0 ? 'text-red-600' : 'text-gray-600'}`}>
                 {criticalCount}
               </p>
             </div>
-            <AlertTriangle size={40} className="text-purple-100" />
+            <AlertTriangle size={40} className="text-purple-100 max-md:w-8 max-md:h-8" />
           </div>
         </Card>
 
-        <Card className="p-4 border-l-4 border-blue-500">
+        <Card className="p-4 max-md:p-3 border-l-4 border-blue-500">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 dark:text-gray-400 text-sm">Total Alerts</p>
-              <p className="text-3xl font-bold text-blue-600">{filteredAlerts.length}</p>
+              <p className="text-gray-600 dark:text-gray-400 text-sm max-md:text-xs">Total Alerts</p>
+              <p className="text-3xl max-md:text-2xl font-bold text-blue-600">{filteredAlerts.length}</p>
             </div>
-            <Shield size={40} className="text-blue-100" />
+            <Shield size={40} className="text-blue-100 max-md:w-8 max-md:h-8" />
           </div>
         </Card>
       </div>
 
       {/* Filters */}
-      <Card className="p-4 space-y-4">
-        <div className="flex items-center gap-2 mb-4">
-          <Filter size={20} className="text-gray-600 dark:text-gray-400" />
-          <h3 className="font-semibold text-lg">Filters</h3>
+      <Card className="p-4 max-md:p-3 space-y-4 max-md:space-y-3">
+        <div className="flex items-center gap-2 mb-4 max-md:mb-2">
+          <Filter size={20} className="text-gray-600 dark:text-gray-400 max-md:w-4 max-md:h-4" />
+          <h3 className="font-semibold text-lg max-md:text-base">Filters</h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 max-md:gap-3">
           {/* Search */}
           <div className="relative md:col-span-2">
             <Search size={16} className="absolute left-3 top-3 text-gray-400" />
@@ -282,8 +282,8 @@ export const SecurityAlertsPage = () => {
 
       {/* Security Alerts Table */}
       {paginatedAlerts.length > 0 ? (
-        <Card className="overflow-hidden">
-          <div className="overflow-x-auto">
+        <Card className="overflow-hidden max-md:p-0 max-md:bg-transparent max-md:border-none max-md:shadow-none">
+          <div className="overflow-x-auto max-md:hidden">
             <table className="w-full">
               <thead className="bg-gray-900 dark:bg-gray-950 text-white sticky top-0">
                 <tr>
@@ -369,28 +369,82 @@ export const SecurityAlertsPage = () => {
             </table>
           </div>
 
+          {/* MOBILE CARDS */}
+          <div className="hidden max-md:flex flex-col gap-3">
+            {paginatedAlerts.map((alert: any) => (
+              <div key={alert.id} className={`bg-white dark:bg-gray-800 p-4 rounded-xl border ${alert.severity === 'critical' || alert.severity === 'high' ? 'border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-900/10' : 'border-gray-100 dark:border-gray-700'} shadow-sm flex flex-col gap-3`}>
+                <div className="flex justify-between items-start gap-2">
+                  <div className="flex flex-col gap-1.5 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      {getSeverityIcon(alert.severity)}
+                      <Badge variant={getSeverityColor(alert.severity)} className="text-[10px] w-fit">
+                        {alert.severity?.charAt(0).toUpperCase() + alert.severity?.slice(1)}
+                      </Badge>
+                    </div>
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">
+                      {formatAlertType(alert.alert_type)}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    {alert.is_resolved ? (
+                      <div className="flex items-center gap-1 text-green-600">
+                        <CheckCircle size={14} />
+                        <span className="text-[10px] font-bold">Resolved</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1 text-red-600">
+                        <X size={14} />
+                        <span className="text-[10px] font-bold">Unresolved</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="bg-gray-50 dark:bg-gray-800/50 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700/50 text-sm text-gray-700 dark:text-gray-300 break-words">
+                  {alert.message}
+                </div>
+                
+                <div className="flex flex-col gap-1 text-[10px] text-gray-500 border-t border-gray-50 dark:border-gray-700/50 pt-2 mt-1">
+                  <div className="flex justify-between items-center w-full">
+                    <span>
+                      {new Date(alert.created_at).toLocaleDateString()} {new Date(alert.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                    <span>{formatDistanceToNow(new Date(alert.created_at), { addSuffix: true })}</span>
+                  </div>
+                  {alert.details && (
+                    <div className="mt-1 flex flex-wrap gap-2 text-gray-600 dark:text-gray-400">
+                      {alert.details.ip_address && <span><span className="font-semibold">IP:</span> {alert.details.ip_address}</span>}
+                      {alert.details.username && <span><span className="font-semibold">User:</span> {alert.details.username}</span>}
+                      {alert.details.failed_attempts && <span><span className="font-semibold">Attempts:</span> {alert.details.failed_attempts}</span>}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="bg-gray-50 dark:bg-gray-800/50 px-6 py-4 flex items-center justify-between border-t border-gray-200 dark:border-gray-700">
-              <span className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="bg-gray-50 dark:bg-gray-800/50 px-6 py-4 max-md:px-3 max-md:py-3 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 max-md:flex-col max-md:gap-3 max-md:bg-transparent max-md:border-none">
+              <span className="text-sm max-md:text-xs text-gray-600 dark:text-gray-400">
                 Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
                 {Math.min(currentPage * itemsPerPage, filteredAlerts.length)} of {filteredAlerts.length}
               </span>
-              <div className="flex gap-2">
+              <div className="flex gap-2 max-md:w-full">
                 <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 max-md:flex-1 max-md:py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold max-md:text-sm"
                 >
                   Previous
                 </button>
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center px-3 py-2">
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center px-3 py-2 max-md:px-1">
                   {currentPage} / {totalPages}
                 </span>
                 <button
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
-                  className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 max-md:flex-1 max-md:py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold max-md:text-sm"
                 >
                   Next
                 </button>

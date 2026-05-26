@@ -104,40 +104,40 @@ export const AccessControlPage = () => {
         <Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
       </div>
 
-      <div className="p-4 lg:p-6 lg:ml-64 space-y-6 pb-32 lg:pb-6">
+      <div className="p-4 lg:p-6 lg:ml-64 space-y-6 pb-32 lg:pb-6 max-md:p-3 max-md:space-y-4 max-md:pb-32">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold mb-2">Access Control</h1>
-          <p className="text-gray-600 dark:text-gray-400">Manage user access and security</p>
+          <h1 className="text-3xl max-md:text-2xl font-bold mb-2 max-md:mb-1">Access Control</h1>
+          <p className="text-gray-600 dark:text-gray-400 max-md:text-xs">Manage user access and security</p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="border-4 border-orange-500">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-md:gap-3">
+          <Card className="border-4 border-orange-500 max-md:p-3">
             <div className="text-center">
-              <p className="text-orange-600 font-semibold text-sm">Total Users</p>
-              <p className="text-5xl font-bold text-orange-600 mt-3">{totalUsers}</p>
+              <p className="text-orange-600 font-semibold text-sm max-md:text-[11px] uppercase tracking-wider">Total Users</p>
+              <p className="text-5xl max-md:text-3xl font-bold text-orange-600 mt-3 max-md:mt-1">{totalUsers}</p>
             </div>
           </Card>
 
-          <Card className="border-4 border-green-500">
+          <Card className="border-4 border-green-500 max-md:p-3">
             <div className="text-center">
-              <p className="text-green-600 font-semibold text-sm">Active users</p>
-              <p className="text-5xl font-bold text-green-600 mt-3">{activeUsers}</p>
+              <p className="text-green-600 font-semibold text-sm max-md:text-[11px] uppercase tracking-wider">Active users</p>
+              <p className="text-5xl max-md:text-3xl font-bold text-green-600 mt-3 max-md:mt-1">{activeUsers}</p>
             </div>
           </Card>
 
-          <Card className="border-4 border-red-500">
+          <Card className="border-4 border-red-500 max-md:p-3">
             <div className="text-center">
-              <p className="text-red-600 font-semibold text-sm">Locked Accounts</p>
-              <p className="text-5xl font-bold text-red-600 mt-3">{lockedAccounts}</p>
+              <p className="text-red-600 font-semibold text-sm max-md:text-[11px] uppercase tracking-wider">Locked Accounts</p>
+              <p className="text-5xl max-md:text-3xl font-bold text-red-600 mt-3 max-md:mt-1">{lockedAccounts}</p>
             </div>
           </Card>
 
-          <Card className="border-4 border-red-700">
+          <Card className="border-4 border-red-700 max-md:p-3">
             <div className="text-center">
-              <p className="text-red-700 font-semibold text-sm">Blacklisted Users</p>
-              <p className="text-5xl font-bold text-red-700 mt-3">{blacklistedUsers}</p>
+              <p className="text-red-700 font-semibold text-sm max-md:text-[11px] uppercase tracking-wider">Blacklisted</p>
+              <p className="text-5xl max-md:text-3xl font-bold text-red-700 mt-3 max-md:mt-1">{blacklistedUsers}</p>
             </div>
           </Card>
         </div>
@@ -191,62 +191,104 @@ export const AccessControlPage = () => {
         </div>
 
         {/* Access User List Table */}
-        <Card>
-          <h2 className="text-lg font-bold text-red-700 mb-4 border-b pb-3">Access User List</h2>
+        <Card className="max-md:p-3">
+          <h2 className="text-lg max-md:text-base font-bold text-red-700 mb-4 max-md:mb-3 border-b pb-3 max-md:pb-2">Access User List</h2>
 
           {filteredEmployees.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-100 dark:bg-gray-800">
-                  <tr>
-                    <th className="px-4 py-3 text-left font-semibold">JTP Code</th>
-                    <th className="px-4 py-3 text-left font-semibold">Fullname</th>
-                    <th className="px-4 py-3 text-left font-semibold">Position</th>
-                    <th className="px-4 py-3 text-left font-semibold">Hub</th>
-                    <th className="px-4 py-3 text-left font-semibold">Status</th>
-                    <th className="px-4 py-3 text-center font-semibold">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredEmployees.map((emp: any) => (
-                    <tr
-                      key={emp.id}
-                      className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
-                    >
-                      <td className="px-4 py-3">{emp.jtp_code || emp.employee_id}</td>
-                      <td className="px-4 py-3 font-medium">{emp.full_name}</td>
-                      <td className="px-4 py-3">{emp.position}</td>
-                      <td className="px-4 py-3">{emp.hub_name || 'N/A'}</td>
-                      <td className="px-4 py-3">
-                        <Badge
-                          variant={
-                            emp.is_active && emp.can_login
-                              ? 'success'
-                              : emp.can_login
-                              ? 'warning'
-                              : 'danger'
-                          }
-                        >
-                          {emp.is_active && emp.can_login
-                            ? 'Active'
-                            : !emp.can_login
-                            ? 'Locked'
-                            : 'Deactivated'}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <button
-                          onClick={() => handleManageClick(emp)}
-                          className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-semibold py-1 px-4 rounded text-sm transition-colors"
-                        >
-                          Manage
-                        </button>
-                      </td>
+            <>
+              {/* DESKTOP TABLE */}
+              <div className="overflow-x-auto max-md:hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-100 dark:bg-gray-800">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-semibold">JTP Code</th>
+                      <th className="px-4 py-3 text-left font-semibold">Fullname</th>
+                      <th className="px-4 py-3 text-left font-semibold">Position</th>
+                      <th className="px-4 py-3 text-left font-semibold">Hub</th>
+                      <th className="px-4 py-3 text-left font-semibold">Status</th>
+                      <th className="px-4 py-3 text-center font-semibold">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {filteredEmployees.map((emp: any) => (
+                      <tr
+                        key={emp.id}
+                        className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+                      >
+                        <td className="px-4 py-3">{emp.jtp_code || emp.employee_id}</td>
+                        <td className="px-4 py-3 font-medium">{emp.full_name}</td>
+                        <td className="px-4 py-3">{emp.position}</td>
+                        <td className="px-4 py-3">{emp.hub_name || 'N/A'}</td>
+                        <td className="px-4 py-3">
+                          <Badge
+                            variant={
+                              emp.is_active && emp.can_login
+                                ? 'success'
+                                : emp.can_login
+                                ? 'warning'
+                                : 'danger'
+                            }
+                          >
+                            {emp.is_active && emp.can_login
+                              ? 'Active'
+                              : !emp.can_login
+                              ? 'Locked'
+                              : 'Deactivated'}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <button
+                            onClick={() => handleManageClick(emp)}
+                            className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-semibold py-1 px-4 rounded text-sm transition-colors"
+                          >
+                            Manage
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* MOBILE CARDS */}
+              <div className="hidden max-md:flex flex-col gap-3">
+                {filteredEmployees.map((emp: any) => (
+                  <div key={emp.id} className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col gap-3">
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-gray-900 dark:text-white truncate">{emp.full_name}</h4>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{emp.position}</p>
+                        <p className="text-[10px] font-mono text-gray-400 uppercase mt-0.5">{emp.jtp_code || emp.employee_id}</p>
+                      </div>
+                      <Badge
+                        variant={
+                          emp.is_active && emp.can_login
+                            ? 'success'
+                            : emp.can_login
+                            ? 'warning'
+                            : 'danger'
+                        }
+                      >
+                        {emp.is_active && emp.can_login
+                          ? 'Active'
+                          : !emp.can_login
+                          ? 'Locked'
+                          : 'Deactivated'}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between items-center border-t border-gray-50 dark:border-gray-700/50 pt-3 mt-1">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 max-w-[50%] truncate">{emp.hub_name || 'No Hub'}</p>
+                      <button
+                        onClick={() => handleManageClick(emp)}
+                        className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold py-1.5 px-4 rounded-lg text-xs transition-colors"
+                      >
+                        Manage Access
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           ) : (
             <EmptyState title="No users found" description="Try adjusting your filters" />
           )}

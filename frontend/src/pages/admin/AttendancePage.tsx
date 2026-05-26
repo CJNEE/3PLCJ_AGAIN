@@ -259,53 +259,53 @@ export const AttendancePage = () => {
           open={sidebarOpen}
           onToggle={() => setSidebarOpen(!sidebarOpen)}
         />
-    <div className="p-4 lg:p-6 lg:ml-64 space-y-6">
+    <div className="p-4 lg:p-6 lg:ml-64 space-y-6 max-md:p-3 max-md:space-y-4 max-md:pb-32 pb-32 lg:pb-6">
       {renderPhotoViewer()}
 
 
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold mb-2">Attendance Dashboard</h1>
-        <p className="text-gray-600 dark:text-gray-400">Real-time employee attendance tracking by hub</p>
+        <h1 className="text-3xl max-md:text-2xl font-bold mb-2 max-md:mb-1">Attendance Dashboard</h1>
+        <p className="text-gray-600 dark:text-gray-400 max-md:text-xs">Real-time employee attendance tracking by hub</p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-md:gap-3">
         {/* Total Employees */}
-        <Card className="border-l-4 border-blue-500">
+        <Card className="border-l-4 border-blue-500 max-md:p-3">
           <div className="text-center">
-            <p className="text-blue-600 font-semibold text-sm">Total Employees</p>
-            <p className="text-5xl font-bold text-blue-600 mt-3">{stats.totalEmployees}</p>
+            <p className="text-blue-600 font-semibold text-sm max-md:text-[11px] uppercase tracking-wider">Total Employees</p>
+            <p className="text-5xl max-md:text-3xl font-bold text-blue-600 mt-3 max-md:mt-1">{stats.totalEmployees}</p>
           </div>
         </Card>
 
         {/* Presents */}
-        <Card className="border-l-4 border-green-500">
+        <Card className="border-l-4 border-green-500 max-md:p-3">
           <div className="text-center">
-            <p className="text-green-600 font-semibold text-sm">Presents</p>
-            <p className="text-5xl font-bold text-green-600 mt-3">{stats.presents}</p>
+            <p className="text-green-600 font-semibold text-sm max-md:text-[11px] uppercase tracking-wider">Presents</p>
+            <p className="text-5xl max-md:text-3xl font-bold text-green-600 mt-3 max-md:mt-1">{stats.presents}</p>
           </div>
         </Card>
 
         {/* Absents */}
-        <Card className="border-l-4 border-red-500">
+        <Card className="border-l-4 border-red-500 max-md:p-3">
           <div className="text-center">
-            <p className="text-red-600 font-semibold text-sm">Absents</p>
-            <p className="text-5xl font-bold text-red-600 mt-3">{stats.absents}</p>
+            <p className="text-red-600 font-semibold text-sm max-md:text-[11px] uppercase tracking-wider">Absents</p>
+            <p className="text-5xl max-md:text-3xl font-bold text-red-600 mt-3 max-md:mt-1">{stats.absents}</p>
           </div>
         </Card>
 
         {/* Lates */}
-        <Card className="border-l-4 border-yellow-500">
+        <Card className="border-l-4 border-yellow-500 max-md:p-3">
           <div className="text-center">
-            <p className="text-yellow-600 font-semibold text-sm">Lates</p>
-            <p className="text-5xl font-bold text-yellow-600 mt-3">{stats.lates}</p>
+            <p className="text-yellow-600 font-semibold text-sm max-md:text-[11px] uppercase tracking-wider">Lates</p>
+            <p className="text-5xl max-md:text-3xl font-bold text-yellow-600 mt-3 max-md:mt-1">{stats.lates}</p>
           </div>
         </Card>
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="max-md:p-3">
         <div className="flex flex-col lg:flex-row gap-3 items-end">
           <div className="flex-1">
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
@@ -376,26 +376,27 @@ export const AttendancePage = () => {
       {/* Attendance by Hub */}
       {Object.keys(attendanceByHub).length > 0 ? (
         Object.entries(attendanceByHub).map(([hubName, records]) => (
-          <Card key={hubName}>
+          <Card key={hubName} className="max-md:p-3 max-md:bg-transparent max-md:border-none max-md:shadow-none">
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
               <div>
-                <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                <h2 className="text-lg max-md:text-base font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
                   <Clock size={20} className="text-blue-600" />
                   {hubName}
                 </h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{records.length} records</p>
+                <p className="text-sm max-md:text-xs text-gray-500 dark:text-gray-400 mt-1">{records.length} records</p>
               </div>
               <button
                 onClick={() => handleDownload(hubName)}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded flex items-center gap-2"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 max-md:py-1.5 max-md:px-3 max-md:text-xs rounded flex items-center gap-2"
               >
-                <Download size={18} />
-                Download
+                <Download size={18} className="max-md:w-4 max-md:h-4" />
+                <span className="max-md:hidden">Download</span>
               </button>
             </div>
 
             {records.length > 0 ? (
-              <div className="overflow-x-auto">
+              <>
+                <div className="overflow-x-auto max-md:hidden">
                 <table className="w-full text-sm">
                   <thead className="bg-gray-100 dark:bg-gray-800">
                     <tr>
@@ -443,6 +444,45 @@ export const AttendancePage = () => {
                   </tbody>
                 </table>
               </div>
+
+              {/* MOBILE CARDS */}
+              <div className="hidden max-md:flex flex-col gap-3">
+                {records.map((record: any, idx: number) => (
+                  <div key={idx} className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col gap-3">
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-gray-900 dark:text-white truncate">{record.employee_name || 'N/A'}</h4>
+                        <p className="text-[10px] font-mono text-gray-400 uppercase mt-1">{record.jtp_code || record.employee_id || 'N/A'}</p>
+                      </div>
+                      <Badge variant={getStatusBadgeVariant(record.status)}>
+                        {record.status || 'N/A'}
+                      </Badge>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2 mt-1">
+                      <div className="bg-gray-50 dark:bg-gray-800/50 p-2 rounded-lg border border-gray-100 dark:border-gray-700/50">
+                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Time In</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">{formatTime(record.clock_in_time)}</p>
+                      </div>
+                      <div className="bg-gray-50 dark:bg-gray-800/50 p-2 rounded-lg border border-gray-100 dark:border-gray-700/50">
+                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">Time Out</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">{formatTime(record.clock_out_time)}</p>
+                      </div>
+                    </div>
+
+                    {(record.clock_in_image || record.clock_out_image) && (
+                      <button
+                        type="button"
+                        onClick={() => openPhotoViewer(record.clock_in_image, record.clock_out_image)}
+                        className="w-full mt-2 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-bold py-2 px-4 rounded-lg text-xs transition-colors"
+                      >
+                        View Photos
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
             ) : (
               <div className="py-8">
                 <EmptyState

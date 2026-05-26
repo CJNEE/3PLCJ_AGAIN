@@ -363,63 +363,63 @@ export const PayslipPage = () => {
         onToggle={() => setSidebarOpen(!sidebarOpen)}
       />
 
-      <div className="p-4 lg:p-6 lg:ml-64 space-y-6">
+      <div className="p-4 lg:p-6 lg:ml-64 space-y-6 max-md:p-3 max-md:space-y-4 max-md:pb-32 pb-32 lg:pb-6">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Payroll Management</h1>
-          <p className="text-gray-600 dark:text-gray-400">View and manage employee payrolls by hub</p>
+          <h1 className="text-3xl max-md:text-2xl font-bold mb-2 max-md:mb-1">Payroll Management</h1>
+          <p className="text-gray-600 dark:text-gray-400 max-md:text-xs">View and manage employee payrolls by hub</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="border-l-4 border-orange-500">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-md:gap-3">
+          <Card className="border-l-4 border-orange-500 max-md:p-3">
             <div className="text-center">
-              <p className="text-orange-600 font-semibold text-sm">Total Employees</p>
-              <p className="text-5xl font-bold text-orange-600 mt-3">{stats.totalEmployees}</p>
+              <p className="text-orange-600 font-semibold text-sm max-md:text-[11px] uppercase tracking-wider">Total Employees</p>
+              <p className="text-5xl max-md:text-3xl font-bold text-orange-600 mt-3 max-md:mt-1">{stats.totalEmployees}</p>
             </div>
           </Card>
-          <Card className="border-l-4 border-green-500">
+          <Card className="border-l-4 border-green-500 max-md:p-3">
             <div className="text-center">
-              <p className="text-green-600 font-semibold text-sm">Approved</p>
-              <p className="text-5xl font-bold text-green-600 mt-3">{stats.approved}</p>
+              <p className="text-green-600 font-semibold text-sm max-md:text-[11px] uppercase tracking-wider">Approved</p>
+              <p className="text-5xl max-md:text-3xl font-bold text-green-600 mt-3 max-md:mt-1">{stats.approved}</p>
             </div>
           </Card>
-          <Card className="border-l-4 border-yellow-600">
+          <Card className="border-l-4 border-yellow-600 max-md:p-3">
             <div className="text-center">
-              <p className="text-yellow-600 font-semibold text-sm">Pending</p>
-              <p className="text-5xl font-bold text-yellow-600 mt-3">{stats.pending}</p>
+              <p className="text-yellow-600 font-semibold text-sm max-md:text-[11px] uppercase tracking-wider">Pending</p>
+              <p className="text-5xl max-md:text-3xl font-bold text-yellow-600 mt-3 max-md:mt-1">{stats.pending}</p>
             </div>
           </Card>
-          <Card className="border-l-4 border-red-600">
+          <Card className="border-l-4 border-red-600 max-md:p-3">
             <div className="text-center">
-              <p className="text-red-600 font-semibold text-sm">Drafts</p>
-              <p className="text-5xl font-bold text-red-600 mt-3">{stats.drafts}</p>
+              <p className="text-red-600 font-semibold text-sm max-md:text-[11px] uppercase tracking-wider">Drafts</p>
+              <p className="text-5xl max-md:text-3xl font-bold text-red-600 mt-3 max-md:mt-1">{stats.drafts}</p>
             </div>
           </Card>
         </div>
 
-        <Card>
+        <Card className="max-md:p-3">
           <div className="flex flex-col lg:flex-row gap-3 items-end">
-            <div className="flex-1">
+            <div className="flex-1 w-full">
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
               <input type="date" value={startDate} onChange={(e) => handleStartDateChange(e.target.value)} className="input-field w-full" />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 w-full">
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">End Date (auto)</label>
               <input type="date" value={endDate} readOnly className="input-field w-full bg-gray-100 dark:bg-gray-800" />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 w-full">
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Year</label>
               <select value={year} onChange={(e) => setYear(e.target.value)} aria-label="Filter by year" className="input-field w-full">
                 {years.map((y) => <option key={y} value={y}>{y}</option>)}
               </select>
             </div>
-            <div className="flex-1">
+            <div className="flex-1 w-full">
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Hub Name</label>
               <select value={hubFilter} onChange={(e) => setHubFilter(e.target.value)} aria-label="Filter by hub name" className="input-field w-full">
                 <option value="All">All Hubs</option>
                 {hubs.map((hub: any) => <option key={hub.id} value={hub.name}>{hub.name}</option>)}
               </select>
             </div>
-            <div className="flex-1">
+            <div className="flex-1 w-full">
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Status</label>
               <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} aria-label="Filter by status" className="input-field w-full">
                 <option value="All">All Status</option>
@@ -430,7 +430,7 @@ export const PayslipPage = () => {
                 )}
               </select>
             </div>
-            <div className="flex-1">
+            <div className="flex-1 w-full">
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Search Name</label>
               <div className="relative">
                 <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
@@ -442,14 +442,14 @@ export const PayslipPage = () => {
 
         {Object.keys(payrollByHub).length > 0 ? (
           Object.entries(payrollByHub).map(([hubName, records]) => (
-            <Card key={hubName}>
+            <Card key={hubName} className="max-md:p-3 max-md:bg-transparent max-md:border-none max-md:shadow-none">
               <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
-                <h2 className="text-lg font-bold text-red-700">Payroll List</h2>
-                <div className="text-sm text-gray-600 dark:text-gray-400">{hubName}</div>
+                <h2 className="text-lg max-md:text-base font-bold text-red-700">Payroll List</h2>
+                <div className="text-sm max-md:text-xs text-gray-600 dark:text-gray-400">{hubName}</div>
               </div>
               {records.length > 0 ? (
                 <>
-                  <div className="overflow-x-auto mb-4">
+                  <div className="overflow-x-auto mb-4 max-md:hidden">
                     <table className="w-full text-sm">
                       <thead className="bg-gray-100 dark:bg-gray-800">
                         <tr>
@@ -467,7 +467,7 @@ export const PayslipPage = () => {
                             <td className="px-4 py-3 font-medium">{record.fullname || 'N/A'}</td>
                             <td className="px-4 py-3">{record.jtp_code || 'N/A'}</td>
                             <td className="px-4 py-3">{record.hub || hubName}</td>
-                            <td className="px-4 py-3">₱{parseFloat(record.net_pay || '0').toFixed(2)}</td>
+                            <td className="px-4 py-3 font-semibold text-gray-900 dark:text-white">₱{parseFloat(record.net_pay || '0').toFixed(2)}</td>
                             <td className="px-4 py-3">
                               <Badge variant={getStatusBadgeVariant(record.status)}>{record.status || 'N/A'}</Badge>
                             </td>
@@ -482,6 +482,35 @@ export const PayslipPage = () => {
                         ))}
                       </tbody>
                     </table>
+                  </div>
+
+                  {/* MOBILE CARDS */}
+                  <div className="hidden max-md:flex flex-col gap-3">
+                    {records.map((record: any, idx: number) => (
+                      <div key={idx} className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col gap-3">
+                        <div className="flex justify-between items-start gap-2">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-bold text-gray-900 dark:text-white truncate">{record.fullname || 'N/A'}</h4>
+                            <p className="text-[10px] font-mono text-gray-400 uppercase mt-0.5">{record.jtp_code || 'N/A'}</p>
+                          </div>
+                          <Badge variant={getStatusBadgeVariant(record.status)}>
+                            {record.status || 'N/A'}
+                          </Badge>
+                        </div>
+                        <div className="flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 p-2 rounded-lg border border-gray-100 dark:border-gray-700/50">
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Net Pay</span>
+                          <span className="text-sm font-semibold text-gray-900 dark:text-white">₱{parseFloat(record.net_pay || '0').toFixed(2)}</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 mt-1">
+                          <button onClick={() => { setSelectedPayslip(record); setIsModalOpen(true); }} className="w-full bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-bold py-2 px-4 rounded-lg text-xs transition-colors">
+                            View Payslip
+                          </button>
+                          <button onClick={() => handleDownload(hubName)} className="w-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-bold py-2 px-4 rounded-lg text-xs transition-colors flex items-center justify-center gap-1">
+                            <Download size={14} /> Download
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
 
                 </>
