@@ -1,12 +1,10 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-
 import { useAuth } from '@/hooks/useAuth';
 import { useGetPayroll } from '@/hooks/useQueries';
-
 import { EmployeeSidebar } from '@/components/EmployeeSidebar';
 import { InfoCard, InfoItem } from '@/components/InfoCard';
-import { DocumentsSection } from '@/components/DocumentsSection';
+import DocumentsSection from "@/components/DocumentsSection";
 import { EmployeeEditModal } from '@/components/EmployeeEditModal';
 import { PayslipDetailModal } from '@/components/PayslipViewforemployee';
 import { EmployeeLeaveRequestForm } from '@/components/EmployeeLeaveRequestForm';

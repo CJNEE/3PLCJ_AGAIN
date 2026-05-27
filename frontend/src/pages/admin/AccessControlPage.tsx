@@ -37,23 +37,41 @@ export const AccessControlPage = () => {
   };
 
   // Keep fetched data to avoid unused warnings (even if not shown)
-  const employees = normalizeApiResponse(employeesData);
+  const employees: any[] = Array.isArray(
+  normalizeApiResponse(employeesData)
+)
+  ? normalizeApiResponse(employeesData)
+  : [];
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const activityLogs = normalizeApiResponse(activityLogsData);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const securityAlerts = normalizeApiResponse(securityAlertsData);
 
   // Get unique roles and hubs for filters
-  const roles = useMemo(() => {
-    const uniqueRoles = new Set(employees.map((emp: any) => emp.role));
-    return ['All', ...Array.from(uniqueRoles)];
-  }, [employees]);
+  const roles = useMemo<string[]>(() => {
+  const uniqueRoles = new Set<string>();
 
-  const hubs = useMemo(() => {
-    const uniqueHubs = new Set(employees.map((emp: any) => emp.hub_name));
-    return ['All', ...Array.from(uniqueHubs).filter(Boolean)];
-  }, [employees]);
+  employees.forEach((emp: any) => {
+    if (emp.role) {
+      uniqueRoles.add(String(emp.role));
+    }
+  });
 
+  return ['All', ...Array.from(uniqueRoles)];
+}, [employees]);
+
+  
+  const hubs = useMemo<string[]>(() => {
+  const uniqueHubs = new Set<string>();
+
+  employees.forEach((emp: any) => {
+    if (emp.hub_name) {
+      uniqueHubs.add(String(emp.hub_name));
+    }
+  });
+
+  return ['All', ...Array.from(uniqueHubs)];
+}, [employees]);
   // Calculate stats
   const totalUsers = employees.length;
   const activeUsers = employees.filter((emp: any) => emp.is_active && emp.can_login).length;
@@ -146,33 +164,43 @@ export const AccessControlPage = () => {
         <div className="flex flex-col md:flex-row gap-3">
           <select
             value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
+            onChange={(e: any) =>
+              setRoleFilter(e.target.value)
+            }
             className="input-field w-full md:w-56"
           >
-            {roles.map((role) => (
-              <option key={role} value={role}>
+            {roles.map((role, index) => (
+              <option
+                key={`${role}-${index}`}
+                value={role}
+              >
                 Role: {role}
               </option>
             ))}
           </select>
-
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e: any) =>
+              setStatusFilter(e.target.value)
+            }
             className="input-field w-full md:w-56"
           >
             <option value="All">Status: All</option>
             <option value="Active">Status: Active</option>
             <option value="Deactivated">Status: Deactivated</option>
           </select>
-
           <select
             value={hubFilter}
-            onChange={(e) => setHubFilter(e.target.value)}
+            onChange={(e: any) =>
+              setHubFilter(e.target.value)
+            }
             className="input-field w-full md:w-56"
           >
-            {hubs.map((hub) => (
-              <option key={hub} value={hub}>
+            {hubs.map((hub, index) => (
+              <option
+                key={`${hub}-${index}`}
+                value={hub}
+              >
                 Hub: {hub}
               </option>
             ))}

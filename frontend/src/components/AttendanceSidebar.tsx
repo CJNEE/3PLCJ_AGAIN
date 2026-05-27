@@ -103,7 +103,7 @@ export const AttendanceSidebar = ({ employeeId, onViewHistory }: AttendanceSideb
     <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center text-[#8B0000]"><Clock size={20} /></div>
-        <div><h3 className="text-lg font-semibold text-gray-800">Attendance</h3><p className="text-sm text-gray-500">{formatDate(currentTime)}</p></div>
+        <div><h3 className="text-lg font-semibold text-gray-800">Clock In & Clck Out</h3><p className="text-sm text-gray-500">{formatDate(currentTime)}</p></div>
       </div>
       
       <div className="text-center mb-6 p-4 bg-gray-50 rounded-lg">
