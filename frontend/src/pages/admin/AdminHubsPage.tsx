@@ -2,538 +2,1321 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Card, LoadingSpinner } from '@/components/common';
 import { GlassCard } from '@/components/GlassCard';
 import {
-useGetHubs,
-useGetEmployees,
-useCreateHub,
-useDeleteHub,
-useUpdateHub
+  useGetHubs,
+  useGetEmployees,
+  useCreateHub,
+  useDeleteHub,
+  useUpdateHub
 } from '@/hooks/useQueries';
 
 import {
-MapPin,
-X,
-Search,
-Navigation,
-ChevronLeft,
-ChevronRight,
-Footprints,
-Bike,
-Car,
-Plus,
-Route,
-Shield,
-Building2,
-CloudSun
+  MapPin,
+  X,
+  Search,
+  Navigation,
+  ChevronLeft,
+  ChevronRight,
+
+import React, {
+useState,
+@@ -1180,1300 +1162,4 @@ export const AdminHubsPage = () => {
+</div>
+</>
+);
+};
+  Users,
+  Footprints,
+  Bike,
+  Car,
+  Plus,
+  Trash2,
+  Edit2,
+  Route,
+  Shield,
+  Building2,
+  CloudSun
 } from 'lucide-react';
 
 import { normalizeApiResponse } from '@/utils/apiResponseHandler';
 
 import {
-MapContainer,
-TileLayer,
-Marker,
-Polyline,
-Popup
+  MapContainer,
+  TileLayer,
+  Marker,
+  Polyline,
+  Popup
 } from 'react-leaflet';
 
 import L from 'leaflet';
+
 import 'leaflet/dist/leaflet.css';
 
 import Sidebar from '@/components/Sidebar';
+
 import { fetchWeather } from '@/utils/weather';
 import { useAuth } from '@/hooks/useAuth';
 
-const OSRM_BASE = '[https://router.project-osrm.org/route/v1](https://router.project-osrm.org/route/v1)';
+const OSRM_BASE = 'https://router.project-osrm.org/route/v1';
 
-function estimateDuration(distanceM: number, mode: 'walk' | 'bike' | 'car') {
-const km = distanceM / 1000;
-
-const speeds = {
-walk: 4.8,
-bike: 14,
-car: 38,
+export type ParsedOsrmRoute = {
+  coordinates: [number, number][];
+  distanceM: number;
+  durationSec: number;
+  turns: Array<{
+    instruction: string;
+    distance: number;
+    duration: number;
+  }>;
+  turnCount: number;
 };
 
-const hours = km / speeds[mode];
+function parseOsrmResponse(data: any): ParsedOsrmRoute | null {
+  if (!data?.routes?.length) return null;
 
-return Math.round(hours * 3600);
-}
+  const route = data.routes[0];
 
-function parseOsrmResponse(data: any, mode: 'walk' | 'bike' | 'car') {
-if (!data?.routes?.length) return null;
+  const coordinates: [number, number][] =
+    route.geometry.coordinates.map(
+      (coord: [number, number]) => [coord[1], coord[0]]
+    );
 
-const route = data.routes[0];
+  const turns: Array<{
+    instruction: string;
+    distance: number;
+    duration: number;
+  }> = [];
 
-return {
-coordinates: route.geometry.coordinates.map((c: [number, number]) => [c[1], c[0]]),
-distanceM: route.distance,
-durationSec: estimateDuration(route.distance, mode),
-};
+  let turnCount = 0;
+
+  route.legs?.forEach((leg: any) => {
+    (leg.steps || []).forEach((step: any) => {
+      const instr = step.maneuver?.instruction;
+
+      if (instr) {
+        turns.push({
+          instruction: instr,
+          distance: Math.round(step.distance ?? 0),
+          duration: Math.round(step.duration ?? 0),
+        });
+      }
+
+      const t = step.maneuver?.type;
+
+      if (t && t !== 'depart' && t !== 'arrive') {
+        turnCount += 1;
+      }
+    });
+  });
+
+  return {
+    coordinates,
+    distanceM: route.distance,
+    durationSec: route.duration,
+    turns,
+    turnCount,
+  };
 }
 
 async function fetchOsrmProfile(
-profile: string,
-mode: 'walk' | 'bike' | 'car',
-startLat: number,
-startLon: number,
-endLat: number,
-endLon: number
-) {
-const url = `${OSRM_BASE}/${profile}/${startLon},${startLat};${endLon},${endLat}?overview=full&geometries=geojson`;
+  profile: string,
+  startLat: number,
+  startLon: number,
+  endLat: number,
+  endLon: number
+): Promise<ParsedOsrmRoute | null> {
+  const url =
+    `${OSRM_BASE}/${profile}/${startLon},${startLat};${endLon},${endLat}` +
+    `?steps=true&geometries=geojson&overview=full`;
 
-const res = await fetch(url);
-const data = await res.json();
+  const response = await fetch(url);
+  const data = await response.json();
 
-return parseOsrmResponse(data, mode);
+  return parseOsrmResponse(data);
 }
 
-function formatDistance(meters: number) {
-return `${(meters / 1000).toFixed(1)} km`;
+function formatDistance(meters: number): string {
+  return `${(meters / 1000).toFixed(1)} km`;
 }
 
-function formatDuration(seconds: number) {
-const mins = Math.round(seconds / 60);
+function formatDuration(seconds: number): string {
+  const mins = Math.round(seconds / 60);
 
-if (mins < 60) return `${mins} mins`;
+  if (mins < 60) return `${mins} min`;
 
-const hrs = Math.floor(mins / 60);
-const rem = mins % 60;
+  const hrs = Math.floor(mins / 60);
+  const rem = mins % 60;
 
-return `${hrs}h ${rem}m`;
+  return `${hrs}h ${rem}m`;
+}
+
+interface HubState {
+  selectedHub: any | null;
 }
 
 export const AdminHubsPage = () => {
-const { canViewEmployees } = useAuth();
+  const { canViewEmployees } = useAuth();
 
-const mapRef = useRef(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [employeeSearch, setEmployeeSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
 
-const [sidebarOpen, setSidebarOpen] = useState(false);
-const [searchTerm, setSearchTerm] = useState('');
-const [employeeSearch, setEmployeeSearch] = useState('');
-const [selectedHub, setSelectedHub] = useState<any | null>(null);
-const [routeData, setRouteData] = useState<any>(null);
-const [showDirections, setShowDirections] = useState(false);
-const [loadingRoute, setLoadingRoute] = useState(false);
-const [weatherData, setWeatherData] = useState<any>(null);
-const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const itemsPerPage = 10;
 
-const { data, isLoading } = useGetHubs();
-const { data: employeesData } = useGetEmployees();
+  const [hubState, setHubState] = useState<HubState>({
+    selectedHub: null,
+  });
 
-useCreateHub();
-useDeleteHub();
-useUpdateHub();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-const hubs = normalizeApiResponse(data);
-const allEmployees = normalizeApiResponse(employeesData);
+  const [userLocation, setUserLocation] =
+    useState<[number, number] | null>(null);
 
-useEffect(() => {
-navigator.geolocation?.getCurrentPosition((position) => {
-setUserLocation([
-position.coords.latitude,
-position.coords.longitude,
-]);
-});
-}, []);
+  const [showDirections, setShowDirections] = useState(false);
 
-const getHubCoordinates = (hub: any): [number, number] => {
-return [hub.latitude || 14.676, hub.longitude || 121.0437];
-};
+  const [routeData, setRouteData] = useState<{
+    walking: ParsedOsrmRoute;
+    riding: ParsedOsrmRoute;
+    car: ParsedOsrmRoute;
+  } | null>(null);
 
-useEffect(() => {
-async function loadWeather() {
-if (!selectedHub) return;
+  const [weatherData, setWeatherData] = useState<{
+    temp: number;
+    label: string;
+    icon: string;
+  } | null>(null);
 
-```
-  const coords = getHubCoordinates(selectedHub);
-  const weather = await fetchWeather(coords[0], coords[1]);
-  setWeatherData(weather);
-}
+  const [loadingRoute, setLoadingRoute] = useState(false);
 
-loadWeather();
-```
+  const mapRef = useRef(null);
 
-}, [selectedHub]);
+  const { data, isLoading } = useGetHubs();
+  const { data: employeesData } = useGetEmployees();
 
-const filteredHubs = useMemo(() => {
-return hubs.filter((hub: any) => {
-return (
-hub.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-hub.city?.toLowerCase().includes(searchTerm.toLowerCase())
-);
-});
-}, [searchTerm, hubs]);
+  const createHubMutation = useCreateHub();
+  const updateHubMutation = useUpdateHub();
+  const deleteHubMutation = useDeleteHub();
 
-const hubEmployees = useMemo(() => {
-if (!selectedHub) return [];
+  const [showAddModal, setShowAddModal] = useState(false);
 
-```
-return allEmployees.filter((emp: any) => {
-  return emp.hub === selectedHub.id;
-});
-```
+  const [editingHubId, setEditingHubId] =
+    useState<number | null>(null);
 
-}, [selectedHub, allEmployees]);
+  const [newHub, setNewHub] = useState({
+    name: '',
+    location: '',
+    city: 'Quezon',
+    address: '',
+    latitude: 14.676,
+    longitude: 121.0437,
+  });
 
-const fetchRoute = async () => {
-if (!userLocation || !selectedHub) return;
+  const hubs = normalizeApiResponse(data);
+  const allEmployees = normalizeApiResponse(employeesData);
 
-```
-setLoadingRoute(true);
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation([
+            position.coords.latitude,
+            position.coords.longitude,
+          ]);
+        },
+        (error) => {
+          console.warn(error);
+        }
+      );
+    }
+  }, []);
 
-const coords = getHubCoordinates(selectedHub);
+  const cityCoords: Record<string, [number, number]> = {
+    manila: [14.5995, 120.9842],
+    quezon: [14.676, 121.0437],
+    cebu: [10.3157, 123.8854],
+    davao: [7.0731, 125.6121],
+  };
 
-try {
-  const [walking, riding, car] = await Promise.all([
-    fetchOsrmProfile('foot', 'walk', userLocation[0], userLocation[1], coords[0], coords[1]),
-    fetchOsrmProfile('cycling', 'bike', userLocation[0], userLocation[1], coords[0], coords[1]),
-    fetchOsrmProfile('driving', 'car', userLocation[0], userLocation[1], coords[0], coords[1]),
+  const getHubCoordinates = (
+    hub: any
+  ): [number, number] => {
+    if (hub.latitude && hub.longitude) {
+      return [hub.latitude, hub.longitude];
+    }
+
+    const city = hub.city?.toLowerCase();
+
+    return cityCoords[city] || [14.5995, 120.9842];
+  };
+
+  useEffect(() => {
+    async function loadWeather() {
+      try {
+        if (hubState.selectedHub) {
+          const coords = getHubCoordinates(
+            hubState.selectedHub
+          );
+
+          const weather = await fetchWeather(
+            coords[0],
+            coords[1]
+          );
+
+          setWeatherData(weather);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    loadWeather();
+  }, [hubState.selectedHub]);
+
+  const hubIcon = useMemo(
+    () =>
+      L.divIcon({
+        className: '',
+        html: `
+        <div
+          style="
+            width:18px;
+            height:18px;
+            background:#dc2626;
+            border-radius:999px;
+            border:3px solid white;
+            box-shadow:0 4px 12px rgba(0,0,0,.25);
+          "
+        ></div>
+      `,
+        iconSize: [18, 18],
+      }),
+    []
+  );
+
+  const userIcon = useMemo(
+    () =>
+      L.divIcon({
+        className: '',
+        html: `
+        <div
+          style="
+            width:18px;
+            height:18px;
+            background:#2563eb;
+            border-radius:999px;
+            border:3px solid white;
+            box-shadow:0 4px 12px rgba(0,0,0,.25);
+          "
+        ></div>
+      `,
+        iconSize: [18, 18],
+      }),
+    []
+  );
+
+  const filteredHubs = useMemo(() => {
+    return hubs.filter((hub: any) => {
+      return (
+        hub.name
+          ?.toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        hub.location
+          ?.toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        hub.city
+          ?.toLowerCase()
+          .includes(searchTerm.toLowerCase())
+      );
+    });
+  }, [searchTerm, hubs]);
+
+  const getHubEmployeeCount = (hubId: number) => {
+    return allEmployees.filter(
+      (emp: any) => emp.hub === hubId
+    ).length;
+  };
+
+  const hubEmployeesData = useMemo(() => {
+    if (!hubState.selectedHub) return [];
+
+    return allEmployees.filter((emp: any) => {
+      return (
+        emp.hub === hubState.selectedHub.id &&
+        (
+          emp.full_name
+            ?.toLowerCase()
+            .includes(employeeSearch.toLowerCase()) ||
+          emp.position
+            ?.toLowerCase()
+            .includes(employeeSearch.toLowerCase())
+        )
+      );
+    });
+  }, [
+    hubState.selectedHub,
+    employeeSearch,
+    allEmployees
   ]);
 
-  setRouteData({ walking, riding, car });
-  setShowDirections(true);
-} catch (err) {
-  console.error(err);
-} finally {
-  setLoadingRoute(false);
-}
-```
+  const totalPages = Math.ceil(
+    hubEmployeesData.length / itemsPerPage
+  );
 
-};
+  const paginatedEmployees = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
 
-const hubIcon = useMemo(() => L.divIcon({
-className: '',
-html: `<div style="width:20px;height:20px;background:#ef4444;border-radius:999px;border:4px solid white;box-shadow:0 6px 18px rgba(0,0,0,.18)"></div>`,
-iconSize: [20, 20],
-}), []);
+    return hubEmployeesData.slice(
+      start,
+      start + itemsPerPage
+    );
+  }, [hubEmployeesData, currentPage]);
 
-const userIcon = useMemo(() => L.divIcon({
-className: '',
-html: `<div style="width:20px;height:20px;background:#2563eb;border-radius:999px;border:4px solid white;box-shadow:0 6px 18px rgba(0,0,0,.18)"></div>`,
-iconSize: [20, 20],
-}), []);
+  const fetchRoute = async (
+    startLat: number,
+    startLon: number,
+    endLat: number,
+    endLon: number
+  ) => {
+    setLoadingRoute(true);
 
-if (isLoading) {
-return ( <div className="min-h-screen bg-[#f4f7fb] flex items-center justify-center"> <LoadingSpinner size="lg" /> </div>
-);
-}
+    try {
+      const [walking, riding, car] =
+        await Promise.all([
+          fetchOsrmProfile(
+            'foot',
+            startLat,
+            startLon,
+            endLat,
+            endLon
+          ),
 
-return (
-<>
-<Sidebar
-open={sidebarOpen}
-onToggle={() => setSidebarOpen(!sidebarOpen)}
-/>
+          fetchOsrmProfile(
+            'cycling',
+            startLat,
+            startLon,
+            endLat,
+            endLon
+          ),
 
-```
-  <div className="min-h-screen bg-[#f4f7fb] lg:ml-64">
+          fetchOsrmProfile(
+            'driving',
+            startLat,
+            startLon,
+            endLat,
+            endLon
+          ),
+        ]);
 
-    <div className="p-5 lg:p-8 space-y-6">
+      if (walking && riding && car) {
+        setRouteData({
+          walking,
+          riding,
+          car,
+        });
 
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        setShowDirections(true);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingRoute(false);
+    }
+  };
 
-        <div>
-          <h1 className="text-4xl font-bold text-gray-800">
-            Hub Management
-          </h1>
+  const handleGetDirections = () => {
+    if (!userLocation || !hubState.selectedHub) return;
 
-          <p className="text-gray-500 mt-2">
-            Manage employees, routes and operational hubs.
-          </p>
+    const coords = getHubCoordinates(
+      hubState.selectedHub
+    );
+
+    fetchRoute(
+      userLocation[0],
+      userLocation[1],
+      coords[0],
+      coords[1]
+    );
+  };
+
+  const handleMarkerClick = (hub: any) => {
+    setHubState({
+      selectedHub: hub,
+    });
+
+    setCurrentPage(1);
+    setEmployeeSearch('');
+  };
+
+  const handleCloseHub = () => {
+    setHubState({
+      selectedHub: null,
+    });
+
+    setShowDirections(false);
+    setRouteData(null);
+  };
+
+  const handleAddHub = async (
+    e: React.FormEvent
+  ) => {
+    e.preventDefault();
+
+    try {
+      if (editingHubId) {
+        await updateHubMutation.mutateAsync({
+          id: editingHubId,
+          data: newHub,
+        });
+      } else {
+        await createHubMutation.mutateAsync(newHub);
+      }
+
+      setShowAddModal(false);
+
+      setEditingHubId(null);
+
+      setNewHub({
+        name: '',
+        location: '',
+        city: 'Quezon',
+        address: '',
+        latitude: 14.676,
+        longitude: 121.0437,
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-black">
+        <Sidebar
+          open={sidebarOpen}
+          onToggle={() =>
+            setSidebarOpen(!sidebarOpen)
+          }
+        />
+
+        <div className="lg:ml-64 p-6">
+          <div className="grid gap-4">
+            <div className="h-32 rounded-3xl bg-gray-200 dark:bg-gray-900 animate-pulse" />
+            <div className="h-[500px] rounded-3xl bg-gray-200 dark:bg-gray-900 animate-pulse" />
+          </div>
         </div>
-
-        <button className="h-12 px-5 rounded-2xl bg-red-500 hover:bg-red-600 text-white flex items-center gap-2 shadow-lg shadow-red-200 transition-all">
-          <Plus size={18} />
-          Add Hub
-        </button>
       </div>
+    );
+  }
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-5">
+  return (
+    <>
+      <Sidebar
+        open={sidebarOpen}
+        onToggle={() =>
+          setSidebarOpen(!sidebarOpen)
+        }
+      />
 
-        <Card className="xl:col-span-4 bg-white border-0 rounded-3xl shadow-sm p-5">
+      <div className="min-h-screen bg-gray-50 dark:bg-black lg:ml-64">
 
-          <div className="relative">
-            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+        <div className="p-4 lg:p-8 space-y-6">
 
-            <input
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search hubs..."
-              className="w-full h-12 rounded-2xl bg-gray-100 border-0 pl-11 pr-4 focus:ring-2 focus:ring-red-400 outline-none"
-            />
-          </div>
+          {/* HEADER */}
 
-          {weatherData && (
-            <div className="mt-5 rounded-3xl bg-gradient-to-br from-orange-50 to-red-50 p-5 border border-orange-100">
-              <div className="flex items-center gap-4">
-                <div className="h-14 w-14 rounded-2xl bg-white flex items-center justify-center text-3xl shadow-sm">
-                  {weatherData.icon}
-                </div>
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
 
-                <div>
-                  <p className="text-sm text-gray-500">
-                    Current Weather
-                  </p>
+            <div>
+              <h1 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-white">
+                Hub Management
+              </h1>
 
-                  <h3 className="text-xl font-bold text-gray-800">
-                    {weatherData.temp}°C
-                  </h3>
-
-                  <p className="text-sm text-gray-500">
-                    {weatherData.label}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </Card>
-
-        <Card className="xl:col-span-8 bg-white border-0 rounded-3xl shadow-sm p-5">
-
-          <div className="flex items-center gap-2 mb-5">
-            <Route size={18} className="text-red-500" />
-            <h3 className="font-bold text-gray-800 text-lg">
-              Route Analytics
-            </h3>
-          </div>
-
-          {routeData ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-              {[
-                {
-                  label: 'Driving',
-                  icon: Car,
-                  data: routeData.car,
-                  bg: 'from-red-50 to-orange-50',
-                },
-                {
-                  label: 'Cycling',
-                  icon: Bike,
-                  data: routeData.riding,
-                  bg: 'from-blue-50 to-cyan-50',
-                },
-                {
-                  label: 'Walking',
-                  icon: Footprints,
-                  data: routeData.walking,
-                  bg: 'from-green-50 to-emerald-50',
-                },
-              ].map((item) => (
-                <div
-                  key={item.label}
-                  className={`rounded-3xl bg-gradient-to-br ${item.bg} border border-white p-5 shadow-sm`}
-                >
-                  <item.icon size={26} className="text-gray-700 mb-4" />
-
-                  <p className="text-sm text-gray-500">
-                    {item.label}
-                  </p>
-
-                  <h3 className="text-3xl font-bold text-gray-800 mt-2">
-                    {formatDistance(item.data.distanceM)}
-                  </h3>
-
-                  <p className="mt-2 text-gray-600 font-medium">
-                    {formatDuration(item.data.durationSec)}
-                  </p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="h-[160px] rounded-3xl bg-gray-50 flex flex-col items-center justify-center text-center border border-dashed border-gray-200">
-              <CloudSun size={42} className="text-gray-300 mb-3" />
-              <p className="text-gray-500 font-medium">
-                Generate route analytics
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Manage locations, employees, routes and operations
               </p>
             </div>
-          )}
-        </Card>
-      </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-5">
-
-        <GlassCard className="xl:col-span-8 rounded-3xl overflow-hidden border border-white shadow-lg p-0">
-
-          <div className="h-[650px]">
-            <MapContainer
-              center={[14.5995, 120.9842]}
-              zoom={6}
-              style={{ height: '100%', width: '100%' }}
-              ref={mapRef}
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="
+                h-12
+                px-5
+                rounded-2xl
+                bg-red-600
+                hover:bg-red-700
+                text-white
+                font-medium
+                shadow-lg
+                transition-all
+                flex
+                items-center
+                justify-center
+                gap-2
+              "
             >
-              <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
+              <Plus size={18} />
+              Add Hub
+            </button>
 
-              {userLocation && (
-                <Marker position={userLocation} icon={userIcon}>
-                  <Popup>Your Location</Popup>
-                </Marker>
-              )}
-
-              {filteredHubs.map((hub: any) => (
-                <Marker
-                  key={hub.id}
-                  position={getHubCoordinates(hub)}
-                  icon={hubIcon}
-                  eventHandlers={{
-                    click: () => setSelectedHub(hub),
-                  }}
-                >
-                  <Popup>{hub.name}</Popup>
-                </Marker>
-              ))}
-
-              {showDirections && routeData && (
-                <Polyline
-                  positions={routeData.car.coordinates}
-                  color="#ef4444"
-                  weight={6}
-                />
-              )}
-            </MapContainer>
           </div>
-        </GlassCard>
 
-        <Card className="xl:col-span-4 bg-white rounded-3xl border-0 shadow-sm overflow-hidden">
+          {/* SEARCH + STATS */}
 
-          {selectedHub ? (
-            <div className="flex flex-col h-full">
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
 
-              <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-800">
-                    {selectedHub.name}
-                  </h3>
+            <Card className="xl:col-span-4 p-5 rounded-3xl border-0 shadow-sm">
 
-                  <p className="text-gray-500 mt-1">
-                    {selectedHub.city}
-                  </p>
-                </div>
+              <div className="relative">
+                <Search
+                  size={18}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                />
 
-                <button
-                  onClick={() => setSelectedHub(null)}
-                  className="h-10 w-10 rounded-2xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center"
-                >
-                  <X size={18} />
-                </button>
+                <input
+                  type="text"
+                  placeholder="Search hubs..."
+                  value={searchTerm}
+                  onChange={(e) =>
+                    setSearchTerm(e.target.value)
+                  }
+                  className="
+                    w-full
+                    h-12
+                    pl-11
+                    pr-4
+                    rounded-2xl
+                    border
+                    border-gray-200
+                    dark:border-gray-700
+                    bg-white
+                    dark:bg-gray-900
+                    text-sm
+                    focus:outline-none
+                    focus:ring-2
+                    focus:ring-red-500/20
+                  "
+                />
               </div>
 
-              <div className="p-5 space-y-5">
+              {weatherData && (
+                <div className="mt-5 flex items-center gap-4 rounded-2xl bg-gray-50 dark:bg-gray-900 p-4">
 
-                <div className="grid grid-cols-2 gap-4">
+                  <div className="h-12 w-12 rounded-2xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-2xl">
+                    {weatherData.icon}
+                  </div>
 
-                  <div className="rounded-3xl bg-blue-50 p-5 border border-blue-100">
-                    <p className="text-sm text-blue-600 font-medium">
-                      Employees
+                  <div>
+                    <p className="text-xs text-gray-500">
+                      Current Weather
                     </p>
 
-                    <h3 className="text-4xl font-bold text-blue-900 mt-2">
-                      {hubEmployees.length}
+                    <h3 className="font-semibold text-gray-900 dark:text-white">
+                      {weatherData.temp}°C · {weatherData.label}
                     </h3>
                   </div>
 
-                  <div className="rounded-3xl bg-orange-50 p-5 border border-orange-100">
-                    <p className="text-sm text-orange-600 font-medium">
-                      City
-                    </p>
-
-                    <h3 className="text-xl font-bold text-orange-900 mt-2 line-clamp-2">
-                      {selectedHub.city}
-                    </h3>
-                  </div>
                 </div>
+              )}
 
-                <button
-                  onClick={fetchRoute}
-                  disabled={loadingRoute}
-                  className="w-full h-12 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-semibold flex items-center justify-center gap-2 shadow-lg shadow-red-200"
+            </Card>
+
+            <Card className="xl:col-span-8 p-5 rounded-3xl border-0 shadow-sm">
+
+              <div className="flex items-center gap-2 mb-4">
+                <Route size={18} className="text-red-600" />
+
+                <h3 className="font-semibold">
+                  Route Analytics
+                </h3>
+              </div>
+
+              {routeData ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                  {[
+                    {
+                      label: 'Driving',
+                      icon: Car,
+                      data: routeData.car,
+                    },
+
+                    {
+                      label: 'Cycling',
+                      icon: Bike,
+                      data: routeData.riding,
+                    },
+
+                    {
+                      label: 'Walking',
+                      icon: Footprints,
+                      data: routeData.walking,
+                    },
+                  ].map((item) => (
+                    <div
+                      key={item.label}
+                      className="
+                        rounded-2xl
+                        border
+                        border-gray-100
+                        dark:border-gray-800
+                        bg-gray-50
+                        dark:bg-gray-900
+                        p-4
+                      "
+                    >
+                      <item.icon
+                        size={20}
+                        className="text-red-600 mb-3"
+                      />
+
+                      <p className="text-sm text-gray-500">
+                        {item.label}
+                      </p>
+
+                      <h3 className="text-2xl font-semibold mt-1">
+                        {formatDistance(
+                          item.data.distanceM
+                        )}
+                      </h3>
+
+                      <p className="text-sm text-gray-400 mt-1">
+                        {formatDuration(
+                          item.data.durationSec
+                        )}
+                      </p>
+                    </div>
+                  ))}
+
+                </div>
+              ) : (
+                <div className="h-full min-h-[120px] flex items-center justify-center text-gray-400 text-sm">
+                  Select a hub and generate directions
+                </div>
+              )}
+
+            </Card>
+
+          </div>
+
+          {/* MAP SECTION */}
+
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-5">
+
+            <GlassCard className="xl:col-span-8 overflow-hidden rounded-3xl p-0 border border-gray-200 dark:border-gray-800 shadow-sm">
+
+              <div className="h-[650px] relative">
+
+                <MapContainer
+                  center={[14.5995, 120.9842]}
+                  zoom={6}
+                  style={{
+                    height: '100%',
+                    width: '100%',
+                  }}
+                  ref={mapRef}
                 >
-                  {loadingRoute ? (
-                    <LoadingSpinner size="sm" />
-                  ) : (
-                    <>
-                      <Navigation size={18} />
-                      Generate Directions
-                    </>
+
+                  <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
+
+                  {userLocation && (
+                    <Marker
+                      position={userLocation}
+                      icon={userIcon}
+                    >
+                      <Popup>
+                        Your Location
+                      </Popup>
+                    </Marker>
                   )}
-                </button>
 
-                <div className="rounded-3xl border border-gray-100 overflow-hidden">
+                  {filteredHubs.map((hub: any) => (
+                    <Marker
+                      key={hub.id}
+                      position={getHubCoordinates(hub)}
+                      icon={hubIcon}
+                      eventHandlers={{
+                        click: () =>
+                          handleMarkerClick(hub),
+                      }}
+                    >
+                      <Popup>
+                        {hub.name}
+                      </Popup>
+                    </Marker>
+                  ))}
 
-                  <div className="p-4 border-b border-gray-100 flex items-center gap-2 bg-gray-50">
-                    <Search size={16} className="text-gray-400" />
+                  {showDirections &&
+                    routeData && (
+                      <Polyline
+                        positions={
+                          routeData.car.coordinates
+                        }
+                        color="#dc2626"
+                        weight={5}
+                      />
+                    )}
 
-                    <input
-                      value={employeeSearch}
-                      onChange={(e) => setEmployeeSearch(e.target.value)}
-                      placeholder="Search employees"
-                      className="bg-transparent w-full outline-none text-sm"
+                </MapContainer>
+
+              </div>
+
+            </GlassCard>
+
+            {/* SIDE PANEL */}
+
+            <Card className="xl:col-span-4 rounded-3xl border-0 shadow-sm overflow-hidden">
+
+              {hubState.selectedHub ? (
+                <div className="flex flex-col h-full">
+
+                  <div className="p-5 border-b dark:border-gray-800 flex items-center justify-between">
+
+                    <div>
+                      <h3 className="text-xl font-semibold">
+                        {hubState.selectedHub.name}
+                      </h3>
+
+                      <p className="text-sm text-gray-500 mt-1">
+                        {hubState.selectedHub.city}
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={handleCloseHub}
+                      className="h-10 w-10 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center"
+                    >
+                      <X size={18} />
+                    </button>
+
+                  </div>
+
+                  <div className="p-5 space-y-5 overflow-y-auto">
+
+                    <div className="relative">
+                      <Search
+                        size={16}
+                        className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                      />
+
+                      <input
+                        type="text"
+                        placeholder="Search employees..."
+                        value={employeeSearch}
+                        onChange={(e) =>
+                          setEmployeeSearch(
+                            e.target.value
+                          )
+                        }
+                        className="
+                          w-full
+                          h-11
+                          pl-10
+                          pr-4
+                          rounded-2xl
+                          border
+                          border-gray-200
+                          dark:border-gray-700
+                          bg-gray-50
+                          dark:bg-gray-900
+                          text-sm
+                        "
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+
+                      <div className="rounded-2xl bg-gray-50 dark:bg-gray-900 p-4">
+                        <p className="text-sm text-gray-500">
+                          Total Staff
+                        </p>
+
+                        <h3 className="text-3xl font-semibold mt-2">
+                          {hubEmployeesData.length}
+                        </h3>
+                      </div>
+
+                      <div className="rounded-2xl bg-gray-50 dark:bg-gray-900 p-4">
+                        <p className="text-sm text-gray-500">
+                          Location
+                        </p>
+
+                        <h3 className="text-lg font-semibold mt-2 line-clamp-2">
+                          {hubState.selectedHub.city}
+                        </h3>
+                      </div>
+
+                    </div>
+
+                    {/* EMPLOYEE TABLE */}
+
+                    <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800">
+
+                      <table className="w-full text-sm">
+
+                        <thead className="bg-gray-50 dark:bg-gray-900">
+
+                          <tr>
+                            <th className="text-left px-4 py-3 font-medium">
+                              Employee
+                            </th>
+
+                            <th className="text-left px-4 py-3 font-medium">
+                              Position
+                            </th>
+
+                            <th className="text-left px-4 py-3 font-medium">
+                              Status
+                            </th>
+                          </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                          {!canViewEmployees ? (
+                            <tr>
+                              <td
+                                colSpan={3}
+                                className="py-12 text-center"
+                              >
+                                <div className="flex flex-col items-center">
+
+                                  <Shield
+                                    size={30}
+                                    className="text-gray-300 mb-2"
+                                  />
+
+                                  <p className="font-medium text-gray-500">
+                                    Restricted Access
+                                  </p>
+
+                                </div>
+                              </td>
+                            </tr>
+                          ) : (
+                            paginatedEmployees.map(
+                              (emp: any) => (
+                                <tr
+                                  key={emp.id}
+                                  className="border-t border-gray-100 dark:border-gray-800"
+                                >
+                                  <td className="px-4 py-3 font-medium">
+                                    {emp.full_name}
+                                  </td>
+
+                                  <td className="px-4 py-3 text-gray-500">
+                                    {emp.position}
+                                  </td>
+
+                                  <td className="px-4 py-3">
+                                    <span
+                                      className={`
+                                        px-2.5
+                                        py-1
+                                        rounded-full
+                                        text-xs
+                                        font-medium
+                                        ${
+                                          emp.status
+                                            ?.toLowerCase() ===
+                                          'active'
+                                            ? 'bg-green-100 text-green-700'
+                                            : 'bg-yellow-100 text-yellow-700'
+                                        }
+                                      `}
+                                    >
+                                      {emp.status}
+                                    </span>
+                                  </td>
+                                </tr>
+                              )
+                            )
+                          )}
+
+                        </tbody>
+
+                      </table>
+
+                    </div>
+
+                    {/* PAGINATION */}
+
+                    <div className="flex items-center justify-between">
+
+                      <button
+                        onClick={() =>
+                          setCurrentPage((p) =>
+                            Math.max(1, p - 1)
+                          )
+                        }
+                        className="h-10 w-10 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center justify-center"
+                      >
+                        <ChevronLeft size={18} />
+                      </button>
+
+                      <p className="text-sm text-gray-500">
+                        Page {currentPage} of{' '}
+                        {totalPages || 1}
+                      </p>
+
+                      <button
+                        onClick={() =>
+                          setCurrentPage((p) =>
+                            Math.min(
+                              totalPages,
+                              p + 1
+                            )
+                          )
+                        }
+                        className="h-10 w-10 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center justify-center"
+                      >
+                        <ChevronRight size={18} />
+                      </button>
+
+                    </div>
+
+                    <button
+                      onClick={handleGetDirections}
+                      disabled={loadingRoute}
+                      className="
+                        w-full
+                        h-12
+                        rounded-2xl
+                        bg-red-600
+                        hover:bg-red-700
+                        text-white
+                        font-medium
+                        transition-all
+                        flex
+                        items-center
+                        justify-center
+                        gap-2
+                      "
+                    >
+                      {loadingRoute ? (
+                        <LoadingSpinner size="sm" />
+                      ) : (
+                        <>
+                          <Navigation size={16} />
+                          Get Directions
+                        </>
+                      )}
+                    </button>
+
+                  </div>
+
+                </div>
+              ) : (
+                <div className="h-full flex flex-col justify-center items-center p-8 text-center">
+
+                  <div className="h-20 w-20 rounded-3xl bg-red-100 dark:bg-red-900/20 flex items-center justify-center mb-5">
+                    <Building2
+                      size={32}
+                      className="text-red-600"
                     />
                   </div>
 
-                  <div className="max-h-[360px] overflow-y-auto">
-                    {!canViewEmployees ? (
-                      <div className="p-10 text-center">
-                        <Shield size={38} className="mx-auto text-gray-300 mb-3" />
-                        <p className="font-medium text-gray-500">
-                          Restricted Access
-                        </p>
-                      </div>
-                    ) : (
-                      hubEmployees.map((emp: any) => (
-                        <div
-                          key={emp.id}
-                          className="p-4 border-b border-gray-100 hover:bg-gray-50 transition-all"
-                        >
-                          <div className="flex items-center justify-between gap-3">
-                            <div>
-                              <h4 className="font-semibold text-gray-800">
-                                {emp.full_name}
-                              </h4>
+                  <h3 className="text-2xl font-semibold">
+                    Select a Hub
+                  </h3>
 
-                              <p className="text-sm text-gray-500 mt-1">
-                                {emp.position}
-                              </p>
-                            </div>
+                  <p className="text-gray-500 mt-2 max-w-sm">
+                    Click any location marker on the map
+                    to view employees, weather,
+                    directions and route analytics.
+                  </p>
 
-                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                              emp.status?.toLowerCase() === 'active'
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-yellow-100 text-yellow-700'
-                            }`}>
-                              {emp.status}
-                            </span>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
                 </div>
-              </div>
-            </div>
-          ) : (
-            <div className="h-full flex flex-col items-center justify-center text-center p-8">
-              <div className="h-24 w-24 rounded-[28px] bg-red-50 flex items-center justify-center mb-5 shadow-inner">
-                <Building2 size={36} className="text-red-500" />
-              </div>
+              )}
 
-              <h3 className="text-3xl font-bold text-gray-800">
-                Select a Hub
+            </Card>
+
+          </div>
+
+          {/* HUB CARDS */}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+
+            {filteredHubs.map((hub: any) => {
+              const employeeCount =
+                getHubEmployeeCount(hub.id);
+
+              return (
+                <GlassCard
+                  key={hub.id}
+                  onClick={() =>
+                    handleMarkerClick(hub)
+                  }
+                  className="
+                    p-5
+                    rounded-3xl
+                    border
+                    border-gray-200/60
+                    dark:border-gray-800
+                    hover:border-red-500/40
+                    hover:shadow-xl
+                    transition-all
+                    cursor-pointer
+                  "
+                >
+
+                  <div className="flex items-start justify-between">
+
+                    <div className="flex-1">
+
+                      <div className="flex items-center gap-2">
+
+                        <MapPin
+                          size={18}
+                          className="text-red-600"
+                        />
+
+                        <h3 className="font-semibold text-lg">
+                          {hub.name}
+                        </h3>
+
+                      </div>
+
+                      <p className="text-sm text-gray-500 mt-2">
+                        {hub.location ||
+                          hub.city}
+                      </p>
+
+                      <p className="text-xs text-gray-400 mt-3">
+                        {hub.address}
+                      </p>
+
+                    </div>
+
+                    <div className="text-right">
+
+                      <h3 className="text-3xl font-semibold">
+                        {employeeCount}
+                      </h3>
+
+                      <p className="text-xs text-gray-400">
+                        Employees
+                      </p>
+
+                    </div>
+
+                  </div>
+
+                </GlassCard>
+              );
+            })}
+
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* MODAL */}
+
+      {showAddModal && (
+        <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+
+          <div className="w-full max-w-xl rounded-3xl bg-white dark:bg-gray-950 overflow-hidden shadow-2xl">
+
+            <div className="p-6 border-b dark:border-gray-800 flex items-center justify-between">
+
+              <h3 className="text-2xl font-semibold">
+                {editingHubId
+                  ? 'Edit Hub'
+                  : 'Add Hub'}
               </h3>
 
-              <p className="text-gray-500 mt-3 leading-relaxed max-w-sm">
-                Select a map marker to view hub employees, weather conditions and real-time route analytics.
-              </p>
-            </div>
-          )}
-        </Card>
-      </div>
-    </div>
-  </div>
-</>
-```
+              <button
+                onClick={() =>
+                  setShowAddModal(false)
+                }
+                className="h-10 w-10 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center"
+              >
+                <X size={18} />
+              </button>
 
-);
+            </div>
+
+            <form
+              onSubmit={handleAddHub}
+              className="p-6 space-y-5"
+            >
+
+              <div>
+                <label className="text-sm font-medium">
+                  Hub Name
+                </label>
+
+                <input
+                  required
+                  value={newHub.name}
+                  onChange={(e) =>
+                    setNewHub({
+                      ...newHub,
+                      name: e.target.value,
+                    })
+                  }
+                  className="mt-2 w-full h-12 px-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+
+                <div>
+                  <label className="text-sm font-medium">
+                    Location
+                  </label>
+
+                  <input
+                    required
+                    value={newHub.location}
+                    onChange={(e) =>
+                      setNewHub({
+                        ...newHub,
+                        location:
+                          e.target.value,
+                      })
+                    }
+                    className="mt-2 w-full h-12 px-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">
+                    City
+                  </label>
+
+                  <input
+                    required
+                    value={newHub.city}
+                    onChange={(e) =>
+                      setNewHub({
+                        ...newHub,
+                        city: e.target.value,
+                      })
+                    }
+                    className="mt-2 w-full h-12 px-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"
+                  />
+                </div>
+
+              </div>
+
+              <div>
+                <label className="text-sm font-medium">
+                  Address
+                </label>
+
+                <input
+                  required
+                  value={newHub.address}
+                  onChange={(e) =>
+                    setNewHub({
+                      ...newHub,
+                      address:
+                        e.target.value,
+                    })
+                  }
+                  className="mt-2 w-full h-12 px-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+
+                <div>
+                  <label className="text-sm font-medium">
+                    Latitude
+                  </label>
+
+                  <input
+                    required
+                    type="number"
+                    step="any"
+                    value={newHub.latitude}
+                    onChange={(e) =>
+                      setNewHub({
+                        ...newHub,
+                        latitude:
+                          parseFloat(
+                            e.target.value
+                          ),
+                      })
+                    }
+                    className="mt-2 w-full h-12 px-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">
+                    Longitude
+                  </label>
+
+                  <input
+                    required
+                    type="number"
+                    step="any"
+                    value={newHub.longitude}
+                    onChange={(e) =>
+                      setNewHub({
+                        ...newHub,
+                        longitude:
+                          parseFloat(
+                            e.target.value
+                          ),
+                      })
+                    }
+                    className="mt-2 w-full h-12 px-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"
+                  />
+                </div>
+
+              </div>
+
+              <div className="pt-4 flex justify-end gap-3">
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowAddModal(false)
+                  }
+                  className="h-11 px-5 rounded-2xl border border-gray-200 dark:border-gray-700"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="
+                    h-11
+                    px-6
+                    rounded-2xl
+                    bg-red-600
+                    hover:bg-red-700
+                    text-white
+                    font-medium
+                    flex
+                    items-center
+                    gap-2
+                  "
+                >
+                  {(createHubMutation.isPending ||
+                    updateHubMutation.isPending) && (
+                    <LoadingSpinner size="sm" />
+                  )}
+
+                  {editingHubId
+                    ? 'Update Hub'
+                    : 'Create Hub'}
+
+                </button>
+
+              </div>
+
+            </form>
+
+          </div>
+
+        </div>
+      )}
+    </>
+  );
 };
