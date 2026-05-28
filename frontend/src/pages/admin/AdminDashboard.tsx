@@ -307,47 +307,28 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
 
         {/* Hub Locations Map & Hub Chart */}
       <div className="grid grid-cols-2 lg:grid-cols-2 gap-2 md:gap-4">
-        {/* Hub Locations Map */}
         {/* HUB LOCATIONS MAP */}
 <Card
   className="
     relative
-
     overflow-hidden
+
+    rounded-2xl
 
     border
     border-white/10
 
-    bg-[#0B1120]
+    bg-[#0B1220]
 
-    shadow-[0_10px_40px_rgba(0,0,0,0.30)]
-
-    rounded-2xl
+    shadow-[0_10px_40px_rgba(0,0,0,0.35)]
 
     flex
     flex-col
 
-    min-h-[180px]
+    min-h-[200px]
     md:min-h-[500px]
   "
 >
-  {/* TOP GRADIENT */}
-  <div
-    className="
-      absolute
-      inset-x-0
-      top-0
-      h-24
-
-      bg-gradient-to-b
-      from-red-500/10
-      to-transparent
-
-      pointer-events-none
-      z-0
-    "
-  />
-
   {/* HEADER */}
   <div
     className="
@@ -358,25 +339,21 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
       items-center
       justify-between
 
-      px-3
+      px-4
       py-3
-
-      md:px-5
-      md:py-4
 
       border-b
       border-white/10
 
+      bg-black/30
       backdrop-blur-xl
-
-      bg-black/20
     "
   >
-    {/* LEFT */}
-    <div className="flex flex-col">
+    {/* TITLE */}
+    <div>
       <h2
         className="
-          text-[11px]
+          text-sm
           md:text-lg
 
           font-semibold
@@ -387,16 +364,16 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
         Hub Locations
       </h2>
 
-      <span
+      <p
         className="
-          text-[9px]
+          text-[10px]
           md:text-xs
 
           text-gray-400
         "
       >
-        Real-time hub monitoring
-      </span>
+        Live hub overview
+      </p>
     </div>
 
     {/* SEARCH */}
@@ -404,12 +381,8 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
       className="
         relative
 
-        flex-1
-
-        max-w-[130px]
-        md:max-w-xs
-
-        ml-3
+        w-[140px]
+        md:w-[240px]
       "
     >
       <Search
@@ -419,13 +392,10 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
           top-1/2
           -translate-y-1/2
 
+          w-4
+          h-4
+
           text-gray-500
-
-          w-3
-          h-3
-
-          md:w-4
-          md:h-4
         "
       />
 
@@ -452,10 +422,11 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
           pl-9
           pr-3
 
-          text-[10px]
+          text-xs
           md:text-sm
 
           text-white
+
           placeholder:text-gray-500
 
           outline-none
@@ -463,8 +434,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
           transition-all
           duration-300
 
-          focus:border-red-500/50
-          focus:bg-white/[0.08]
+          focus:border-red-500/40
           focus:ring-4
           focus:ring-red-500/10
         "
@@ -472,26 +442,26 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
     </div>
   </div>
 
-  {/* MAP AREA */}
+  {/* MAP CONTAINER */}
   <div
     className="
       relative
       flex-1
 
-      min-h-[160px]
-      md:min-h-[420px]
+      h-[260px]
+      md:h-[430px]
 
       overflow-hidden
     "
   >
-    {/* MAP OVERLAY */}
+    {/* OVERLAY */}
     <div
       className="
         absolute
         inset-0
 
         bg-gradient-to-t
-        from-[#020617]/60
+        from-black/40
         via-transparent
         to-transparent
 
@@ -501,7 +471,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
       "
     />
 
-    {/* STATS FLOAT */}
+    {/* FLOATING CARD */}
     <div
       className="
         absolute
@@ -510,176 +480,184 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
 
         z-[500]
 
-        flex
-        flex-col
-        gap-2
+        rounded-xl
+
+        border
+        border-white/10
+
+        bg-black/40
+
+        backdrop-blur-xl
+
+        px-3
+        py-2
       "
     >
-      <div
+      <p
         className="
-          px-3
-          py-2
-
-          rounded-xl
-
-          border
-          border-white/10
-
-          bg-black/40
-
-          backdrop-blur-xl
+          text-[10px]
+          text-gray-400
         "
       >
-        <p
-          className="
-            text-[9px]
-            md:text-xs
+        Total Hubs
+      </p>
 
-            text-gray-400
-          "
-        >
-          Total Hubs
-        </p>
-
-        <h3
-          className="
-            text-sm
-            md:text-lg
-
-            font-bold
-
-            text-white
-          "
-        >
-          {hubs.length}
-        </h3>
-      </div>
+      <h3
+        className="
+          text-lg
+          font-bold
+          text-white
+        "
+      >
+        {hubs.length}
+      </h3>
     </div>
 
-    {hubs.length > 0 ? (
-      <MapContainer
-        center={[12.5797, 124.0758]}
-        zoom={6}
-        zoomControl={false}
-        attributionControl={false}
-        style={{
-          width: '100%',
-          height: '100%',
-          background: '#020617',
-        }}
-      >
-        <FitBoundsComponent
-          mapHubs={hubs}
-          getCoords={getHubCoordinates}
-        />
+    {/* MAP */}
+    <MapContainer
+      center={[12.5797, 124.0758]}
+      zoom={6}
+      zoomControl={false}
+      attributionControl={false}
+      style={{
+        width: '100%',
+        height: '100%',
+      }}
+    >
+      {/* DARK THEME MAP */}
+      <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
 
-        {/* DARK MAP */}
-        <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        />
+      <FitBoundsComponent
+        mapHubs={hubs}
+        getCoords={getHubCoordinates}
+      />
 
-        {hubs
-          .filter(
-            (hub: any) =>
-              !searchLocationTerm ||
-              hub.name
-                ?.toLowerCase()
-                .includes(
-                  searchLocationTerm.toLowerCase()
-                ) ||
-              hub.location
-                ?.toLowerCase()
-                .includes(
-                  searchLocationTerm.toLowerCase()
-                ) ||
-              hub.city
-                ?.toLowerCase()
-                .includes(
-                  searchLocationTerm.toLowerCase()
-                )
-          )
-          .map((hub: any) => {
-            let lat = hub.latitude || 12.5797;
-            let lng = hub.longitude || 124.0758;
+      {hubs
+        .filter((hub: any) => {
+          const q =
+            searchLocationTerm.toLowerCase();
 
-            const cityCoords: Record<
-              string,
-              [number, number]
-            > = {
-              manila: [14.5995, 120.9842],
-              quezon: [14.8291, 121.2558],
-              cebu: [10.3157, 123.8854],
-              davao: [7.0731, 125.6121],
-              cagayan: [17.6412, 121.774],
-              pampanga: [15.0955, 120.665],
-              laguna: [14.3159, 121.4158],
-              batangas: [13.7563, 121.0437],
-            };
+          return (
+            !q ||
+            hub.name
+              ?.toLowerCase()
+              .includes(q) ||
+            hub.location
+              ?.toLowerCase()
+              .includes(q) ||
+            hub.city
+              ?.toLowerCase()
+              .includes(q)
+          );
+        })
+        .map((hub: any) => {
+          let lat = hub.latitude || 12.5797;
+          let lng = hub.longitude || 124.0758;
 
-            if (!hub.latitude || !hub.longitude) {
-              const city =
-                hub.city?.toLowerCase() || '';
+          const cityCoords: Record<
+            string,
+            [number, number]
+          > = {
+            manila: [14.5995, 120.9842],
+            quezon: [14.8291, 121.2558],
+            cebu: [10.3157, 123.8854],
+            davao: [7.0731, 125.6121],
+            pampanga: [15.0955, 120.665],
+            laguna: [14.3159, 121.4158],
+          };
 
-              for (const [key, coords] of Object.entries(
-                cityCoords
-              )) {
-                if (city.includes(key)) {
-                  lat = coords[0];
-                  lng = coords[1];
-                  break;
-                }
+          if (!hub.latitude || !hub.longitude) {
+            const city =
+              hub.city?.toLowerCase() || '';
+
+            for (const [key, coords] of Object.entries(
+              cityCoords
+            )) {
+              if (city.includes(key)) {
+                lat = coords[0];
+                lng = coords[1];
+                break;
               }
             }
+          }
 
-            return (
-              <Marker
-                key={hub.id}
-                position={[lat, lng]}
-                icon={hubIcon}
+          /**
+           * CLEAN MODERN MARKER
+           */
+          const modernMarker = L.divIcon({
+            className: '',
+            html: `
+              <div
+                style="
+                  position:relative;
+                  width:14px;
+                  height:14px;
+                "
               >
-                <Popup>
-                  <div className="min-w-[180px] p-1">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="font-semibold text-sm">
-                          {hub.name}
-                        </h3>
+                <div
+                  style="
+                    position:absolute;
+                    inset:0;
+                    border-radius:999px;
+                    background:#ef4444;
+                    border:2px solid white;
+                    box-shadow:
+                      0 0 0 4px rgba(239,68,68,0.18),
+                      0 0 18px rgba(239,68,68,0.55);
+                  "
+                ></div>
+              </div>
+            `,
+          });
 
-                        <p className="text-xs text-gray-500">
-                          {hub.location || hub.city}
-                        </p>
-                      </div>
+          return (
+            <Marker
+              key={hub.id}
+              position={[lat, lng]}
+              icon={modernMarker}
+            >
+              <Popup>
+                <div className="min-w-[180px]">
+                  {/* TOP */}
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="font-semibold text-sm">
+                        {hub.name}
+                      </h3>
 
-                      <div
-                        className="
-                          w-2
-                          h-2
-
-                          rounded-full
-
-                          bg-green-500
-
-                          animate-pulse
-                        "
-                      />
+                      <p className="text-xs text-gray-500">
+                        {hub.location || hub.city}
+                      </p>
                     </div>
 
                     <div
                       className="
-                        mt-3
+                        w-2
+                        h-2
 
-                        flex
-                        items-center
-                        justify-between
+                        rounded-full
 
-                        rounded-lg
+                        bg-green-500
 
-                        bg-gray-100
-
-                        px-2
-                        py-2
+                        animate-pulse
                       "
-                    >
+                    />
+                  </div>
+
+                  {/* STATS */}
+                  <div
+                    className="
+                      mt-3
+
+                      rounded-lg
+
+                      bg-gray-100
+
+                      px-3
+                      py-2
+                    "
+                  >
+                    <div className="flex items-center justify-between">
                       <span className="text-xs text-gray-500">
                         Employees
                       </span>
@@ -694,35 +672,12 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
                       </span>
                     </div>
                   </div>
-                </Popup>
-              </Marker>
-            );
-          })}
-      </MapContainer>
-    ) : (
-      <div
-        className="
-          w-full
-          h-full
-
-          flex
-          items-center
-          justify-center
-
-          bg-[#020617]
-        "
-      >
-        <div className="text-center">
-          <p className="text-gray-400 text-sm">
-            No hubs available
-          </p>
-
-          <span className="text-xs text-gray-500">
-            Map data will appear here
-          </span>
-        </div>
-      </div>
-    )}
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
+    </MapContainer>
   </div>
 </Card>
 
