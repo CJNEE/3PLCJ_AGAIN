@@ -10,6 +10,118 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import HubsEmployeeChart from '@/components/HubsEmployeeChart';
 import { Sidebar } from '@/components/Sidebar';
+const FitBoundsComponent = ({
+  mapHubs,
+}: {
+  mapHubs: any[];
+}) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!mapHubs?.length) return;
+
+    const valid = mapHubs.filter(
+      (h) => h.latitude && h.longitude
+    );
+
+    if (!valid.length) return;
+
+    const bounds = L.latLngBounds(
+      valid.map((hub) => [
+        hub.latitude,
+        hub.longitude,
+      ])
+    );
+
+    map.fitBounds(bounds, {
+      padding: [50, 50],
+    });
+  }, [map, mapHubs]);
+
+  return null;
+};
+
+/**
+ * PHILIPPINES CITY COORDS
+ * more accurate fallback coords
+ */
+const philippinesCityCoords: Record<
+  string,
+  [number, number]
+> = {
+  manila: [14.5995, 120.9842],
+  quezon: [14.6760, 121.0437],
+  makati: [14.5547, 121.0244],
+  pasig: [14.5764, 121.0851],
+  taguig: [14.5176, 121.0509],
+  cebu: [10.3157, 123.8854],
+  davao: [7.1907, 125.4553],
+  laguna: [14.1407, 121.4692],
+  batangas: [13.7565, 121.0583],
+  pampanga: [15.0794, 120.6200],
+  cavite: [14.2456, 120.8786],
+  bulacan: [14.7942, 120.8799],
+  rizal: [14.6037, 121.3084],
+  iloilo: [10.7202, 122.5621],
+  bacolod: [10.6765, 122.9509],
+  cagayan: [17.6132, 121.7269],
+  palawan: [9.8349, 118.7384],
+  albay: [13.1775, 123.5280],
+  leyte: [11.2449, 124.9912],
+};
+
+/**
+ * GET ACCURATE COORDS
+ */
+const getHubCoordinates = (hub: any) => {
+  /**
+   * PRIORITIZE REAL DATABASE COORDS
+   */
+  if (
+    hub.latitude &&
+    hub.longitude &&
+    !isNaN(hub.latitude) &&
+    !isNaN(hub.longitude)
+  ) {
+    return [
+      Number(hub.latitude),
+      Number(hub.longitude),
+    ];
+  }
+
+  /**
+   * FALLBACK TO CITY MATCHING
+   */
+  const city =
+    (
+      hub.city ||
+      hub.location ||
+      ''
+    ).toLowerCase();
+
+  for (const [key, coords] of Object.entries(
+    philippinesCityCoords
+  )) {
+    if (city.includes(key)) {
+      return coords;
+    }
+  }
+
+  /**
+   * DEFAULT PHILIPPINES CENTER
+   */
+  return [12.8797, 121.774];
+};
+
+
+
+
+
+
+
+
+
+
 
 
 const STATUS_COLORS: Record<string, string> = {
@@ -308,7 +420,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
         {/* Hub Locations Map & Hub Chart */}
       <div className="grid grid-cols-2 lg:grid-cols-2 gap-2 md:gap-4">
 
-{/* HUB LOCATIONS MAP */}
+            {/* HUB LOCATIONS MAP */}
 <Card
   className="
     relative
@@ -355,7 +467,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
       backdrop-blur-xl
     "
   >
-    {/* LEFT */}
+    {/* TITLE */}
     <div>
       <h2
         className="
@@ -453,7 +565,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
     </div>
   </div>
 
-  {/* MAP AREA */}
+  {/* MAP */}
   <div
     className="
       relative
@@ -465,7 +577,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
       overflow-hidden
     "
   >
-    {/* LIGHT OVERLAY */}
+    {/* CLEAN OVERLAY */}
     <div
       className="
         absolute
@@ -482,37 +594,8 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
       "
     />
 
-    {/* FLOATING STATS */}
-    <div
-      className="
-        absolute
-        top-3
-        left-3
-
-        z-[500]
-
-        rounded-xl
-
-        border
-        border-gray-200
-        dark:border-gray-700
-
-        bg-white/90
-        dark:bg-[#111827]/90
-
-        backdrop-blur-xl
-
-        px-3
-        py-2
-
-        shadow-lg
-      "
-    >
-    </div>
-
-    {/* MAP */}
     <MapContainer
-      center={[12.5797, 124.0758]}
+      center={[12.8797, 121.774]}
       zoom={6}
       zoomControl={false}
       attributionControl={false}
@@ -521,15 +604,13 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
         height: '100%',
       }}
     >
-      {/* CLEAN PREMIUM LIGHT MAP */}
+      {/* LIGHT MAP */}
       <TileLayer
         url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
       />
 
-      <FitBoundsComponent
-        mapHubs={hubs}
-        getCoords={getHubCoordinates}
-      />
+      {/* AUTO FIT */}
+      <FitBoundsComponent mapHubs={hubs} />
 
       {hubs
         .filter((hub: any) => {
@@ -550,39 +631,11 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
           );
         })
         .map((hub: any) => {
-          let lat = hub.latitude || 12.5797;
-          let lng = hub.longitude || 124.0758;
-
-          const cityCoords: Record<
-            string,
-            [number, number]
-          > = {
-            manila: [14.5995, 120.9842],
-            quezon: [14.8291, 121.2558],
-            cebu: [10.3157, 123.8854],
-            davao: [7.0731, 125.6121],
-            pampanga: [15.0955, 120.665],
-            laguna: [14.3159, 121.4158],
-            batangas: [13.7563, 121.0437],
-          };
-
-          if (!hub.latitude || !hub.longitude) {
-            const city =
-              hub.city?.toLowerCase() || '';
-
-            for (const [key, coords] of Object.entries(
-              cityCoords
-            )) {
-              if (city.includes(key)) {
-                lat = coords[0];
-                lng = coords[1];
-                break;
-              }
-            }
-          }
+          const [lat, lng] =
+            getHubCoordinates(hub);
 
           /**
-           * CLEAN MODERN RED MARKER
+           * CLEANER SMALLER MARKER
            */
           const modernMarker = L.divIcon({
             className: '',
@@ -590,8 +643,8 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
               <div
                 style="
                   position:relative;
-                  width:14px;
-                  height:14px;
+                  width:12px;
+                  height:12px;
                 "
               >
                 <div
@@ -602,8 +655,8 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
                     background:#ef4444;
                     border:2px solid white;
                     box-shadow:
-                      0 0 0 4px rgba(239,68,68,0.10),
-                      0 0 10px rgba(239,68,68,0.20);
+                      0 0 0 3px rgba(239,68,68,0.10),
+                      0 0 8px rgba(239,68,68,0.15);
                   "
                 ></div>
               </div>
@@ -671,6 +724,11 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
                         }
                       </span>
                     </div>
+                  </div>
+
+                  {/* COORDS */}
+                  <div className="mt-2 text-[10px] text-gray-400">
+                    {lat.toFixed(4)}, {lng.toFixed(4)}
                   </div>
                 </div>
               </Popup>
