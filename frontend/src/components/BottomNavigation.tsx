@@ -79,7 +79,7 @@ export const BottomNavigation = ({
   );
 
   /**
-   * FLOATING ITEMS
+   * FLOATING MENU
    */
   const floatingItems = useMemo(
     () => [
@@ -118,18 +118,18 @@ export const BottomNavigation = ({
   );
 
   /**
-   * SHIFTED LEFT FOR PERFECT CENTERING
+   * SHIFTED LEFT FOR PERFECT CENTER
    */
   const positions = [
     // LEFT SIDE
-    { x: -135, y: -92 },
-    { x: -88, y: -148 },
-    { x: -28, y: -182 },
+    { x: -150, y: -92 },
+    { x: -102, y: -148 },
+    { x: -42, y: -182 },
 
     // RIGHT SIDE
-    { x: 35, y: -182 },
-    { x: 96, y: -148 },
-    { x: 145, y: -92 },
+    { x: 22, y: -182 },
+    { x: 84, y: -148 },
+    { x: 134, y: -92 },
   ];
 
   return (
