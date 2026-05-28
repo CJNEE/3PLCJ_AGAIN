@@ -307,7 +307,8 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
 
         {/* Hub Locations Map & Hub Chart */}
       <div className="grid grid-cols-2 lg:grid-cols-2 gap-2 md:gap-4">
-        {/* HUB LOCATIONS MAP */}
+
+{/* HUB LOCATIONS MAP */}
 <Card
   className="
     relative
@@ -316,16 +317,18 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
     rounded-2xl
 
     border
-    border-white/10
+    border-gray-200
+    dark:border-gray-800
 
-    bg-[#0B1220]
+    bg-white
+    dark:bg-[#111827]
 
-    shadow-[0_10px_40px_rgba(0,0,0,0.35)]
+    shadow-xl
 
     flex
     flex-col
 
-    min-h-[200px]
+    min-h-[220px]
     md:min-h-[500px]
   "
 >
@@ -343,13 +346,16 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
       py-3
 
       border-b
-      border-white/10
+      border-gray-200
+      dark:border-gray-800
 
-      bg-black/30
+      bg-white/90
+      dark:bg-[#111827]/90
+
       backdrop-blur-xl
     "
   >
-    {/* TITLE */}
+    {/* LEFT */}
     <div>
       <h2
         className="
@@ -358,7 +364,8 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
 
           font-semibold
 
-          text-white
+          text-gray-900
+          dark:text-white
         "
       >
         Hub Locations
@@ -369,7 +376,8 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
           text-[10px]
           md:text-xs
 
-          text-gray-400
+          text-gray-500
+          dark:text-gray-400
         "
       >
         Live hub overview
@@ -381,8 +389,8 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
       className="
         relative
 
-        w-[140px]
-        md:w-[240px]
+        w-[150px]
+        md:w-[250px]
       "
     >
       <Search
@@ -395,7 +403,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
           w-4
           h-4
 
-          text-gray-500
+          text-gray-400
         "
       />
 
@@ -415,9 +423,11 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
           rounded-xl
 
           border
-          border-white/10
+          border-gray-200
+          dark:border-gray-700
 
-          bg-white/5
+          bg-gray-100
+          dark:bg-[#1f2937]
 
           pl-9
           pr-3
@@ -425,16 +435,17 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
           text-xs
           md:text-sm
 
-          text-white
+          text-gray-900
+          dark:text-white
 
-          placeholder:text-gray-500
+          placeholder:text-gray-400
 
           outline-none
 
           transition-all
           duration-300
 
-          focus:border-red-500/40
+          focus:border-red-400
           focus:ring-4
           focus:ring-red-500/10
         "
@@ -442,26 +453,26 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
     </div>
   </div>
 
-  {/* MAP CONTAINER */}
+  {/* MAP AREA */}
   <div
     className="
       relative
       flex-1
 
-      h-[260px]
+      h-[280px]
       md:h-[430px]
 
       overflow-hidden
     "
   >
-    {/* OVERLAY */}
+    {/* LIGHT OVERLAY */}
     <div
       className="
         absolute
         inset-0
 
         bg-gradient-to-t
-        from-black/40
+        from-white/5
         via-transparent
         to-transparent
 
@@ -471,7 +482,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
       "
     />
 
-    {/* FLOATING CARD */}
+    {/* FLOATING STATS */}
     <div
       className="
         absolute
@@ -483,20 +494,26 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
         rounded-xl
 
         border
-        border-white/10
+        border-gray-200
+        dark:border-gray-700
 
-        bg-black/40
+        bg-white/90
+        dark:bg-[#111827]/90
 
         backdrop-blur-xl
 
         px-3
         py-2
+
+        shadow-lg
       "
     >
       <p
         className="
           text-[10px]
-          text-gray-400
+
+          text-gray-500
+          dark:text-gray-400
         "
       >
         Total Hubs
@@ -506,7 +523,9 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
         className="
           text-lg
           font-bold
-          text-white
+
+          text-gray-900
+          dark:text-white
         "
       >
         {hubs.length}
@@ -524,8 +543,10 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
         height: '100%',
       }}
     >
-      {/* DARK THEME MAP */}
-      <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+      {/* CLEAN PREMIUM LIGHT MAP */}
+      <TileLayer
+        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+      />
 
       <FitBoundsComponent
         mapHubs={hubs}
@@ -564,6 +585,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
             davao: [7.0731, 125.6121],
             pampanga: [15.0955, 120.665],
             laguna: [14.3159, 121.4158],
+            batangas: [13.7563, 121.0437],
           };
 
           if (!hub.latitude || !hub.longitude) {
@@ -582,7 +604,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
           }
 
           /**
-           * CLEAN MODERN MARKER
+           * CLEAN MODERN RED MARKER
            */
           const modernMarker = L.divIcon({
             className: '',
@@ -602,8 +624,8 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
                     background:#ef4444;
                     border:2px solid white;
                     box-shadow:
-                      0 0 0 4px rgba(239,68,68,0.18),
-                      0 0 18px rgba(239,68,68,0.55);
+                      0 0 0 4px rgba(239,68,68,0.10),
+                      0 0 10px rgba(239,68,68,0.20);
                   "
                 ></div>
               </div>
@@ -617,7 +639,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
               icon={modernMarker}
             >
               <Popup>
-                <div className="min-w-[180px]">
+                <div className="min-w-[190px]">
                   {/* TOP */}
                   <div className="flex items-start justify-between">
                     <div>
@@ -662,7 +684,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
                         Employees
                       </span>
 
-                      <span className="text-sm font-bold">
+                      <span className="text-sm font-bold text-gray-900">
                         {
                           allEmployees.filter(
                             (emp: any) =>
@@ -680,6 +702,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
     </MapContainer>
   </div>
 </Card>
+        
 
         {/* Hub Employee Distribution */}
         <Card className="p-2 md:p-4">
