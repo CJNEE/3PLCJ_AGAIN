@@ -121,16 +121,16 @@ export const BottomNavigation = ({
    * SHIFTED LEFT FOR PERFECT CENTER
    */
   const positions = [
-    // LEFT SIDE
-    { x: -150, y: -92 },
-    { x: -102, y: -148 },
-    { x: -42, y: -182 },
+  // LEFT SIDE
+  { x: -162, y: -92 },
+  { x: -114, y: -148 },
+  { x: -54, y: -182 },
 
-    // RIGHT SIDE
-    { x: 22, y: -182 },
-    { x: 84, y: -148 },
-    { x: 134, y: -92 },
-  ];
+  // RIGHT SIDE
+  { x: 8, y: -182 },
+  { x: 68, y: -148 },
+  { x: 116, y: -92 },
+];
 
   return (
     <>
@@ -208,7 +208,7 @@ export const BottomNavigation = ({
                     }}
                     className="
                       absolute
-                      left-1/2
+                      left-[48%]
                       bottom-[18px]
                       z-40
                     "
