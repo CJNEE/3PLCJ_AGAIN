@@ -50,7 +50,7 @@ export const BottomNavigation = ({
       : '/employee';
 
   /**
-   * BOTTOM NAV
+   * MAIN NAV
    */
   const bottomItems = useMemo(
     () => [
@@ -118,17 +118,16 @@ export const BottomNavigation = ({
   );
 
   /**
-   * RESPONSIVE ARC
-   * smaller + cleaner
+   * FLOATING ARC
    */
   const positions = [
-    { x: -118, y: -82 },
-    { x: -78, y: -140 },
-    { x: -28, y: -172 },
+    { x: -96, y: -72 },
+    { x: -62, y: -122 },
+    { x: -22, y: -150 },
 
-    { x: 28, y: -172 },
-    { x: 78, y: -140 },
-    { x: 118, y: -82 },
+    { x: 22, y: -150 },
+    { x: 62, y: -122 },
+    { x: 96, y: -72 },
   ];
 
   return (
@@ -147,7 +146,7 @@ export const BottomNavigation = ({
           ${className}
         `}
       >
-        <div className="relative w-full max-w-[430px]">
+        <div className="relative w-full max-w-[420px]">
           {/* BACKDROP */}
           <AnimatePresence>
             {expanded && (
@@ -208,11 +207,11 @@ export const BottomNavigation = ({
                     className="
                       absolute
                       left-1/2
-                      bottom-[40px]
+                      bottom-[38px]
                       z-40
                     "
                     style={{
-                      marginLeft: '-24px',
+                      marginLeft: '-22px',
                     }}
                   >
                     <NavLink
@@ -230,19 +229,18 @@ export const BottomNavigation = ({
                           flex
                           flex-col
                           items-center
-                          gap-1.5
+                          gap-1
                         "
                       >
-                        {/* SMALLER RED CIRCLE */}
                         <div
                           className={`
                             relative
 
-                            w-[48px]
-                            h-[48px]
+                            w-[44px]
+                            h-[44px]
 
-                            sm:w-[54px]
-                            sm:h-[54px]
+                            sm:w-[48px]
+                            sm:h-[48px]
 
                             rounded-full
 
@@ -292,22 +290,17 @@ export const BottomNavigation = ({
                           />
 
                           <Icon
-                            size={20}
+                            size={18}
                             strokeWidth={2.2}
                             className="relative z-10"
                           />
                         </div>
 
-                        {/* LABEL */}
                         <span
                           className="
                             text-[9px]
-                            sm:text-[10px]
-
                             font-semibold
                             text-white
-
-                            text-center
                             leading-none
                           "
                         >
@@ -325,30 +318,30 @@ export const BottomNavigation = ({
             className="
               relative
 
-              h-[78px]
-              sm:h-[84px]
+              h-[72px]
+              sm:h-[76px]
 
-              rounded-[28px]
+              rounded-[26px]
 
               overflow-visible
 
               border
               border-white/10
 
-              bg-[rgba(8,15,35,0.92)]
+              bg-[rgba(8,15,35,0.94)]
 
               backdrop-blur-[22px]
 
               shadow-[0_16px_40px_rgba(0,0,0,0.38)]
             "
           >
-            {/* LIGHT */}
+            {/* INNER LIGHT */}
             <div
               className="
                 absolute
                 inset-0
 
-                rounded-[28px]
+                rounded-[26px]
 
                 bg-gradient-to-b
                 from-white/[0.03]
@@ -366,12 +359,12 @@ export const BottomNavigation = ({
 
                 h-full
 
-                px-5
-                sm:px-7
+                px-3
+                sm:px-4
               "
             >
-              {/* LEFT */}
-              <div className="flex items-center gap-5 sm:gap-7">
+              {/* LEFT SIDE */}
+              <div className="flex items-center gap-2 sm:gap-4">
                 {bottomItems.slice(0, 2).map((item) => {
                   const Icon = item.icon;
 
@@ -388,7 +381,9 @@ export const BottomNavigation = ({
                         flex
                         flex-col
                         items-center
-                        gap-1
+                        gap-[2px]
+
+                        min-w-[54px]
                       "
                     >
                       <motion.div
@@ -410,7 +405,7 @@ export const BottomNavigation = ({
                         `}
                       >
                         <Icon
-                          size={20}
+                          size={18}
                           strokeWidth={2.2}
                         />
                       </motion.div>
@@ -418,8 +413,6 @@ export const BottomNavigation = ({
                       <span
                         className={`
                           text-[9px]
-                          sm:text-[10px]
-
                           font-semibold
 
                           transition-all
@@ -446,7 +439,7 @@ export const BottomNavigation = ({
                   left-1/2
                   -translate-x-1/2
 
-                  -top-[18px]
+                  -top-[16px]
 
                   z-50
                 "
@@ -462,11 +455,11 @@ export const BottomNavigation = ({
                   className="
                     relative
 
-                    w-[72px]
-                    h-[72px]
+                    w-[64px]
+                    h-[64px]
 
-                    sm:w-[80px]
-                    sm:h-[80px]
+                    sm:w-[70px]
+                    sm:h-[70px]
 
                     rounded-full
 
@@ -507,13 +500,13 @@ export const BottomNavigation = ({
                   >
                     {expanded ? (
                       <X
-                        size={26}
+                        size={24}
                         strokeWidth={2.5}
                         className="text-white"
                       />
                     ) : (
                       <Plus
-                        size={26}
+                        size={24}
                         strokeWidth={2.5}
                         className="text-white"
                       />
@@ -522,8 +515,8 @@ export const BottomNavigation = ({
                 </motion.button>
               </div>
 
-              {/* RIGHT */}
-              <div className="flex items-center gap-5 sm:gap-7">
+              {/* RIGHT SIDE */}
+              <div className="flex items-center gap-2 sm:gap-4">
                 {bottomItems.slice(2, 4).map((item) => {
                   const Icon = item.icon;
 
@@ -538,7 +531,9 @@ export const BottomNavigation = ({
                         flex
                         flex-col
                         items-center
-                        gap-1
+                        gap-[2px]
+
+                        min-w-[54px]
                       "
                     >
                       <motion.div
@@ -560,7 +555,7 @@ export const BottomNavigation = ({
                         `}
                       >
                         <Icon
-                          size={20}
+                          size={18}
                           strokeWidth={2.2}
                         />
                       </motion.div>
@@ -568,8 +563,6 @@ export const BottomNavigation = ({
                       <span
                         className={`
                           text-[9px]
-                          sm:text-[10px]
-
                           font-semibold
 
                           transition-all
