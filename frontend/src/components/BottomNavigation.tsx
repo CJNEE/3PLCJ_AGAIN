@@ -49,31 +49,38 @@ export const BottomNavigation = ({
       ? '/hr'
       : '/employee';
 
-  // MAIN NAVBAR
-  const bottomItems = [
-    {
-      label: 'Dashboard',
-      icon: LayoutDashboard,
-      path: basePath,
-    },
-    {
-      label: 'Hubs',
-      icon: MapPin,
-      path: `${basePath}/hubs`,
-    },
-    {
-      label: 'Employees',
-      icon: Users,
-      path: `${basePath}/employees`,
-    },
-    {
-      label: 'Edit',
-      icon: FileText,
-      path: `${basePath}/edit-requests`,
-    },
-  ];
+  /**
+   * BOTTOM NAV ITEMS
+   */
+  const bottomItems = useMemo(
+    () => [
+      {
+        label: 'Dashboard',
+        icon: LayoutDashboard,
+        path: basePath,
+      },
+      {
+        label: 'Hubs',
+        icon: MapPin,
+        path: `${basePath}/hubs`,
+      },
+      {
+        label: 'Employees',
+        icon: Users,
+        path: `${basePath}/employees`,
+      },
+      {
+        label: 'Edit',
+        icon: FileText,
+        path: `${basePath}/edit-requests`,
+      },
+    ],
+    [basePath]
+  );
 
-  // FLOATING MENU
+  /**
+   * FLOATING ACTION ITEMS
+   */
   const floatingItems = useMemo(
     () => [
       {
@@ -110,9 +117,23 @@ export const BottomNavigation = ({
     [basePath]
   );
 
+  /**
+   * PERFECT ARC POSITIONS
+   * SAME AS IMAGE
+   */
+  const positions = [
+    { x: -120, y: -90 },
+    { x: -72, y: -145 },
+    { x: -18, y: -178 },
+
+    { x: 45, y: -178 },
+    { x: 100, y: -145 },
+    { x: 145, y: -90 },
+  ];
+
   return (
     <>
-      {/* MOBILE NAV */}
+      {/* MOBILE ONLY */}
       <div
         className={`
           fixed
@@ -127,7 +148,7 @@ export const BottomNavigation = ({
           ${className}
         `}
       >
-        <div className="relative w-full max-w-[420px]">
+        <div className="relative w-full max-w-[430px]">
           {/* BACKDROP */}
           <AnimatePresence>
             {expanded && (
@@ -139,33 +160,23 @@ export const BottomNavigation = ({
                 className="
                   fixed
                   inset-0
-                  bg-black/20
+                  bg-black/10
                   backdrop-blur-[8px]
                 "
               />
             )}
           </AnimatePresence>
 
-          {/* FLOATING ITEMS */}
+          {/* FLOATING ACTION BUTTONS */}
           <AnimatePresence>
             {expanded &&
               floatingItems.map((item, index) => {
                 const Icon = item.icon;
 
+                const pos = positions[index];
+
                 const isActive =
                   location.pathname.startsWith(item.path);
-
-                // CLEAN CURVED LAYOUT
-                const angle = -145 + index * 18;
-                const radius = 140;
-
-                const x =
-                  Math.cos((angle * Math.PI) / 180) *
-                  radius;
-
-                const y =
-                  Math.sin((angle * Math.PI) / 180) *
-                  radius;
 
                 return (
                   <motion.div
@@ -179,8 +190,8 @@ export const BottomNavigation = ({
                     animate={{
                       opacity: 1,
                       scale: 1,
-                      x,
-                      y,
+                      x: pos.x,
+                      y: pos.y,
                     }}
                     exit={{
                       opacity: 0,
@@ -197,7 +208,7 @@ export const BottomNavigation = ({
                     className="
                       absolute
                       left-1/2
-                      bottom-[42px]
+                      bottom-[40px]
                       z-40
                     "
                   >
@@ -214,7 +225,7 @@ export const BottomNavigation = ({
                           gap-2
                         "
                       >
-                        {/* ICON CARD */}
+                        {/* CARD */}
                         <div
                           className={`
                             w-[62px]
@@ -224,10 +235,10 @@ export const BottomNavigation = ({
                             items-center
                             justify-center
                             border
-                            backdrop-blur-xl
                             transition-all
                             duration-300
-                            shadow-[0_12px_30px_rgba(0,0,0,0.10)]
+                            backdrop-blur-xl
+                            shadow-[0_10px_30px_rgba(0,0,0,0.08)]
                             ${
                               isActive
                                 ? `
@@ -237,9 +248,9 @@ export const BottomNavigation = ({
                                 `
                                 : `
                                   bg-white/88
-                                  dark:bg-[#0f172a]/92
-                                  border-white/30
-                                  text-[#1e293b]
+                                  dark:bg-[#111827]/92
+                                  border-white/20
+                                  text-[#1f2937]
                                   dark:text-white
                                 `
                             }
@@ -256,9 +267,9 @@ export const BottomNavigation = ({
                           className="
                             text-[11px]
                             font-semibold
+                            whitespace-nowrap
                             text-gray-700
                             dark:text-white
-                            whitespace-nowrap
                           "
                         >
                           {item.label}
@@ -270,15 +281,15 @@ export const BottomNavigation = ({
               })}
           </AnimatePresence>
 
-          {/* BOTTOM BAR */}
+          {/* NAVBAR */}
           <div
             className="
               relative
-              h-[82px]
+              h-[84px]
               rounded-[32px]
               border border-white/20
               bg-white/75
-              dark:bg-[#081120]/85
+              dark:bg-[#0b1120]/85
               backdrop-blur-3xl
               shadow-[0_10px_40px_rgba(0,0,0,0.12)]
             "
@@ -289,11 +300,11 @@ export const BottomNavigation = ({
                 items-center
                 justify-between
                 h-full
-                px-6
+                px-7
               "
             >
               {/* LEFT SIDE */}
-              <div className="flex items-center gap-7">
+              <div className="flex items-center gap-8">
                 {bottomItems.slice(0, 2).map((item) => {
                   const Icon = item.icon;
 
@@ -311,14 +322,13 @@ export const BottomNavigation = ({
                         flex-col
                         items-center
                         gap-1
-                        relative
                       "
                     >
                       <motion.div
+                        whileTap={{ scale: 0.92 }}
                         animate={{
                           y: isActive ? -2 : 0,
                         }}
-                        whileTap={{ scale: 0.92 }}
                         className={`
                           transition-all
                           duration-300
@@ -353,31 +363,37 @@ export const BottomNavigation = ({
                 })}
               </div>
 
-              {/* FAB BUTTON */}
-              <motion.button
-                whileTap={{ scale: 0.92 }}
+              {/* CENTER FAB */}
+              <button
                 onClick={() => setExpanded(!expanded)}
                 className="
                   absolute
                   left-1/2
                   -translate-x-1/2
                   -top-7
-                  w-[72px]
-                  h-[72px]
+                  z-50
+
+                  w-[74px]
+                  h-[74px]
+
                   rounded-full
+                  border-[6px]
+                  border-white
+                  dark:border-[#0b1120]
+
                   bg-gradient-to-br
                   from-red-500
                   to-red-600
-                  border-[6px]
-                  border-white
-                  dark:border-[#081120]
+
                   flex
                   items-center
                   justify-center
-                  shadow-[0_15px_40px_rgba(239,68,68,0.35)]
-                  z-50
+
+                  shadow-[0_18px_40px_rgba(239,68,68,0.35)]
                 "
               >
+                {/* FIXED BUTTON */}
+                {/* ONLY ICON ROTATES */}
                 <motion.div
                   animate={{
                     rotate: expanded ? 180 : 0,
@@ -398,10 +414,10 @@ export const BottomNavigation = ({
                     />
                   )}
                 </motion.div>
-              </motion.button>
+              </button>
 
               {/* RIGHT SIDE */}
-              <div className="flex items-center gap-7">
+              <div className="flex items-center gap-8">
                 {bottomItems.slice(2, 4).map((item) => {
                   const Icon = item.icon;
 
@@ -417,14 +433,13 @@ export const BottomNavigation = ({
                         flex-col
                         items-center
                         gap-1
-                        relative
                       "
                     >
                       <motion.div
+                        whileTap={{ scale: 0.92 }}
                         animate={{
                           y: isActive ? -2 : 0,
                         }}
-                        whileTap={{ scale: 0.92 }}
                         className={`
                           transition-all
                           duration-300
