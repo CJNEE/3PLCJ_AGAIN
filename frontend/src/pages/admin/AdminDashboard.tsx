@@ -10,41 +10,34 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import HubsEmployeeChart from '@/components/HubsEmployeeChart';
 import { Sidebar } from '@/components/Sidebar';
+
+
 const FitBoundsComponent = ({
   mapHubs,
+  getCoords,
 }: {
   mapHubs: any[];
+  getCoords: (hub: any) => [number, number];
 }) => {
   const map = useMap();
 
   useEffect(() => {
     if (!mapHubs?.length) return;
 
-    const valid = mapHubs.filter(
-      (h) => h.latitude && h.longitude
-    );
-
-    if (!valid.length) return;
-
     const bounds = L.latLngBounds(
-      valid.map((hub) => [
-        hub.latitude,
-        hub.longitude,
-      ])
+      mapHubs.map((hub) => getCoords(hub))
     );
 
-    map.fitBounds(bounds, {
-      padding: [50, 50],
-    });
-  }, [map, mapHubs]);
+    if (bounds.isValid()) {
+      map.fitBounds(bounds, {
+        padding: [50, 50],
+      });
+    }
+  }, [map, mapHubs, getCoords]);
 
   return null;
 };
 
-/**
- * PHILIPPINES CITY COORDS
- * more accurate fallback coords
- */
 const philippinesCityCoords: Record<
   string,
   [number, number]
@@ -175,18 +168,7 @@ export const AdminDashboard = () => {
   // Loading state
   const isLoading = employeesQuery.isLoading || hubsQuery.isLoading;
 
-function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords: (hub: any) => [number, number] }) {
-  const map = useMap();
-  useEffect(() => {
-    if (mapHubs && mapHubs.length > 0) {
-      const bounds = L.latLngBounds(mapHubs.map(hub => getCoords(hub)));
-      if (bounds.isValid()) {
-        map.fitBounds(bounds, { padding: [50, 50] });
-      }
-    }
-  }, [mapHubs, map, getCoords]);
-  return null;
-}
+
 
 // Process data
   const employees = useMemo(() => {
@@ -224,7 +206,14 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
 
   // Hub-specific employee distribution with status breakdown
   const hubEmployeeData = useMemo(() => {
-    const hubMap = {} as Record<string, { Active: number; AWOL: number; Blacklist: number; Resign: number }>;
+    type HubStatuses = {
+    Active: number;
+    AWOL: number;
+    Blacklist: number;
+    Resign: number;
+  };
+  
+  const hubMap: Record<string, HubStatuses> = {};
     
     allEmployees.forEach((emp: any) => {
       const hubName = emp.hub_name || 'Unknown Hub';
@@ -233,7 +222,8 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
       }
       const status = emp.status || 'Active';
       if (status !== 'Inactive') {
-        hubMap[hubName][status as keyof typeof hubMap[string]] = (hubMap[hubName][status as keyof typeof hubMap[string]] || 0) + 1;
+        hubMap[hubName][status as keyof HubStatuses] =
+        (hubMap[hubName][status as keyof HubStatuses] || 0) + 1;
       }
     });
 
@@ -248,31 +238,6 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
   }, [allEmployees]);
 
 
-
-  // Get hub coordinates
-  const cityCoords: Record<string, [number, number]> = {
-    'manila': [14.5995, 120.9842],
-    'quezon': [14.8291, 121.2558],
-    'cebu': [10.3157, 123.8854],
-    'davao': [7.0731, 125.6121],
-    'cagayan': [17.6412, 121.7740],
-    'pampanga': [15.0955, 120.6650],
-    'laguna': [14.3159, 121.4158],
-    'batangas': [13.7563, 121.0437],
-  };
-
-  const getHubCoordinates = (hub: any): [number, number] => {
-    if (hub.latitude && hub.longitude) {
-      return [hub.latitude, hub.longitude];
-    }
-    const city = hub.city?.toLowerCase() || '';
-    for (const [key, coords] of Object.entries(cityCoords)) {
-      if (city.includes(key)) {
-        return coords;
-      }
-    }
-    return [12.5797, 124.0758];
-  };
 
 
 
@@ -433,7 +398,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
     dark:border-gray-800
 
     bg-white
-    dark:bg-[#111827]
+    dark:bg-white
 
     shadow-xl
 
@@ -539,7 +504,7 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
           dark:border-gray-700
 
           bg-gray-100
-          dark:bg-[#1f2937]
+          dark:bg-gray-100
 
           pl-9
           pr-3
@@ -610,7 +575,10 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
       />
 
       {/* AUTO FIT */}
-      <FitBoundsComponent mapHubs={hubs} />
+      <FitBoundsComponent
+  mapHubs={hubs}
+  getCoords={getHubCoordinates}
+/>
 
       {hubs
         .filter((hub: any) => {
@@ -638,30 +606,33 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
            * CLEANER SMALLER MARKER
            */
           const modernMarker = L.divIcon({
-            className: '',
-            html: `
-              <div
-                style="
-                  position:relative;
-                  width:12px;
-                  height:12px;
-                "
-              >
-                <div
-                  style="
-                    position:absolute;
-                    inset:0;
-                    border-radius:999px;
-                    background:#ef4444;
-                    border:2px solid white;
-                    box-shadow:
-                      0 0 0 3px rgba(239,68,68,0.10),
-                      0 0 8px rgba(239,68,68,0.15);
-                  "
-                ></div>
-              </div>
-            `,
-          });
+  className: 'custom-modern-marker',
+  html: `
+    <div
+      style="
+        position:relative;
+        width:16px;
+        height:16px;
+      "
+    >
+      <div
+        style="
+          position:absolute;
+          inset:0;
+          border-radius:999px;
+          background:#ef4444;
+          border:3px solid white;
+          box-shadow:
+            0 0 0 4px rgba(239,68,68,0.15),
+            0 4px 12px rgba(239,68,68,0.25);
+        "
+      ></div>
+    </div>
+  `,
+  iconSize: [16, 16],
+  iconAnchor: [8, 8],
+  popupAnchor: [0, -10],
+});
 
           return (
             <Marker
@@ -669,7 +640,12 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
               position={[lat, lng]}
               icon={modernMarker}
             >
-              <Popup>
+              <Popup
+                autoPan={true}
+                keepInView={true}
+                closeButton={false}
+                offset={[0, -10]}
+              >
                 <div className="min-w-[190px]">
                   {/* TOP */}
                   <div className="flex items-start justify-between">
@@ -982,8 +958,8 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
                   </div>
 
                   {/* Contact Information */}
-                  <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm space-y-4">
-                    <div className="flex items-center gap-2 pb-3 border-b border-gray-100 dark:border-gray-800">
+                  <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-100 dark:border-gray-200 shadow-sm space-y-4">
+                    <div className="flex items-center gap-2 pb-3 border-b border-gray-100 dark:border-gray-200">
                       <Phone size={18} className="text-red-600 dark:text-red-500" />
                       <h3 className="text-sm font-black uppercase tracking-wider text-gray-800 dark:text-white">Contact Info</h3>
                     </div>
