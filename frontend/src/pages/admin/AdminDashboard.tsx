@@ -308,90 +308,423 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
         {/* Hub Locations Map & Hub Chart */}
       <div className="grid grid-cols-2 lg:grid-cols-2 gap-2 md:gap-4">
         {/* Hub Locations Map */}
-        <Card className="p-0 overflow-hidden border border-gray-200 dark:border-gray-700 flex flex-col min-h-[150px] md:min-h-[500px] bg-white dark:bg-gray-900">
-          <div className="flex justify-between items-center p-2 md:p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 relative z-[1001]">
-            <h2 className="text-[9px] md:text-lg font-semibold">Hub Locations</h2>
-            <div className="relative flex-1 max-w-[120px] md:max-w-xs ml-2 md:ml-4">
-              <Search className="absolute left-1.5 md:left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none w-2 h-2 md:w-4 md:h-4" />
-              <input 
-                type="text" 
-                placeholder="Search..." 
-                value={searchLocationTerm}
-                onChange={(e) => setSearchLocationTerm(e.target.value)}
-                className="input-field text-[8px] md:text-sm !pl-4 md:!pl-10 w-full !py-0.5 md:!py-2 h-5 md:h-10 bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700 rounded md:rounded-lg focus:ring-2 focus:ring-red-500/20"
-              />
-            </div>
-          </div>
-          <div className="flex-1 w-full relative z-0 min-h-[120px] md:min-h-[400px]">
-            {hubs.length > 0 ? (
-              <MapContainer 
-                center={[12.5797, 124.0758]} 
-                zoom={6} 
-                style={{ width: '100%', height: '100%' }}
-                attributionControl={false}
-              >
-                <FitBoundsComponent mapHubs={hubs} getCoords={getHubCoordinates} />
-                <TileLayer
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                />
-                {hubs
-                  .filter((hub: any) => 
-                    !searchLocationTerm || 
-                    hub.name?.toLowerCase().includes(searchLocationTerm.toLowerCase()) ||
-                    hub.location?.toLowerCase().includes(searchLocationTerm.toLowerCase()) ||
-                    hub.city?.toLowerCase().includes(searchLocationTerm.toLowerCase())
-                  )
-                  .map((hub: any) => {
-                    // Use hub coordinates if available, otherwise use a default based on city
-                    let lat = hub.latitude || 12.5797;
-                    let lng = hub.longitude || 124.0758;
-                    
-                    // Default coordinates for Philippine cities
-                    const cityCoords: Record<string, [number, number]> = {
-                      'manila': [14.5995, 120.9842],
-                      'quezon': [14.8291, 121.2558],
-                      'cebu': [10.3157, 123.8854],
-                      'davao': [7.0731, 125.6121],
-                      'cagayan': [17.6412, 121.7740],
-                      'pampanga': [15.0955, 120.6650],
-                      'laguna': [14.3159, 121.4158],
-                      'batangas': [13.7563, 121.0437],
-                    };
-                    
-                    if (!hub.latitude || !hub.longitude) {
-                      const city = hub.city?.toLowerCase() || '';
-                      for (const [key, coords] of Object.entries(cityCoords)) {
-                        if (city.includes(key)) {
-                          lat = coords[0];
-                          lng = coords[1];
-                          break;
-                        }
-                      }
-                    }
+        {/* HUB LOCATIONS MAP */}
+<Card
+  className="
+    relative
 
-                    return (
-                      <Marker key={hub.id} position={[lat, lng]} icon={hubIcon}>
-                        <Popup>
-                          <div className="text-sm">
-                            <p className="font-semibold">{hub.name}</p>
-                            <p className="text-gray-600 dark:text-gray-300">{hub.location || hub.city}</p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              {allEmployees.filter((emp: any) => emp.hub === hub.id).length} employees
-                            </p>
-                          </div>
-                        </Popup>
-                      </Marker>
-                    );
-                  })}
-              </MapContainer>
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gray-50 dark:bg-gray-800">
-                <p className="text-gray-500">No hubs available to display</p>
-              </div>
-            )}
-          </div>
-        </Card>
+    overflow-hidden
+
+    border
+    border-white/10
+
+    bg-[#0B1120]
+
+    shadow-[0_10px_40px_rgba(0,0,0,0.30)]
+
+    rounded-2xl
+
+    flex
+    flex-col
+
+    min-h-[180px]
+    md:min-h-[500px]
+  "
+>
+  {/* TOP GRADIENT */}
+  <div
+    className="
+      absolute
+      inset-x-0
+      top-0
+      h-24
+
+      bg-gradient-to-b
+      from-red-500/10
+      to-transparent
+
+      pointer-events-none
+      z-0
+    "
+  />
+
+  {/* HEADER */}
+  <div
+    className="
+      relative
+      z-[1001]
+
+      flex
+      items-center
+      justify-between
+
+      px-3
+      py-3
+
+      md:px-5
+      md:py-4
+
+      border-b
+      border-white/10
+
+      backdrop-blur-xl
+
+      bg-black/20
+    "
+  >
+    {/* LEFT */}
+    <div className="flex flex-col">
+      <h2
+        className="
+          text-[11px]
+          md:text-lg
+
+          font-semibold
+
+          text-white
+        "
+      >
+        Hub Locations
+      </h2>
+
+      <span
+        className="
+          text-[9px]
+          md:text-xs
+
+          text-gray-400
+        "
+      >
+        Real-time hub monitoring
+      </span>
+    </div>
+
+    {/* SEARCH */}
+    <div
+      className="
+        relative
+
+        flex-1
+
+        max-w-[130px]
+        md:max-w-xs
+
+        ml-3
+      "
+    >
+      <Search
+        className="
+          absolute
+          left-3
+          top-1/2
+          -translate-y-1/2
+
+          text-gray-500
+
+          w-3
+          h-3
+
+          md:w-4
+          md:h-4
+        "
+      />
+
+      <input
+        type="text"
+        placeholder="Search hub..."
+        value={searchLocationTerm}
+        onChange={(e) =>
+          setSearchLocationTerm(e.target.value)
+        }
+        className="
+          w-full
+
+          h-9
+          md:h-10
+
+          rounded-xl
+
+          border
+          border-white/10
+
+          bg-white/5
+
+          pl-9
+          pr-3
+
+          text-[10px]
+          md:text-sm
+
+          text-white
+          placeholder:text-gray-500
+
+          outline-none
+
+          transition-all
+          duration-300
+
+          focus:border-red-500/50
+          focus:bg-white/[0.08]
+          focus:ring-4
+          focus:ring-red-500/10
+        "
+      />
+    </div>
+  </div>
+
+  {/* MAP AREA */}
+  <div
+    className="
+      relative
+      flex-1
+
+      min-h-[160px]
+      md:min-h-[420px]
+
+      overflow-hidden
+    "
+  >
+    {/* MAP OVERLAY */}
+    <div
+      className="
+        absolute
+        inset-0
+
+        bg-gradient-to-t
+        from-[#020617]/60
+        via-transparent
+        to-transparent
+
+        z-[400]
+
+        pointer-events-none
+      "
+    />
+
+    {/* STATS FLOAT */}
+    <div
+      className="
+        absolute
+        top-3
+        left-3
+
+        z-[500]
+
+        flex
+        flex-col
+        gap-2
+      "
+    >
+      <div
+        className="
+          px-3
+          py-2
+
+          rounded-xl
+
+          border
+          border-white/10
+
+          bg-black/40
+
+          backdrop-blur-xl
+        "
+      >
+        <p
+          className="
+            text-[9px]
+            md:text-xs
+
+            text-gray-400
+          "
+        >
+          Total Hubs
+        </p>
+
+        <h3
+          className="
+            text-sm
+            md:text-lg
+
+            font-bold
+
+            text-white
+          "
+        >
+          {hubs.length}
+        </h3>
+      </div>
+    </div>
+
+    {hubs.length > 0 ? (
+      <MapContainer
+        center={[12.5797, 124.0758]}
+        zoom={6}
+        zoomControl={false}
+        attributionControl={false}
+        style={{
+          width: '100%',
+          height: '100%',
+          background: '#020617',
+        }}
+      >
+        <FitBoundsComponent
+          mapHubs={hubs}
+          getCoords={getHubCoordinates}
+        />
+
+        {/* DARK MAP */}
+        <TileLayer
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        />
+
+        {hubs
+          .filter(
+            (hub: any) =>
+              !searchLocationTerm ||
+              hub.name
+                ?.toLowerCase()
+                .includes(
+                  searchLocationTerm.toLowerCase()
+                ) ||
+              hub.location
+                ?.toLowerCase()
+                .includes(
+                  searchLocationTerm.toLowerCase()
+                ) ||
+              hub.city
+                ?.toLowerCase()
+                .includes(
+                  searchLocationTerm.toLowerCase()
+                )
+          )
+          .map((hub: any) => {
+            let lat = hub.latitude || 12.5797;
+            let lng = hub.longitude || 124.0758;
+
+            const cityCoords: Record<
+              string,
+              [number, number]
+            > = {
+              manila: [14.5995, 120.9842],
+              quezon: [14.8291, 121.2558],
+              cebu: [10.3157, 123.8854],
+              davao: [7.0731, 125.6121],
+              cagayan: [17.6412, 121.774],
+              pampanga: [15.0955, 120.665],
+              laguna: [14.3159, 121.4158],
+              batangas: [13.7563, 121.0437],
+            };
+
+            if (!hub.latitude || !hub.longitude) {
+              const city =
+                hub.city?.toLowerCase() || '';
+
+              for (const [key, coords] of Object.entries(
+                cityCoords
+              )) {
+                if (city.includes(key)) {
+                  lat = coords[0];
+                  lng = coords[1];
+                  break;
+                }
+              }
+            }
+
+            return (
+              <Marker
+                key={hub.id}
+                position={[lat, lng]}
+                icon={hubIcon}
+              >
+                <Popup>
+                  <div className="min-w-[180px] p-1">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="font-semibold text-sm">
+                          {hub.name}
+                        </h3>
+
+                        <p className="text-xs text-gray-500">
+                          {hub.location || hub.city}
+                        </p>
+                      </div>
+
+                      <div
+                        className="
+                          w-2
+                          h-2
+
+                          rounded-full
+
+                          bg-green-500
+
+                          animate-pulse
+                        "
+                      />
+                    </div>
+
+                    <div
+                      className="
+                        mt-3
+
+                        flex
+                        items-center
+                        justify-between
+
+                        rounded-lg
+
+                        bg-gray-100
+
+                        px-2
+                        py-2
+                      "
+                    >
+                      <span className="text-xs text-gray-500">
+                        Employees
+                      </span>
+
+                      <span className="text-sm font-bold">
+                        {
+                          allEmployees.filter(
+                            (emp: any) =>
+                              emp.hub === hub.id
+                          ).length
+                        }
+                      </span>
+                    </div>
+                  </div>
+                </Popup>
+              </Marker>
+            );
+          })}
+      </MapContainer>
+    ) : (
+      <div
+        className="
+          w-full
+          h-full
+
+          flex
+          items-center
+          justify-center
+
+          bg-[#020617]
+        "
+      >
+        <div className="text-center">
+          <p className="text-gray-400 text-sm">
+            No hubs available
+          </p>
+
+          <span className="text-xs text-gray-500">
+            Map data will appear here
+          </span>
+        </div>
+      </div>
+    )}
+  </div>
+</Card>
 
         {/* Hub Employee Distribution */}
         <Card className="p-2 md:p-4">
