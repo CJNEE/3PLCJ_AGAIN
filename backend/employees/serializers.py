@@ -159,7 +159,6 @@ class EmployeeSerializer(serializers.ModelSerializer):
             'hired_date': {'required': False},
             'can_login': {'required': False}
         },
-print(Employee.objects.first().id),
     def get_full_name(self, obj):
         return f"{obj.firstname} {obj.middle_initial} {obj.lastname}".strip()
 
