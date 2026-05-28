@@ -1,1165 +1,539 @@
-
-import React, {
-  useState,
-  useMemo,
-  useEffect,
-  useRef
-} from 'react';
-
-import {
-  Card,
-  LoadingSpinner
-} from '@/components/common';
-
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { Card, LoadingSpinner } from '@/components/common';
 import { GlassCard } from '@/components/GlassCard';
-
 import {
-  useGetHubs,
-  useGetEmployees,
-  useCreateHub,
-  useDeleteHub,
-  useUpdateHub
+useGetHubs,
+useGetEmployees,
+useCreateHub,
+useDeleteHub,
+useUpdateHub
 } from '@/hooks/useQueries';
 
 import {
-  MapPin,
-  X,
-  Search,
-  Navigation,
-  ChevronLeft,
-  ChevronRight,
-  Users,
-  Footprints,
-  Bike,
-  Car,
-  Plus,
-  Route,
-  Shield,
-  Building2,
-  CloudSun,
-  Clock3
+MapPin,
+X,
+Search,
+Navigation,
+ChevronLeft,
+ChevronRight,
+Footprints,
+Bike,
+Car,
+Plus,
+Route,
+Shield,
+Building2,
+CloudSun
 } from 'lucide-react';
 
 import { normalizeApiResponse } from '@/utils/apiResponseHandler';
 
 import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Polyline,
-  Popup
+MapContainer,
+TileLayer,
+Marker,
+Polyline,
+Popup
 } from 'react-leaflet';
 
 import L from 'leaflet';
-
 import 'leaflet/dist/leaflet.css';
 
 import Sidebar from '@/components/Sidebar';
-
 import { fetchWeather } from '@/utils/weather';
-
 import { useAuth } from '@/hooks/useAuth';
 
-const OSRM_BASE = 'https://router.project-osrm.org/route/v1';
+const OSRM_BASE = '[https://router.project-osrm.org/route/v1](https://router.project-osrm.org/route/v1)';
 
-// ===============================
-// BETTER SPEEDS
-// ===============================
+function estimateDuration(distanceM: number, mode: 'walk' | 'bike' | 'car') {
+const km = distanceM / 1000;
 
-const WALKING_SPEED_KMH = 4.8;
-const CYCLING_SPEED_KMH = 15;
-const DRIVING_SPEED_KMH = 35;
-
-// ===============================
-
-export type ParsedOsrmRoute = {
-  coordinates: [number, number][];
-  distanceM: number;
-  durationSec: number;
-  turns: Array<{
-    instruction: string;
-    distance: number;
-    duration: number;
-  }>;
-  turnCount: number;
+const speeds = {
+walk: 4.8,
+bike: 14,
+car: 38,
 };
 
-function estimateTravelTime(
-  distanceMeters: number,
-  speedKmH: number
-) {
-  const km = distanceMeters / 1000;
+const hours = km / speeds[mode];
 
-  const hours = km / speedKmH;
-
-  return Math.round(hours * 3600);
+return Math.round(hours * 3600);
 }
 
-function parseOsrmResponse(
-  data: any,
-  mode: 'walking' | 'cycling' | 'driving'
-): ParsedOsrmRoute | null {
-  if (!data?.routes?.length) return null;
+function parseOsrmResponse(data: any, mode: 'walk' | 'bike' | 'car') {
+if (!data?.routes?.length) return null;
 
-  const route = data.routes[0];
+const route = data.routes[0];
 
-  const coordinates: [number, number][] =
-    route.geometry.coordinates.map(
-      (coord: [number, number]) => [
-        coord[1],
-        coord[0]
-      ]
-    );
-
-  const turns: Array<{
-    instruction: string;
-    distance: number;
-    duration: number;
-  }> = [];
-
-  let turnCount = 0;
-
-  route.legs?.forEach((leg: any) => {
-    (leg.steps || []).forEach((step: any) => {
-      const instr = step.maneuver?.instruction;
-
-      if (instr) {
-        turns.push({
-          instruction: instr,
-          distance: Math.round(step.distance ?? 0),
-          duration: Math.round(step.duration ?? 0)
-        });
-      }
-
-      const t = step.maneuver?.type;
-
-      if (
-        t &&
-        t !== 'depart' &&
-        t !== 'arrive'
-      ) {
-        turnCount += 1;
-      }
-    });
-  });
-
-  // ===============================
-  // BETTER DURATION ESTIMATION
-  // ===============================
-
-  let duration = route.duration;
-
-  if (mode === 'walking') {
-    duration = estimateTravelTime(
-      route.distance,
-      WALKING_SPEED_KMH
-    );
-  }
-
-  if (mode === 'cycling') {
-    duration = estimateTravelTime(
-      route.distance,
-      CYCLING_SPEED_KMH
-    );
-  }
-
-  if (mode === 'driving') {
-    duration = estimateTravelTime(
-      route.distance,
-      DRIVING_SPEED_KMH
-    );
-  }
-
-  return {
-    coordinates,
-    distanceM: route.distance,
-    durationSec: duration,
-    turns,
-    turnCount
-  };
+return {
+coordinates: route.geometry.coordinates.map((c: [number, number]) => [c[1], c[0]]),
+distanceM: route.distance,
+durationSec: estimateDuration(route.distance, mode),
+};
 }
 
 async function fetchOsrmProfile(
-  profile: string,
-  mode: 'walking' | 'cycling' | 'driving',
-  startLat: number,
-  startLon: number,
-  endLat: number,
-  endLon: number
-): Promise<ParsedOsrmRoute | null> {
-  const url =
-    `${OSRM_BASE}/${profile}/${startLon},${startLat};${endLon},${endLat}` +
-    `?steps=true&geometries=geojson&overview=full`;
+profile: string,
+mode: 'walk' | 'bike' | 'car',
+startLat: number,
+startLon: number,
+endLat: number,
+endLon: number
+) {
+const url = `${OSRM_BASE}/${profile}/${startLon},${startLat};${endLon},${endLat}?overview=full&geometries=geojson`;
 
-  const response = await fetch(url);
+const res = await fetch(url);
+const data = await res.json();
 
-  const data = await response.json();
-
-  return parseOsrmResponse(data, mode);
+return parseOsrmResponse(data, mode);
 }
 
 function formatDistance(meters: number) {
-  return `${(meters / 1000).toFixed(1)} km`;
+return `${(meters / 1000).toFixed(1)} km`;
 }
 
 function formatDuration(seconds: number) {
-  const mins = Math.round(seconds / 60);
+const mins = Math.round(seconds / 60);
 
-  if (mins < 60) {
-    return `${mins} mins`;
-  }
+if (mins < 60) return `${mins} mins`;
 
-  const hrs = Math.floor(mins / 60);
+const hrs = Math.floor(mins / 60);
+const rem = mins % 60;
 
-  const rem = mins % 60;
-
-  return `${hrs}h ${rem}m`;
-}
-
-interface HubState {
-  selectedHub: any | null;
+return `${hrs}h ${rem}m`;
 }
 
 export const AdminHubsPage = () => {
-  const { canViewEmployees } = useAuth();
+const { canViewEmployees } = useAuth();
 
-  const [searchTerm, setSearchTerm] =
-    useState('');
+const mapRef = useRef(null);
 
-  const [employeeSearch, setEmployeeSearch] =
-    useState('');
+const [sidebarOpen, setSidebarOpen] = useState(false);
+const [searchTerm, setSearchTerm] = useState('');
+const [employeeSearch, setEmployeeSearch] = useState('');
+const [selectedHub, setSelectedHub] = useState<any | null>(null);
+const [routeData, setRouteData] = useState<any>(null);
+const [showDirections, setShowDirections] = useState(false);
+const [loadingRoute, setLoadingRoute] = useState(false);
+const [weatherData, setWeatherData] = useState<any>(null);
+const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
 
-  const [currentPage, setCurrentPage] =
-    useState(1);
+const { data, isLoading } = useGetHubs();
+const { data: employeesData } = useGetEmployees();
 
-  const itemsPerPage = 10;
+useCreateHub();
+useDeleteHub();
+useUpdateHub();
 
-  const [hubState, setHubState] =
-    useState<HubState>({
-      selectedHub: null
-    });
+const hubs = normalizeApiResponse(data);
+const allEmployees = normalizeApiResponse(employeesData);
 
-  const [sidebarOpen, setSidebarOpen] =
-    useState(false);
+useEffect(() => {
+navigator.geolocation?.getCurrentPosition((position) => {
+setUserLocation([
+position.coords.latitude,
+position.coords.longitude,
+]);
+});
+}, []);
 
-  const [userLocation, setUserLocation] =
-    useState<[number, number] | null>(null);
+const getHubCoordinates = (hub: any): [number, number] => {
+return [hub.latitude || 14.676, hub.longitude || 121.0437];
+};
 
-  const [showDirections, setShowDirections] =
-    useState(false);
+useEffect(() => {
+async function loadWeather() {
+if (!selectedHub) return;
 
-  const [routeData, setRouteData] =
-    useState<any>(null);
+```
+  const coords = getHubCoordinates(selectedHub);
+  const weather = await fetchWeather(coords[0], coords[1]);
+  setWeatherData(weather);
+}
 
-  const [weatherData, setWeatherData] =
-    useState<any>(null);
+loadWeather();
+```
 
-  const [loadingRoute, setLoadingRoute] =
-    useState(false);
+}, [selectedHub]);
 
-  const mapRef = useRef(null);
+const filteredHubs = useMemo(() => {
+return hubs.filter((hub: any) => {
+return (
+hub.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+hub.city?.toLowerCase().includes(searchTerm.toLowerCase())
+);
+});
+}, [searchTerm, hubs]);
 
-  const { data, isLoading } = useGetHubs();
+const hubEmployees = useMemo(() => {
+if (!selectedHub) return [];
 
-  const { data: employeesData } =
-    useGetEmployees();
+```
+return allEmployees.filter((emp: any) => {
+  return emp.hub === selectedHub.id;
+});
+```
 
-  const createHubMutation =
-    useCreateHub();
+}, [selectedHub, allEmployees]);
 
-  const updateHubMutation =
-    useUpdateHub();
+const fetchRoute = async () => {
+if (!userLocation || !selectedHub) return;
 
-  const deleteHubMutation =
-    useDeleteHub();
+```
+setLoadingRoute(true);
 
-  const [showAddModal, setShowAddModal] =
-    useState(false);
+const coords = getHubCoordinates(selectedHub);
 
-  const [editingHubId, setEditingHubId] =
-    useState<number | null>(null);
-
-  const [newHub, setNewHub] = useState({
-    name: '',
-    location: '',
-    city: 'Quezon',
-    address: '',
-    latitude: 14.676,
-    longitude: 121.0437
-  });
-
-  const hubs = normalizeApiResponse(data);
-
-  const allEmployees =
-    normalizeApiResponse(employeesData);
-
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation([
-            position.coords.latitude,
-            position.coords.longitude
-          ]);
-        }
-      );
-    }
-  }, []);
-
-  const cityCoords: Record<
-    string,
-    [number, number]
-  > = {
-    manila: [14.5995, 120.9842],
-    quezon: [14.676, 121.0437],
-    cebu: [10.3157, 123.8854],
-    davao: [7.0731, 125.6121]
-  };
-
-  const getHubCoordinates = (
-    hub: any
-  ): [number, number] => {
-    if (hub.latitude && hub.longitude) {
-      return [hub.latitude, hub.longitude];
-    }
-
-    const city = hub.city?.toLowerCase();
-
-    return (
-      cityCoords[city] || [
-        14.5995,
-        120.9842
-      ]
-    );
-  };
-
-  // ===============================
-  // WEATHER
-  // ===============================
-
-  useEffect(() => {
-    async function loadWeather() {
-      try {
-        if (hubState.selectedHub) {
-          const coords = getHubCoordinates(
-            hubState.selectedHub
-          );
-
-          const weather = await fetchWeather(
-            coords[0],
-            coords[1]
-          );
-
-          setWeatherData(weather);
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    }
-
-    loadWeather();
-  }, [hubState.selectedHub]);
-
-  // ===============================
-  // ICONS
-  // ===============================
-
-  const hubIcon = useMemo(
-    () =>
-      L.divIcon({
-        className: '',
-        html: `
-        <div
-          style="
-            width:20px;
-            height:20px;
-            background:#ef4444;
-            border-radius:999px;
-            border:4px solid white;
-            box-shadow:0 8px 20px rgba(239,68,68,.45);
-          "
-        ></div>
-      `,
-        iconSize: [20, 20]
-      }),
-    []
-  );
-
-  const userIcon = useMemo(
-    () =>
-      L.divIcon({
-        className: '',
-        html: `
-        <div
-          style="
-            width:20px;
-            height:20px;
-            background:#3b82f6;
-            border-radius:999px;
-            border:4px solid white;
-            box-shadow:0 8px 20px rgba(59,130,246,.45);
-          "
-        ></div>
-      `,
-        iconSize: [20, 20]
-      }),
-    []
-  );
-
-  // ===============================
-  // FILTERED HUBS
-  // ===============================
-
-  const filteredHubs = useMemo(() => {
-    return hubs.filter((hub: any) => {
-      return (
-        hub.name
-          ?.toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        hub.location
-          ?.toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        hub.city
-          ?.toLowerCase()
-          .includes(searchTerm.toLowerCase())
-      );
-    });
-  }, [searchTerm, hubs]);
-
-  const getHubEmployeeCount = (
-    hubId: number
-  ) => {
-    return allEmployees.filter(
-      (emp: any) => emp.hub === hubId
-    ).length;
-  };
-
-  // ===============================
-  // EMPLOYEE FILTER
-  // ===============================
-
-  const hubEmployeesData = useMemo(() => {
-    if (!hubState.selectedHub) return [];
-
-    return allEmployees.filter((emp: any) => {
-      return (
-        emp.hub ===
-          hubState.selectedHub.id &&
-        (emp.full_name
-          ?.toLowerCase()
-          .includes(
-            employeeSearch.toLowerCase()
-          ) ||
-          emp.position
-            ?.toLowerCase()
-            .includes(
-              employeeSearch.toLowerCase()
-            ))
-      );
-    });
-  }, [
-    hubState.selectedHub,
-    employeeSearch,
-    allEmployees
+try {
+  const [walking, riding, car] = await Promise.all([
+    fetchOsrmProfile('foot', 'walk', userLocation[0], userLocation[1], coords[0], coords[1]),
+    fetchOsrmProfile('cycling', 'bike', userLocation[0], userLocation[1], coords[0], coords[1]),
+    fetchOsrmProfile('driving', 'car', userLocation[0], userLocation[1], coords[0], coords[1]),
   ]);
 
-  const totalPages = Math.ceil(
-    hubEmployeesData.length / itemsPerPage
-  );
+  setRouteData({ walking, riding, car });
+  setShowDirections(true);
+} catch (err) {
+  console.error(err);
+} finally {
+  setLoadingRoute(false);
+}
+```
 
-  const paginatedEmployees = useMemo(() => {
-    const start =
-      (currentPage - 1) * itemsPerPage;
+};
 
-    return hubEmployeesData.slice(
-      start,
-      start + itemsPerPage
-    );
-  }, [hubEmployeesData, currentPage]);
+const hubIcon = useMemo(() => L.divIcon({
+className: '',
+html: `<div style="width:20px;height:20px;background:#ef4444;border-radius:999px;border:4px solid white;box-shadow:0 6px 18px rgba(0,0,0,.18)"></div>`,
+iconSize: [20, 20],
+}), []);
 
-  // ===============================
-  // ROUTE FETCH
-  // ===============================
+const userIcon = useMemo(() => L.divIcon({
+className: '',
+html: `<div style="width:20px;height:20px;background:#2563eb;border-radius:999px;border:4px solid white;box-shadow:0 6px 18px rgba(0,0,0,.18)"></div>`,
+iconSize: [20, 20],
+}), []);
 
-  const fetchRoute = async (
-    startLat: number,
-    startLon: number,
-    endLat: number,
-    endLon: number
-  ) => {
-    setLoadingRoute(true);
+if (isLoading) {
+return ( <div className="min-h-screen bg-[#f4f7fb] flex items-center justify-center"> <LoadingSpinner size="lg" /> </div>
+);
+}
 
-    try {
-      const [walking, riding, car] =
-        await Promise.all([
-          fetchOsrmProfile(
-            'foot',
-            'walking',
-            startLat,
-            startLon,
-            endLat,
-            endLon
-          ),
+return (
+<>
+<Sidebar
+open={sidebarOpen}
+onToggle={() => setSidebarOpen(!sidebarOpen)}
+/>
 
-          fetchOsrmProfile(
-            'cycling',
-            'cycling',
-            startLat,
-            startLon,
-            endLat,
-            endLon
-          ),
+```
+  <div className="min-h-screen bg-[#f4f7fb] lg:ml-64">
 
-          fetchOsrmProfile(
-            'driving',
-            'driving',
-            startLat,
-            startLon,
-            endLat,
-            endLon
-          )
-        ]);
+    <div className="p-5 lg:p-8 space-y-6">
 
-      if (walking && riding && car) {
-        setRouteData({
-          walking,
-          riding,
-          car
-        });
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
 
-        setShowDirections(true);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingRoute(false);
-    }
-  };
+        <div>
+          <h1 className="text-4xl font-bold text-gray-800">
+            Hub Management
+          </h1>
 
-  const handleGetDirections = () => {
-    if (
-      !userLocation ||
-      !hubState.selectedHub
-    )
-      return;
-
-    const coords = getHubCoordinates(
-      hubState.selectedHub
-    );
-
-    fetchRoute(
-      userLocation[0],
-      userLocation[1],
-      coords[0],
-      coords[1]
-    );
-  };
-
-  const handleMarkerClick = (hub: any) => {
-    setHubState({
-      selectedHub: hub
-    });
-
-    setCurrentPage(1);
-
-    setEmployeeSearch('');
-  };
-
-  const handleCloseHub = () => {
-    setHubState({
-      selectedHub: null
-    });
-
-    setShowDirections(false);
-
-    setRouteData(null);
-  };
-
-  // ===============================
-  // LOADING
-  // ===============================
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#f4f7fb]">
-        <Sidebar
-          open={sidebarOpen}
-          onToggle={() =>
-            setSidebarOpen(!sidebarOpen)
-          }
-        />
-
-        <div className="lg:ml-64 p-6">
-          <div className="h-40 rounded-[28px] bg-white animate-pulse mb-4" />
-
-          <div className="h-[650px] rounded-[28px] bg-white animate-pulse" />
+          <p className="text-gray-500 mt-2">
+            Manage employees, routes and operational hubs.
+          </p>
         </div>
+
+        <button className="h-12 px-5 rounded-2xl bg-red-500 hover:bg-red-600 text-white flex items-center gap-2 shadow-lg shadow-red-200 transition-all">
+          <Plus size={18} />
+          Add Hub
+        </button>
       </div>
-    );
-  }
 
-  // ===============================
-  // MAIN
-  // ===============================
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-5">
 
-  return (
-    <>
-      <Sidebar
-        open={sidebarOpen}
-        onToggle={() =>
-          setSidebarOpen(!sidebarOpen)
-        }
-      />
+        <Card className="xl:col-span-4 bg-white border-0 rounded-3xl shadow-sm p-5">
 
-      <div className="min-h-screen bg-[#f4f7fb] lg:ml-64">
+          <div className="relative">
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
 
-        <div className="p-5 lg:p-8 space-y-6">
+            <input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search hubs..."
+              className="w-full h-12 rounded-2xl bg-gray-100 border-0 pl-11 pr-4 focus:ring-2 focus:ring-red-400 outline-none"
+            />
+          </div>
 
-          {/* HEADER */}
+          {weatherData && (
+            <div className="mt-5 rounded-3xl bg-gradient-to-br from-orange-50 to-red-50 p-5 border border-orange-100">
+              <div className="flex items-center gap-4">
+                <div className="h-14 w-14 rounded-2xl bg-white flex items-center justify-center text-3xl shadow-sm">
+                  {weatherData.icon}
+                </div>
 
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+                <div>
+                  <p className="text-sm text-gray-500">
+                    Current Weather
+                  </p>
 
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900">
-                Hub Management
-              </h1>
+                  <h3 className="text-xl font-bold text-gray-800">
+                    {weatherData.temp}°C
+                  </h3>
 
-              <p className="text-gray-500 mt-2">
-                Manage hubs, employees,
-                routes and analytics
+                  <p className="text-sm text-gray-500">
+                    {weatherData.label}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </Card>
+
+        <Card className="xl:col-span-8 bg-white border-0 rounded-3xl shadow-sm p-5">
+
+          <div className="flex items-center gap-2 mb-5">
+            <Route size={18} className="text-red-500" />
+            <h3 className="font-bold text-gray-800 text-lg">
+              Route Analytics
+            </h3>
+          </div>
+
+          {routeData ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+              {[
+                {
+                  label: 'Driving',
+                  icon: Car,
+                  data: routeData.car,
+                  bg: 'from-red-50 to-orange-50',
+                },
+                {
+                  label: 'Cycling',
+                  icon: Bike,
+                  data: routeData.riding,
+                  bg: 'from-blue-50 to-cyan-50',
+                },
+                {
+                  label: 'Walking',
+                  icon: Footprints,
+                  data: routeData.walking,
+                  bg: 'from-green-50 to-emerald-50',
+                },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className={`rounded-3xl bg-gradient-to-br ${item.bg} border border-white p-5 shadow-sm`}
+                >
+                  <item.icon size={26} className="text-gray-700 mb-4" />
+
+                  <p className="text-sm text-gray-500">
+                    {item.label}
+                  </p>
+
+                  <h3 className="text-3xl font-bold text-gray-800 mt-2">
+                    {formatDistance(item.data.distanceM)}
+                  </h3>
+
+                  <p className="mt-2 text-gray-600 font-medium">
+                    {formatDuration(item.data.durationSec)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="h-[160px] rounded-3xl bg-gray-50 flex flex-col items-center justify-center text-center border border-dashed border-gray-200">
+              <CloudSun size={42} className="text-gray-300 mb-3" />
+              <p className="text-gray-500 font-medium">
+                Generate route analytics
               </p>
             </div>
-
-            <button
-              onClick={() =>
-                setShowAddModal(true)
-              }
-              className="
-                h-12
-                px-6
-                rounded-2xl
-                bg-gradient-to-r
-                from-red-500
-                to-red-600
-                hover:scale-[1.02]
-                active:scale-[0.98]
-                transition-all
-                text-white
-                font-semibold
-                flex
-                items-center
-                gap-2
-                shadow-lg
-                shadow-red-500/20
-              "
-            >
-              <Plus size={18} />
-              Add Hub
-            </button>
-
-          </div>
-
-          {/* SEARCH */}
-
-          <Card className="rounded-[28px] border-0 bg-white shadow-sm p-5">
-
-            <div className="relative">
-
-              <Search
-                size={18}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-              />
-
-              <input
-                type="text"
-                placeholder="Search hubs..."
-                value={searchTerm}
-                onChange={(e) =>
-                  setSearchTerm(
-                    e.target.value
-                  )
-                }
-                className="
-                  w-full
-                  h-14
-                  rounded-2xl
-                  bg-[#f8fafc]
-                  border
-                  border-gray-200
-                  pl-12
-                  pr-4
-                  outline-none
-                  focus:ring-4
-                  focus:ring-red-500/10
-                  text-gray-800
-                "
-              />
-
-            </div>
-
-          </Card>
-
-          {/* ANALYTICS */}
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-
-            {routeData ? (
-              <>
-                {[
-                  {
-                    title: 'Driving',
-                    icon: Car,
-                    color:
-                      'from-blue-500 to-cyan-500',
-                    data: routeData.car
-                  },
-
-                  {
-                    title: 'Cycling',
-                    icon: Bike,
-                    color:
-                      'from-emerald-500 to-green-500',
-                    data: routeData.riding
-                  },
-
-                  {
-                    title: 'Walking',
-                    icon: Footprints,
-                    color:
-                      'from-orange-500 to-yellow-500',
-                    data: routeData.walking
-                  }
-                ].map((item) => (
-                  <div
-                    key={item.title}
-                    className="
-                      rounded-[28px]
-                      bg-white
-                      p-5
-                      shadow-sm
-                      border
-                      border-gray-100
-                    "
-                  >
-
-                    <div
-                      className={`
-                        h-14
-                        w-14
-                        rounded-2xl
-                        bg-gradient-to-r
-                        ${item.color}
-                        flex
-                        items-center
-                        justify-center
-                        text-white
-                        mb-4
-                      `}
-                    >
-                      <item.icon size={24} />
-                    </div>
-
-                    <p className="text-gray-500 text-sm">
-                      {item.title}
-                    </p>
-
-                    <h2 className="text-3xl font-bold text-gray-900 mt-2">
-                      {formatDistance(
-                        item.data.distanceM
-                      )}
-                    </h2>
-
-                    <div className="flex items-center gap-2 mt-3 text-gray-500 text-sm">
-                      <Clock3 size={15} />
-
-                      {formatDuration(
-                        item.data.durationSec
-                      )}
-                    </div>
-
-                  </div>
-                ))}
-              </>
-            ) : (
-              <div className="md:col-span-3 rounded-[28px] bg-white h-40 flex items-center justify-center text-gray-400 border border-dashed border-gray-300">
-                Select a hub to generate
-                route analytics
-              </div>
-            )}
-
-          </div>
-
-          {/* MAP + SIDEBAR */}
-
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-5">
-
-            {/* MAP */}
-
-            <div className="xl:col-span-8 rounded-[32px] overflow-hidden shadow-sm border border-gray-200 bg-white">
-
-              <div className="h-[700px]">
-
-                <MapContainer
-                  center={[14.5995, 120.9842]}
-                  zoom={6}
-                  style={{
-                    height: '100%',
-                    width: '100%'
-                  }}
-                  ref={mapRef}
-                >
-
-                  <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  />
-
-                  {userLocation && (
-                    <Marker
-                      position={userLocation}
-                      icon={userIcon}
-                    >
-                      <Popup>
-                        Your Location
-                      </Popup>
-                    </Marker>
-                  )}
-
-                  {filteredHubs.map(
-                    (hub: any) => (
-                      <Marker
-                        key={hub.id}
-                        position={getHubCoordinates(
-                          hub
-                        )}
-                        icon={hubIcon}
-                        eventHandlers={{
-                          click: () =>
-                            handleMarkerClick(
-                              hub
-                            )
-                        }}
-                      >
-                        <Popup>
-                          {hub.name}
-                        </Popup>
-                      </Marker>
-                    )
-                  )}
-
-                  {showDirections &&
-                    routeData && (
-                      <Polyline
-                        positions={
-                          routeData.car
-                            .coordinates
-                        }
-                        color="#ef4444"
-                        weight={6}
-                      />
-                    )}
-
-                </MapContainer>
-
-              </div>
-
-            </div>
-
-            {/* RIGHT PANEL */}
-
-            <div className="xl:col-span-4">
-
-              <Card className="rounded-[32px] bg-white border-0 shadow-sm overflow-hidden">
-
-                {hubState.selectedHub ? (
-                  <div>
-
-                    <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-
-                      <div>
-
-                        <h2 className="text-2xl font-bold text-gray-900">
-                          {
-                            hubState.selectedHub
-                              .name
-                          }
-                        </h2>
-
-                        <p className="text-gray-500 mt-1">
-                          {
-                            hubState.selectedHub
-                              .city
-                          }
-                        </p>
-
-                      </div>
-
-                      <button
-                        onClick={
-                          handleCloseHub
-                        }
-                        className="
-                          h-11
-                          w-11
-                          rounded-2xl
-                          hover:bg-gray-100
-                          flex
-                          items-center
-                          justify-center
-                        "
-                      >
-                        <X size={20} />
-                      </button>
-
-                    </div>
-
-                    <div className="p-6 space-y-5">
-
-                      {/* WEATHER */}
-
-                      {weatherData && (
-                        <div className="rounded-3xl bg-gradient-to-r from-sky-50 to-blue-50 border border-blue-100 p-5">
-
-                          <div className="flex items-center gap-4">
-
-                            <div className="h-16 w-16 rounded-3xl bg-white flex items-center justify-center text-3xl shadow-sm">
-                              {
-                                weatherData.icon
-                              }
-                            </div>
-
-                            <div>
-
-                              <p className="text-gray-500 text-sm">
-                                Current Weather
-                              </p>
-
-                              <h2 className="text-2xl font-bold text-gray-900">
-                                {
-                                  weatherData.temp
-                                }
-                                °C
-                              </h2>
-
-                              <p className="text-gray-600">
-                                {
-                                  weatherData.label
-                                }
-                              </p>
-
-                            </div>
-
-                          </div>
-
-                        </div>
-                      )}
-
-                      {/* STATS */}
-
-                      <div className="grid grid-cols-2 gap-4">
-
-                        <div className="rounded-3xl bg-[#f8fafc] border border-gray-100 p-5">
-
-                          <Users
-                            size={22}
-                            className="text-red-500 mb-3"
-                          />
-
-                          <p className="text-gray-500 text-sm">
-                            Employees
-                          </p>
-
-                          <h2 className="text-3xl font-bold text-gray-900 mt-2">
-                            {
-                              hubEmployeesData.length
-                            }
-                          </h2>
-
-                        </div>
-
-                        <div className="rounded-3xl bg-[#f8fafc] border border-gray-100 p-5">
-
-                          <MapPin
-                            size={22}
-                            className="text-blue-500 mb-3"
-                          />
-
-                          <p className="text-gray-500 text-sm">
-                            City
-                          </p>
-
-                          <h2 className="text-lg font-bold text-gray-900 mt-2">
-                            {
-                              hubState
-                                .selectedHub
-                                .city
-                            }
-                          </h2>
-
-                        </div>
-
-                      </div>
-
-                      {/* BUTTON */}
-
-                      <button
-                        onClick={
-                          handleGetDirections
-                        }
-                        disabled={
-                          loadingRoute
-                        }
-                        className="
-                          w-full
-                          h-14
-                          rounded-2xl
-                          bg-gradient-to-r
-                          from-red-500
-                          to-red-600
-                          text-white
-                          font-semibold
-                          hover:scale-[1.01]
-                          active:scale-[0.99]
-                          transition-all
-                          flex
-                          items-center
-                          justify-center
-                          gap-2
-                          shadow-lg
-                          shadow-red-500/20
-                        "
-                      >
-                        {loadingRoute ? (
-                          <LoadingSpinner size="sm" />
-                        ) : (
-                          <>
-                            <Navigation
-                              size={18}
-                            />
-
-                            Get Directions
-                          </>
-                        )}
-                      </button>
-
-                    </div>
-
-                  </div>
-                ) : (
-                  <div className="h-[700px] flex flex-col items-center justify-center text-center p-8">
-
-                    <div className="h-24 w-24 rounded-[32px] bg-red-100 flex items-center justify-center mb-6">
-
-                      <Building2
-                        size={40}
-                        className="text-red-500"
-                      />
-
-                    </div>
-
-                    <h2 className="text-3xl font-bold text-gray-900">
-                      Select a Hub
-                    </h2>
-
-                    <p className="text-gray-500 mt-3 max-w-sm">
-                      Choose a hub marker from
-                      the map to see employees,
-                      routes and analytics.
-                    </p>
-
-                  </div>
-                )}
-
-              </Card>
-
-            </div>
-
-          </div>
-
-          {/* HUB CARDS */}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-
-            {filteredHubs.map((hub: any) => {
-              const employeeCount =
-                getHubEmployeeCount(hub.id);
-
-              return (
-                <div
-                  key={hub.id}
-                  onClick={() =>
-                    handleMarkerClick(hub)
-                  }
-                  className="
-                    rounded-[30px]
-                    bg-white
-                    border
-                    border-gray-100
-                    p-6
-                    hover:shadow-xl
-                    hover:-translate-y-1
-                    transition-all
-                    cursor-pointer
-                  "
-                >
-
-                  <div className="flex items-start justify-between">
-
-                    <div>
-
-                      <div className="flex items-center gap-3">
-
-                        <div className="h-12 w-12 rounded-2xl bg-red-50 flex items-center justify-center">
-
-                          <MapPin
-                            size={20}
-                            className="text-red-500"
-                          />
-
-                        </div>
-
-                        <div>
-
-                          <h3 className="font-bold text-lg text-gray-900">
-                            {hub.name}
-                          </h3>
-
-                          <p className="text-sm text-gray-500">
-                            {hub.city}
-                          </p>
-
-                        </div>
-
-                      </div>
-
-                      <p className="text-sm text-gray-400 mt-4 line-clamp-2">
-                        {hub.address}
-                      </p>
-
-                    </div>
-
-                    <div className="text-right">
-
-                      <h2 className="text-4xl font-bold text-gray-900">
-                        {employeeCount}
-                      </h2>
-
-                      <p className="text-xs text-gray-500">
-                        Staff
-                      </p>
-
-                    </div>
-
-                  </div>
-
-                </div>
-              );
-            })}
-
-          </div>
-
-        </div>
-
+          )}
+        </Card>
       </div>
-    </>
-  );
+
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-5">
+
+        <GlassCard className="xl:col-span-8 rounded-3xl overflow-hidden border border-white shadow-lg p-0">
+
+          <div className="h-[650px]">
+            <MapContainer
+              center={[14.5995, 120.9842]}
+              zoom={6}
+              style={{ height: '100%', width: '100%' }}
+              ref={mapRef}
+            >
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+
+              {userLocation && (
+                <Marker position={userLocation} icon={userIcon}>
+                  <Popup>Your Location</Popup>
+                </Marker>
+              )}
+
+              {filteredHubs.map((hub: any) => (
+                <Marker
+                  key={hub.id}
+                  position={getHubCoordinates(hub)}
+                  icon={hubIcon}
+                  eventHandlers={{
+                    click: () => setSelectedHub(hub),
+                  }}
+                >
+                  <Popup>{hub.name}</Popup>
+                </Marker>
+              ))}
+
+              {showDirections && routeData && (
+                <Polyline
+                  positions={routeData.car.coordinates}
+                  color="#ef4444"
+                  weight={6}
+                />
+              )}
+            </MapContainer>
+          </div>
+        </GlassCard>
+
+        <Card className="xl:col-span-4 bg-white rounded-3xl border-0 shadow-sm overflow-hidden">
+
+          {selectedHub ? (
+            <div className="flex flex-col h-full">
+
+              <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-800">
+                    {selectedHub.name}
+                  </h3>
+
+                  <p className="text-gray-500 mt-1">
+                    {selectedHub.city}
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setSelectedHub(null)}
+                  className="h-10 w-10 rounded-2xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="p-5 space-y-5">
+
+                <div className="grid grid-cols-2 gap-4">
+
+                  <div className="rounded-3xl bg-blue-50 p-5 border border-blue-100">
+                    <p className="text-sm text-blue-600 font-medium">
+                      Employees
+                    </p>
+
+                    <h3 className="text-4xl font-bold text-blue-900 mt-2">
+                      {hubEmployees.length}
+                    </h3>
+                  </div>
+
+                  <div className="rounded-3xl bg-orange-50 p-5 border border-orange-100">
+                    <p className="text-sm text-orange-600 font-medium">
+                      City
+                    </p>
+
+                    <h3 className="text-xl font-bold text-orange-900 mt-2 line-clamp-2">
+                      {selectedHub.city}
+                    </h3>
+                  </div>
+                </div>
+
+                <button
+                  onClick={fetchRoute}
+                  disabled={loadingRoute}
+                  className="w-full h-12 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-semibold flex items-center justify-center gap-2 shadow-lg shadow-red-200"
+                >
+                  {loadingRoute ? (
+                    <LoadingSpinner size="sm" />
+                  ) : (
+                    <>
+                      <Navigation size={18} />
+                      Generate Directions
+                    </>
+                  )}
+                </button>
+
+                <div className="rounded-3xl border border-gray-100 overflow-hidden">
+
+                  <div className="p-4 border-b border-gray-100 flex items-center gap-2 bg-gray-50">
+                    <Search size={16} className="text-gray-400" />
+
+                    <input
+                      value={employeeSearch}
+                      onChange={(e) => setEmployeeSearch(e.target.value)}
+                      placeholder="Search employees"
+                      className="bg-transparent w-full outline-none text-sm"
+                    />
+                  </div>
+
+                  <div className="max-h-[360px] overflow-y-auto">
+                    {!canViewEmployees ? (
+                      <div className="p-10 text-center">
+                        <Shield size={38} className="mx-auto text-gray-300 mb-3" />
+                        <p className="font-medium text-gray-500">
+                          Restricted Access
+                        </p>
+                      </div>
+                    ) : (
+                      hubEmployees.map((emp: any) => (
+                        <div
+                          key={emp.id}
+                          className="p-4 border-b border-gray-100 hover:bg-gray-50 transition-all"
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <h4 className="font-semibold text-gray-800">
+                                {emp.full_name}
+                              </h4>
+
+                              <p className="text-sm text-gray-500 mt-1">
+                                {emp.position}
+                              </p>
+                            </div>
+
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                              emp.status?.toLowerCase() === 'active'
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-yellow-100 text-yellow-700'
+                            }`}>
+                              {emp.status}
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="h-full flex flex-col items-center justify-center text-center p-8">
+              <div className="h-24 w-24 rounded-[28px] bg-red-50 flex items-center justify-center mb-5 shadow-inner">
+                <Building2 size={36} className="text-red-500" />
+              </div>
+
+              <h3 className="text-3xl font-bold text-gray-800">
+                Select a Hub
+              </h3>
+
+              <p className="text-gray-500 mt-3 leading-relaxed max-w-sm">
+                Select a map marker to view hub employees, weather conditions and real-time route analytics.
+              </p>
+            </div>
+          )}
+        </Card>
+      </div>
+    </div>
+  </div>
+</>
+```
+
+);
 };
