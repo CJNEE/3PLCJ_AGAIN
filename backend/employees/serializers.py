@@ -117,9 +117,9 @@ class EmployeeDocumentSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'file_url', 'file_name', 'file_size', 'uploaded_at', 'document_type']
 
     def get_file_url(self, obj):
-        return absolute_media_url(self.context.get('request'), obj.file.url)
-
-
+        if obj.file:
+            return absolute_media_url(self.context.get('request'), obj.file.url)
+        return None
 
 
 
@@ -158,8 +158,8 @@ class EmployeeSerializer(serializers.ModelSerializer):
             'hub': {'required': False},
             'hired_date': {'required': False},
             'can_login': {'required': False}
-        }
-
+        },
+print(Employee.objects.first().id),
     def get_full_name(self, obj):
         return f"{obj.firstname} {obj.middle_initial} {obj.lastname}".strip()
 
@@ -222,7 +222,11 @@ class EmployeeCreateSerializer(serializers.ModelSerializer):
         'canEditInfo': 'can_edit_info',
         'isActive': 'is_active',
         'profileImage': 'profile_image',
+        'philHealth': 'philhealth',
+        'pagIbig': 'pagibig',
+        'canLogin': 'can_login',
     }
+    
 
     class Meta:
         model = Employee
@@ -272,6 +276,7 @@ class EmployeeCreateSerializer(serializers.ModelSerializer):
         return super().to_internal_value(mutable_data)
     
     def create(self, validated_data):
+        print("VALIDATED DATA:", validated_data)
         username = validated_data.pop('username', None)
         password = validated_data.pop('password', None)
         role = validated_data.get('role', 'Employee')
@@ -525,12 +530,20 @@ class PayrollSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
+
         try:
             data['sss_percent'] = float(self._get_effective_percent(instance, 'sss'))
             data['philhealth_percent'] = float(self._get_effective_percent(instance, 'philhealth'))
             data['pagibig_percent'] = float(self._get_effective_percent(instance, 'pagibig'))
         except Exception:
             pass
+
+        req = self.context.get('request')
+
+        img = data.get('payslip_image')
+        if isinstance(img, str) and img.startswith('/'):
+            data['payslip_image'] = absolute_media_url(req, img)
+
         return data
 
     def validate(self, attrs):
@@ -546,13 +559,6 @@ class PayrollSerializer(serializers.ModelSerializer):
         if errors:
             raise serializers.ValidationError(errors)
         return attrs
-
-    def get_total_government_deductions(self, obj):
-        return float(
-            (self.get_sss_deduction(obj) or 0) +
-            (self.get_philhealth_deduction(obj) or 0) +
-            (self.get_pagibig_deduction(obj) or 0)
-        )
 
     def get_total_government_deductions(self, obj):
         # legacy model fields should not be used here; government deductions are computed from earnings
@@ -683,13 +689,7 @@ class PayrollSerializer(serializers.ModelSerializer):
         except Exception:
             return int(obj.absences or 0)
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        req = self.context.get('request')
-        img = data.get('payslip_image')
-        if isinstance(img, str) and img.startswith('/'):
-            data['payslip_image'] = absolute_media_url(req, img)
-        return data
+    
 
 class LeaveRequestSerializer(serializers.ModelSerializer):
     employee_name = serializers.SerializerMethodField()
@@ -854,7 +854,13 @@ class CreateEmployeeSerializer(serializers.ModelSerializer):
         username = validated_data.pop('username')
         password = validated_data.pop('password')
         
-        employee = Employee.objects.create(**validated_data)
+        try:
+            employee = Employee.objects.create(**validated_data)
+        except Exception as e:
+            print("EMPLOYEE CREATE ERROR:", str(e))
+            raise serializers.ValidationError({
+                "error": str(e)
+            })
         employee.user = User.objects.create_user(
             username=username, password=password,
             first_name=validated_data.get('firstname', ''),

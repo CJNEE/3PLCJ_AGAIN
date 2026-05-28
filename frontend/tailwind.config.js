@@ -24,12 +24,12 @@ export default {
         },
         status: {
           active: '#10B981',
-          inactive: '#6B7280',
-          awol: '#F59E0B',
+          inactive: '#ffdd00',
+          awol: '#ff7b00',
           blacklist: '#EF4444',
           present: '#10B981',
           late: '#F59E0B',
-          absent: '#EF4444'
+          absent: '#524f4f'
         }
       },
       animation: {

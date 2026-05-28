@@ -11,12 +11,12 @@ import 'leaflet/dist/leaflet.css';
 import HubsEmployeeChart from '@/components/HubsEmployeeChart';
 import { Sidebar } from '@/components/Sidebar';
 
-// Color mappings for status
+
 const STATUS_COLORS: Record<string, string> = {
-  'Active': '#10B981',      // green
-  'AWOL': '#F59E0B',        // yellow
-  'Blacklist': '#EF4444',   // red
-  'Resign': '#3B82F6',      // blue
+  'Active': '#10B981',      
+  'AWOL': '#ff4d00',        
+  'Blacklist': '#ff0000',   
+  'Resign': '#454545',      
 };
 
 const EMPLOYMENT_TYPE_COLORS: Record<string, string> = {

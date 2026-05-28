@@ -21,17 +21,30 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-_4-^c(%mqhby%80&o1)s=#lw97439c$d25rjp6wk0m--j7^svl'
-
+# SECRET_KEY = 'django-insecure-_4-^c(%mqhby%80&o1)s=#lw97439c$d25rjp6wk0m--j7^svl'
+SECRET_KEY = os.environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+
+X_FRAME_OPTIONS = 'DENY'
 # Read from env var for flexibility, default to hardcoded for production
 _ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS', '').strip()
 if _ALLOWED_HOSTS_ENV:
     ALLOWED_HOSTS = [host.strip() for host in _ALLOWED_HOSTS_ENV.split(',')]
 else:
-    ALLOWED_HOSTS = ["threepl-backend-wf79.onrender.com", "*.vercel.app", "localhost", "127.0.0.1"]
+    ALLOWED_HOSTS = [
+    "threepl-backend-wf79.onrender.com",
+    ".vercel.app",
+    "localhost",
+    "127.0.0.1",
+]
 
 
 # Application definition
@@ -52,6 +65,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -86,7 +100,7 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 # Use PostgreSQL exclusively. Set DATABASE_URL in environment or fallback to local DB.
-_DATABASE_URL = os.environ.get('DATABASE_URL', 'postgresql://db_3pl_db_user:1c252y1LRra5SogWdlOBRWNLBjAqHC3R@dpg-d823dkpkh4rs73br35d0-a.oregon-postgres.render.com/db_3pl_db').strip()
+_DATABASE_URL = os.environ.get('DATABASE_URL', '').strip()
 
 import dj_database_url
 
@@ -105,7 +119,10 @@ DATABASES = {
     )
 }
 
-
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.vercel.app",
+    "https://threepl-backend-wf79.onrender.com",
+]
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
@@ -140,9 +157,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
