@@ -508,28 +508,6 @@ function FitBoundsComponent({ mapHubs, getCoords }: { mapHubs: any[], getCoords:
         shadow-lg
       "
     >
-      <p
-        className="
-          text-[10px]
-
-          text-gray-500
-          dark:text-gray-400
-        "
-      >
-        Total Hubs
-      </p>
-
-      <h3
-        className="
-          text-lg
-          font-bold
-
-          text-gray-900
-          dark:text-white
-        "
-      >
-        {hubs.length}
-      </h3>
     </div>
 
     {/* MAP */}
