@@ -118,19 +118,19 @@ export const BottomNavigation = ({
   );
 
   /**
-   * SHIFTED LEFT FOR PERFECT CENTER
+   * PERFECT ARC SPACING
    */
   const positions = [
-  // LEFT SIDE
-  { x: -162, y: -92 },
-  { x: -114, y: -148 },
-  { x: -54, y: -182 },
+    // LEFT
+    { x: -168, y: -102 },
+    { x: -118, y: -164 },
+    { x: -52, y: -206 },
 
-  // RIGHT SIDE
-  { x: 8, y: -182 },
-  { x: 68, y: -148 },
-  { x: 116, y: -92 },
-];
+    // RIGHT
+    { x: 14, y: -206 },
+    { x: 80, y: -164 },
+    { x: 130, y: -102 },
+  ];
 
   return (
     <>
@@ -161,8 +161,8 @@ export const BottomNavigation = ({
                 className="
                   fixed
                   inset-0
-                  bg-black/10
-                  backdrop-blur-[8px]
+                  bg-black/20
+                  backdrop-blur-[10px]
                 "
               />
             )}
@@ -202,14 +202,14 @@ export const BottomNavigation = ({
                     }}
                     transition={{
                       type: 'spring',
-                      stiffness: 450,
-                      damping: 26,
-                      delay: index * 0.02,
+                      stiffness: 430,
+                      damping: 24,
+                      delay: index * 0.025,
                     }}
                     className="
                       absolute
-                      left-[48%]
-                      bottom-[18px]
+                      left-1/2
+                      bottom-[28px]
                       z-40
                     "
                   >
@@ -218,19 +218,26 @@ export const BottomNavigation = ({
                       onClick={() => setExpanded(false)}
                     >
                       <motion.div
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={{
+                          y: -4,
+                          scale: 1.05,
+                        }}
+                        whileTap={{ scale: 0.94 }}
                         className="
                           flex
                           flex-col
                           items-center
-                          gap-[5px]
+                          gap-[6px]
                         "
                       >
-                        {/* CARD */}
+                        {/* FLOATING CARD */}
                         <div
                           className={`
-                            w-[58px]
-                            h-[58px]
+                            group
+                            relative
+
+                            w-[62px]
+                            h-[62px]
 
                             rounded-[22px]
 
@@ -240,26 +247,33 @@ export const BottomNavigation = ({
 
                             border
 
-                            backdrop-blur-2xl
-
                             transition-all
                             duration-300
 
-                            shadow-[0_10px_28px_rgba(0,0,0,0.10)]
+                            backdrop-blur-2xl
+
+                            shadow-[0_12px_35px_rgba(0,0,0,0.14)]
 
                             ${
                               isActive
                                 ? `
-                                  bg-red-500
+                                  bg-gradient-to-br
+                                  from-red-500
+                                  to-red-600
                                   border-red-400
                                   text-white
+                                  shadow-[0_12px_35px_rgba(239,68,68,0.40)]
                                 `
                                 : `
-                                  bg-white/90
-                                  dark:bg-[#111827]/92
-                                  border-white/40
-                                  text-[#1f2937]
-                                  dark:text-white
+                                  bg-white/92
+                                  dark:bg-[#182235]/94
+                                  border-white/30
+                                  text-[#374151]
+                                  dark:text-gray-100
+                                  hover:bg-red-500
+                                  hover:text-white
+                                  hover:border-red-400
+                                  hover:shadow-[0_12px_35px_rgba(239,68,68,0.28)]
                                 `
                             }
                           `}
@@ -278,8 +292,8 @@ export const BottomNavigation = ({
                             leading-tight
                             whitespace-pre-line
                             text-center
-                            text-gray-800
-                            dark:text-gray-100
+                            text-white
+                            drop-shadow-sm
                           "
                         >
                           {item.label}
@@ -295,23 +309,41 @@ export const BottomNavigation = ({
           <div
             className="
               relative
-              h-[84px]
+              h-[88px]
 
-              rounded-[30px]
+              rounded-[32px]
 
               border
-              border-white/20
+              border-white/10
 
-              bg-white/80
-              dark:bg-[#0b1120]/88
+              bg-gradient-to-r
+              from-[#f8fafc]
+              via-[#eef2ff]
+              to-[#f8fafc]
+
+              dark:from-[#111827]
+              dark:via-[#172033]
+              dark:to-[#111827]
 
               backdrop-blur-3xl
 
-              shadow-[0_10px_40px_rgba(0,0,0,0.10)]
+              shadow-[0_14px_45px_rgba(15,23,42,0.16)]
             "
           >
+            {/* INNER GLOW */}
             <div
               className="
+                absolute
+                inset-[1px]
+                rounded-[31px]
+                bg-white/65
+                dark:bg-white/[0.03]
+              "
+            />
+
+            <div
+              className="
+                relative
                 flex
                 items-center
                 justify-between
@@ -337,11 +369,12 @@ export const BottomNavigation = ({
                         flex
                         flex-col
                         items-center
-                        gap-1
+                        gap-[3px]
                       "
                     >
                       <motion.div
                         whileTap={{ scale: 0.92 }}
+                        whileHover={{ y: -2 }}
                         animate={{
                           y: isActive ? -2 : 0,
                         }}
@@ -351,13 +384,13 @@ export const BottomNavigation = ({
                           ${
                             isActive
                               ? 'text-red-500'
-                              : 'text-gray-500 dark:text-gray-400'
+                              : 'text-gray-400 dark:text-gray-500'
                           }
                         `}
                       >
                         <Icon
                           size={22}
-                          strokeWidth={2.2}
+                          strokeWidth={2.3}
                         />
                       </motion.div>
 
@@ -365,10 +398,13 @@ export const BottomNavigation = ({
                         className={`
                           text-[10px]
                           font-semibold
+                          tracking-wide
+                          transition-all
+                          duration-300
                           ${
                             isActive
                               ? 'text-red-500'
-                              : 'text-gray-500 dark:text-gray-400'
+                              : 'text-gray-400 dark:text-gray-500'
                           }
                         `}
                       >
@@ -380,43 +416,63 @@ export const BottomNavigation = ({
               </div>
 
               {/* CENTER FAB */}
-              <button
+              <motion.button
+                whileTap={{ scale: 0.94 }}
+                whileHover={{
+                  scale: 1.04,
+                }}
                 onClick={() => setExpanded(!expanded)}
                 className="
                   absolute
                   left-1/2
                   -translate-x-1/2
-                  -top-7
+                  -top-9
 
                   z-50
 
-                  w-[76px]
-                  h-[76px]
+                  w-[82px]
+                  h-[82px]
 
                   rounded-full
 
-                  border-[6px]
-                  border-white
-                  dark:border-[#0b1120]
+                  border-[7px]
+                  border-[#f8fafc]
+                  dark:border-[#111827]
 
                   bg-gradient-to-br
                   from-red-500
-                  to-red-600
+                  via-red-500
+                  to-rose-600
 
                   flex
                   items-center
                   justify-center
 
-                  shadow-[0_20px_50px_rgba(239,68,68,0.35)]
+                  shadow-[0_22px_55px_rgba(239,68,68,0.45)]
+
+                  transition-all
+                  duration-300
+
+                  hover:shadow-[0_26px_65px_rgba(239,68,68,0.55)]
                 "
               >
-                {/* FIXED BUTTON */}
+                {/* INNER RING */}
+                <div
+                  className="
+                    absolute
+                    inset-[6px]
+                    rounded-full
+                    border
+                    border-white/20
+                  "
+                />
+
                 <motion.div
                   animate={{
                     rotate: expanded ? 180 : 0,
                   }}
                   transition={{
-                    duration: 0.22,
+                    duration: 0.25,
                   }}
                 >
                   {expanded ? (
@@ -431,7 +487,7 @@ export const BottomNavigation = ({
                     />
                   )}
                 </motion.div>
-              </button>
+              </motion.button>
 
               {/* RIGHT */}
               <div className="flex items-center gap-8">
@@ -449,11 +505,12 @@ export const BottomNavigation = ({
                         flex
                         flex-col
                         items-center
-                        gap-1
+                        gap-[3px]
                       "
                     >
                       <motion.div
                         whileTap={{ scale: 0.92 }}
+                        whileHover={{ y: -2 }}
                         animate={{
                           y: isActive ? -2 : 0,
                         }}
@@ -463,13 +520,13 @@ export const BottomNavigation = ({
                           ${
                             isActive
                               ? 'text-red-500'
-                              : 'text-gray-500 dark:text-gray-400'
+                              : 'text-gray-400 dark:text-gray-500'
                           }
                         `}
                       >
                         <Icon
                           size={22}
-                          strokeWidth={2.2}
+                          strokeWidth={2.3}
                         />
                       </motion.div>
 
@@ -477,10 +534,13 @@ export const BottomNavigation = ({
                         className={`
                           text-[10px]
                           font-semibold
+                          tracking-wide
+                          transition-all
+                          duration-300
                           ${
                             isActive
                               ? 'text-red-500'
-                              : 'text-gray-500 dark:text-gray-400'
+                              : 'text-gray-400 dark:text-gray-500'
                           }
                         `}
                       >
