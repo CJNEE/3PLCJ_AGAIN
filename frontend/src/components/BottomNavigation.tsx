@@ -13,7 +13,7 @@ import {
   Clock,
   DollarSign,
   Activity,
-  AlertTriangle,
+ AlertTriangle,
   Plus,
   X,
 } from 'lucide-react';
@@ -49,7 +49,46 @@ export const BottomNavigation = ({
       ? '/hr'
       : '/employee';
 
-  const navItems = useMemo(
+  // ONLY THE FLOATING MENU ITEMS
+  // NO DUPLICATES
+  const floatingItems = useMemo(
+    () => [
+      {
+        label: 'Leave',
+        icon: CalendarDays,
+        path: `${basePath}/leave-requests`,
+      },
+      {
+        label: 'Access',
+        icon: Lock,
+        path: `${basePath}/access-control`,
+      },
+      {
+        label: 'Attendance',
+        icon: Clock,
+        path: `${basePath}/attendance`,
+      },
+      {
+        label: 'Payroll',
+        icon: DollarSign,
+        path: `${basePath}/payslip`,
+      },
+      {
+        label: 'Logs',
+        icon: Activity,
+        path: `${basePath}/activity-logs`,
+      },
+      {
+        label: 'Alerts',
+        icon: AlertTriangle,
+        path: `${basePath}/security-alerts`,
+      },
+    ],
+    [basePath]
+  );
+
+  // BOTTOM BAR ITEMS
+  const bottomItems = useMemo(
     () => [
       {
         label: 'Dashboard',
@@ -67,39 +106,9 @@ export const BottomNavigation = ({
         path: `${basePath}/employees`,
       },
       {
-        label: 'Edit Request',
+        label: 'Edit',
         icon: FileText,
         path: `${basePath}/edit-requests`,
-      },
-      {
-        label: 'Leave Request',
-        icon: CalendarDays,
-        path: `${basePath}/leave-requests`,
-      },
-      {
-        label: 'Access Control',
-        icon: Lock,
-        path: `${basePath}/access-control`,
-      },
-      {
-        label: 'Attendance',
-        icon: Clock,
-        path: `${basePath}/attendance`,
-      },
-      {
-        label: 'Payroll',
-        icon: DollarSign,
-        path: `${basePath}/payslip`,
-      },
-      {
-        label: 'Activity Log',
-        icon: Activity,
-        path: `${basePath}/activity-logs`,
-      },
-      {
-        label: 'Security Alerts',
-        icon: AlertTriangle,
-        path: `${basePath}/security-alerts`,
       },
     ],
     [basePath]
@@ -111,19 +120,19 @@ export const BottomNavigation = ({
       <div
         className={`
           fixed
-          bottom-4
+          bottom-3
           left-0
           right-0
           z-[9999]
           flex
           justify-center
-          px-4
+          px-3
           lg:hidden
           ${className}
         `}
       >
-        <div className="relative w-full max-w-[420px]">
-          {/* BACKDROP WHEN EXPANDED */}
+        <div className="relative w-full max-w-[400px]">
+          {/* BACKDROP */}
           <AnimatePresence>
             {expanded && (
               <motion.div
@@ -134,183 +143,159 @@ export const BottomNavigation = ({
                 className="
                   fixed
                   inset-0
-                  bg-black/30
+                  bg-black/20
                   backdrop-blur-[2px]
-                  z-0
                 "
               />
             )}
           </AnimatePresence>
 
-          {/* RADIAL MENU */}
+          {/* FLOATING MENU */}
           <AnimatePresence>
-            {expanded && (
-              <>
-                {navItems.map((item, index) => {
-                  const Icon = item.icon;
+            {expanded &&
+              floatingItems.map((item, index) => {
+                const Icon = item.icon;
 
-                  const isActive =
-                    item.path === basePath
-                      ? location.pathname === item.path
-                      : location.pathname.startsWith(item.path);
+                const isActive =
+                  location.pathname.startsWith(item.path);
 
-                  // PERFECT FAN LAYOUT
-                  const angle = -160 + index * 16;
-                  const radius = 170;
+                // COMPACT CURVE
+                const angle = -145 + index * 18;
+                const radius = 118;
 
-                  const x =
-                    Math.cos((angle * Math.PI) / 180) * radius;
+                const x =
+                  Math.cos((angle * Math.PI) / 180) *
+                  radius;
 
-                  const y =
-                    Math.sin((angle * Math.PI) / 180) * radius;
+                const y =
+                  Math.sin((angle * Math.PI) / 180) *
+                  radius;
 
-                  return (
-                    <motion.div
-                      key={item.path}
-                      initial={{
-                        opacity: 0,
-                        scale: 0.2,
-                        x: 0,
-                        y: 0,
-                      }}
-                      animate={{
-                        opacity: 1,
-                        scale: 1,
-                        x,
-                        y,
-                      }}
-                      exit={{
-                        opacity: 0,
-                        scale: 0.2,
-                        x: 0,
-                        y: 0,
-                      }}
-                      transition={{
-                        type: 'spring',
-                        stiffness: 420,
-                        damping: 24,
-                        delay: index * 0.02,
-                      }}
-                      className="
-                        absolute
-                        left-1/2
-                        bottom-[42px]
-                        z-30
-                      "
+                return (
+                  <motion.div
+                    key={item.path}
+                    initial={{
+                      opacity: 0,
+                      scale: 0.2,
+                      x: 0,
+                      y: 0,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      scale: 1,
+                      x,
+                      y,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      scale: 0.2,
+                      x: 0,
+                      y: 0,
+                    }}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 450,
+                      damping: 24,
+                      delay: index * 0.03,
+                    }}
+                    className="
+                      absolute
+                      left-1/2
+                      bottom-[38px]
+                      z-40
+                    "
+                  >
+                    <NavLink
+                      to={item.path}
+                      onClick={() => setExpanded(false)}
                     >
-                      <NavLink
-                        to={item.path}
-                        onClick={() => setExpanded(false)}
-                        className="relative"
+                      <motion.div
+                        whileTap={{ scale: 0.92 }}
+                        className="
+                          flex
+                          flex-col
+                          items-center
+                          gap-1
+                        "
                       >
-                        <motion.div
-                          whileTap={{ scale: 0.9 }}
-                          className="
+                        <div
+                          className={`
+                            w-[52px]
+                            h-[52px]
+                            rounded-2xl
                             flex
-                            flex-col
                             items-center
-                            gap-1
+                            justify-center
+                            backdrop-blur-xl
+                            border
+                            transition-all
+                            duration-300
+                            shadow-[0_8px_20px_rgba(0,0,0,0.18)]
+                            ${
+                              isActive
+                                ? `
+                                  bg-red-500
+                                  text-white
+                                  border-red-400
+                                `
+                                : `
+                                  bg-white/90
+                                  dark:bg-[#0f172a]/95
+                                  border-white/20
+                                  text-gray-700
+                                  dark:text-white
+                                `
+                            }
+                          `}
+                        >
+                          <Icon
+                            size={20}
+                            strokeWidth={2.5}
+                          />
+                        </div>
+
+                        <span
+                          className="
+                            text-[9px]
+                            font-semibold
+                            text-white
+                            whitespace-nowrap
                           "
                         >
-                          {/* ICON BUTTON */}
-                          <div
-                            className={`
-                              w-[56px]
-                              h-[56px]
-                              rounded-2xl
-                              flex
-                              items-center
-                              justify-center
-                              backdrop-blur-2xl
-                              border
-                              shadow-[0_10px_30px_rgba(0,0,0,0.20)]
-                              transition-all
-                              duration-300
-                              ${
-                                isActive
-                                  ? `
-                                    bg-red-500
-                                    border-red-400
-                                    text-white
-                                  `
-                                  : `
-                                    bg-white/80
-                                    dark:bg-[#0f172a]/90
-                                    border-white/20
-                                    text-gray-700
-                                    dark:text-white
-                                  `
-                              }
-                            `}
-                          >
-                            <Icon
-                              size={22}
-                              strokeWidth={2.4}
-                            />
-                          </div>
-
-                          {/* LABEL */}
-                          <span
-                            className="
-                              text-[10px]
-                              font-semibold
-                              whitespace-nowrap
-                              text-white
-                              drop-shadow-lg
-                            "
-                          >
-                            {item.label}
-                          </span>
-                        </motion.div>
-                      </NavLink>
-                    </motion.div>
-                  );
-                })}
-              </>
-            )}
+                          {item.label}
+                        </span>
+                      </motion.div>
+                    </NavLink>
+                  </motion.div>
+                );
+              })}
           </AnimatePresence>
 
-          {/* BOTTOM BAR */}
+          {/* NAVBAR */}
           <div
             className="
               relative
-              h-[82px]
-              rounded-[30px]
-              border
-              border-white/15
+              h-[74px]
+              rounded-[28px]
+              border border-white/10
               bg-white/10
               dark:bg-[#081120]/80
               backdrop-blur-3xl
-              shadow-[0_10px_40px_rgba(0,0,0,0.25)]
-              overflow-hidden
+              shadow-[0_10px_35px_rgba(0,0,0,0.20)]
             "
           >
-            {/* INNER GLOW */}
             <div
               className="
-                absolute
-                inset-0
-                bg-gradient-to-t
-                from-white/5
-                to-transparent
-                pointer-events-none
-              "
-            />
-
-            {/* MAIN NAV */}
-            <div
-              className="
-                relative
-                h-full
                 flex
                 items-center
                 justify-between
-                px-6
+                h-full
+                px-5
               "
             >
               {/* LEFT */}
               <div className="flex items-center gap-5">
-                {navItems.slice(0, 2).map((item) => {
+                {bottomItems.slice(0, 2).map((item) => {
                   const Icon = item.icon;
 
                   const isActive =
@@ -323,19 +308,17 @@ export const BottomNavigation = ({
                       key={item.path}
                       to={item.path}
                       className="
-                        relative
                         flex
                         flex-col
                         items-center
-                        justify-center
                         gap-1
-                        min-w-[54px]
+                        min-w-[50px]
                       "
                     >
                       <motion.div
                         whileTap={{ scale: 0.92 }}
                         animate={{
-                          y: isActive ? -4 : 0,
+                          y: isActive ? -3 : 0,
                         }}
                         className={`
                           transition-all
@@ -347,16 +330,13 @@ export const BottomNavigation = ({
                           }
                         `}
                       >
-                        <Icon
-                          size={22}
-                          strokeWidth={2.4}
-                        />
+                        <Icon size={21} />
                       </motion.div>
 
                       <span
                         className={`
                           text-[10px]
-                          font-semibold
+                          font-medium
                           ${
                             isActive
                               ? 'text-red-500'
@@ -371,7 +351,7 @@ export const BottomNavigation = ({
                 })}
               </div>
 
-              {/* CENTER FAB */}
+              {/* FAB */}
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setExpanded(!expanded)}
@@ -379,17 +359,17 @@ export const BottomNavigation = ({
                   absolute
                   left-1/2
                   -translate-x-1/2
-                  -top-7
-                  w-[74px]
-                  h-[74px]
+                  -top-5
+                  w-[62px]
+                  h-[62px]
                   rounded-full
                   bg-gradient-to-br
                   from-red-500
                   to-red-600
-                  border-[6px]
+                  border-[5px]
                   border-white
                   dark:border-[#081120]
-                  shadow-[0_15px_40px_rgba(239,68,68,0.45)]
+                  shadow-[0_12px_30px_rgba(239,68,68,0.45)]
                   flex
                   items-center
                   justify-center
@@ -401,17 +381,17 @@ export const BottomNavigation = ({
                     rotate: expanded ? 180 : 0,
                   }}
                   transition={{
-                    duration: 0.35,
+                    duration: 0.28,
                   }}
                 >
                   {expanded ? (
                     <X
-                      size={30}
+                      size={26}
                       className="text-white"
                     />
                   ) : (
                     <Plus
-                      size={30}
+                      size={26}
                       className="text-white"
                     />
                   )}
@@ -420,32 +400,28 @@ export const BottomNavigation = ({
 
               {/* RIGHT */}
               <div className="flex items-center gap-5">
-                {navItems.slice(2, 4).map((item) => {
+                {bottomItems.slice(2, 4).map((item) => {
                   const Icon = item.icon;
 
                   const isActive =
-                    item.path === basePath
-                      ? location.pathname === item.path
-                      : location.pathname.startsWith(item.path);
+                    location.pathname.startsWith(item.path);
 
                   return (
                     <NavLink
                       key={item.path}
                       to={item.path}
                       className="
-                        relative
                         flex
                         flex-col
                         items-center
-                        justify-center
                         gap-1
-                        min-w-[54px]
+                        min-w-[50px]
                       "
                     >
                       <motion.div
                         whileTap={{ scale: 0.92 }}
                         animate={{
-                          y: isActive ? -4 : 0,
+                          y: isActive ? -3 : 0,
                         }}
                         className={`
                           transition-all
@@ -457,17 +433,13 @@ export const BottomNavigation = ({
                           }
                         `}
                       >
-                        <Icon
-                          size={22}
-                          strokeWidth={2.4}
-                        />
+                        <Icon size={21} />
                       </motion.div>
 
                       <span
                         className={`
                           text-[10px]
-                          font-semibold
-                          whitespace-nowrap
+                          font-medium
                           ${
                             isActive
                               ? 'text-red-500'
@@ -487,7 +459,7 @@ export const BottomNavigation = ({
       </div>
 
       {/* SPACER */}
-      <div className="h-28 lg:hidden" />
+      <div className="h-24 lg:hidden" />
     </>
   );
 };
