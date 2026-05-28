@@ -50,7 +50,7 @@ export const BottomNavigation = ({
       : '/employee';
 
   /**
-   * BOTTOM NAV
+   * MAIN NAV
    */
   const bottomItems = useMemo(
     () => [
@@ -79,7 +79,7 @@ export const BottomNavigation = ({
   );
 
   /**
-   * FLOATING ITEMS
+   * FLOATING MENU
    */
   const floatingItems = useMemo(
     () => [
@@ -118,23 +118,21 @@ export const BottomNavigation = ({
   );
 
   /**
-   * PERFECT RADIAL POSITIONS
+   * CLEAN COMPACT ARC
    */
   const positions = [
-    // LEFT
-    { x: -170, y: -120 },
-    { x: -105, y: -205 },
-    { x: -18, y: -255 },
+    { x: -118, y: -92 },
+    { x: -68, y: -150 },
+    { x: -5, y: -182 },
 
-    // RIGHT
-    { x: 82, y: -255 },
-    { x: 170, y: -205 },
-    { x: 235, y: -120 },
+    { x: 58, y: -182 },
+    { x: 120, y: -150 },
+    { x: 170, y: -92 },
   ];
 
   return (
     <>
-      {/* MOBILE ONLY */}
+      {/* MOBILE NAV */}
       <div
         className={`
           fixed
@@ -149,7 +147,7 @@ export const BottomNavigation = ({
           ${className}
         `}
       >
-        <div className="relative w-full max-w-[520px]">
+        <div className="relative w-full max-w-[430px]">
           {/* BACKDROP */}
           <AnimatePresence>
             {expanded && (
@@ -162,7 +160,7 @@ export const BottomNavigation = ({
                   fixed
                   inset-0
                   bg-black/10
-                  backdrop-blur-[10px]
+                  backdrop-blur-[8px]
                 "
               />
             )}
@@ -202,9 +200,9 @@ export const BottomNavigation = ({
                     }}
                     transition={{
                       type: 'spring',
-                      stiffness: 420,
-                      damping: 24,
-                      delay: index * 0.03,
+                      stiffness: 450,
+                      damping: 26,
+                      delay: index * 0.02,
                     }}
                     className="
                       absolute
@@ -218,21 +216,21 @@ export const BottomNavigation = ({
                       onClick={() => setExpanded(false)}
                     >
                       <motion.div
-                        whileTap={{ scale: 0.94 }}
+                        whileTap={{ scale: 0.95 }}
                         className="
                           flex
                           flex-col
                           items-center
-                          gap-[8px]
+                          gap-[5px]
                         "
                       >
                         {/* ICON CARD */}
                         <div
                           className={`
-                            w-[72px]
-                            h-[72px]
+                            w-[58px]
+                            h-[58px]
 
-                            rounded-[28px]
+                            rounded-[22px]
 
                             flex
                             items-center
@@ -245,7 +243,7 @@ export const BottomNavigation = ({
                             transition-all
                             duration-300
 
-                            shadow-[0_15px_35px_rgba(0,0,0,0.10)]
+                            shadow-[0_10px_28px_rgba(0,0,0,0.10)]
 
                             ${
                               isActive
@@ -265,15 +263,15 @@ export const BottomNavigation = ({
                           `}
                         >
                           <Icon
-                            size={30}
-                            strokeWidth={2.1}
+                            size={24}
+                            strokeWidth={2.2}
                           />
                         </div>
 
                         {/* LABEL */}
                         <span
                           className="
-                            text-[11px]
+                            text-[10px]
                             font-semibold
                             leading-tight
                             whitespace-pre-line
@@ -295,9 +293,9 @@ export const BottomNavigation = ({
           <div
             className="
               relative
-              h-[90px]
+              h-[84px]
 
-              rounded-[34px]
+              rounded-[30px]
 
               border
               border-white/20
@@ -316,11 +314,11 @@ export const BottomNavigation = ({
                 items-center
                 justify-between
                 h-full
-                px-8
+                px-7
               "
             >
               {/* LEFT */}
-              <div className="flex items-center gap-10">
+              <div className="flex items-center gap-8">
                 {bottomItems.slice(0, 2).map((item) => {
                   const Icon = item.icon;
 
@@ -356,14 +354,14 @@ export const BottomNavigation = ({
                         `}
                       >
                         <Icon
-                          size={24}
+                          size={22}
                           strokeWidth={2.2}
                         />
                       </motion.div>
 
                       <span
                         className={`
-                          text-[11px]
+                          text-[10px]
                           font-semibold
                           ${
                             isActive
@@ -386,12 +384,12 @@ export const BottomNavigation = ({
                   absolute
                   left-1/2
                   -translate-x-1/2
-                  -top-8
+                  -top-7
 
                   z-50
 
-                  w-[84px]
-                  h-[84px]
+                  w-[76px]
+                  h-[76px]
 
                   rounded-full
 
@@ -421,12 +419,12 @@ export const BottomNavigation = ({
                 >
                   {expanded ? (
                     <X
-                      size={34}
+                      size={30}
                       className="text-white"
                     />
                   ) : (
                     <Plus
-                      size={34}
+                      size={30}
                       className="text-white"
                     />
                   )}
@@ -434,7 +432,7 @@ export const BottomNavigation = ({
               </button>
 
               {/* RIGHT */}
-              <div className="flex items-center gap-10">
+              <div className="flex items-center gap-8">
                 {bottomItems.slice(2, 4).map((item) => {
                   const Icon = item.icon;
 
@@ -468,14 +466,14 @@ export const BottomNavigation = ({
                         `}
                       >
                         <Icon
-                          size={24}
+                          size={22}
                           strokeWidth={2.2}
                         />
                       </motion.div>
 
                       <span
                         className={`
-                          text-[11px]
+                          text-[10px]
                           font-semibold
                           ${
                             isActive
@@ -496,7 +494,7 @@ export const BottomNavigation = ({
       </div>
 
       {/* SPACER */}
-      <div className="h-32 lg:hidden" />
+      <div className="h-28 lg:hidden" />
     </>
   );
 };
