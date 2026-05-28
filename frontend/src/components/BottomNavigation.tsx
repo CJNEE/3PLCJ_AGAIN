@@ -79,7 +79,7 @@ export const BottomNavigation = ({
   );
 
   /**
-   * FLOATING MENU
+   * FLOATING ITEMS
    */
   const floatingItems = useMemo(
     () => [
@@ -118,16 +118,18 @@ export const BottomNavigation = ({
   );
 
   /**
-   * CLEAN COMPACT ARC
+   * SHIFTED LEFT FOR PERFECT CENTERING
    */
   const positions = [
-    { x: -118, y: -92 },
-    { x: -68, y: -150 },
-    { x: -5, y: -182 },
+    // LEFT SIDE
+    { x: -135, y: -92 },
+    { x: -88, y: -148 },
+    { x: -28, y: -182 },
 
-    { x: 58, y: -182 },
-    { x: 120, y: -150 },
-    { x: 170, y: -92 },
+    // RIGHT SIDE
+    { x: 35, y: -182 },
+    { x: 96, y: -148 },
+    { x: 145, y: -92 },
   ];
 
   return (
@@ -224,7 +226,7 @@ export const BottomNavigation = ({
                           gap-[5px]
                         "
                       >
-                        {/* ICON CARD */}
+                        {/* CARD */}
                         <div
                           className={`
                             w-[58px]
