@@ -50,7 +50,7 @@ export const BottomNavigation = ({
       : '/employee';
 
   /**
-   * MAIN NAV
+   * MAIN NAVIGATION
    */
   const bottomItems = useMemo(
     () => [
@@ -79,7 +79,7 @@ export const BottomNavigation = ({
   );
 
   /**
-   * FLOATING ACTIONS
+   * FLOATING MENU
    */
   const floatingItems = useMemo(
     () => [
@@ -118,16 +118,17 @@ export const BottomNavigation = ({
   );
 
   /**
-   * FLOATING ARC
+   * FIXED FLOATING ARC SPACING
+   * evenly separated
    */
   const positions = [
-    { x: -96, y: -72 },
-    { x: -62, y: -122 },
-    { x: -22, y: -150 },
+    { x: -132, y: -88 },
+    { x: -92, y: -152 },
+    { x: -34, y: -198 },
 
-    { x: 22, y: -150 },
-    { x: 62, y: -122 },
-    { x: 96, y: -72 },
+    { x: 34, y: -198 },
+    { x: 92, y: -152 },
+    { x: 132, y: -88 },
   ];
 
   return (
@@ -229,9 +230,10 @@ export const BottomNavigation = ({
                           flex
                           flex-col
                           items-center
-                          gap-1
+                          gap-1.5
                         "
                       >
+                        {/* FLOATING ICON */}
                         <div
                           className={`
                             relative
@@ -296,6 +298,7 @@ export const BottomNavigation = ({
                           />
                         </div>
 
+                        {/* LABEL */}
                         <span
                           className="
                             text-[9px]
@@ -313,7 +316,7 @@ export const BottomNavigation = ({
               })}
           </AnimatePresence>
 
-          {/* MAIN NAV */}
+          {/* MAIN NAVIGATION */}
           <div
             className="
               relative
