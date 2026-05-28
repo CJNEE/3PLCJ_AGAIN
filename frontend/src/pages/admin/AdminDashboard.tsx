@@ -66,7 +66,9 @@ const philippinesCityCoords: Record<
 /**
  * GET ACCURATE COORDS
  */
-const getHubCoordinates = (hub: any) => {
+const getHubCoordinates = (
+  hub: any
+): [number, number] => {
   /**
    * PRIORITIZE REAL DATABASE COORDS
    */
