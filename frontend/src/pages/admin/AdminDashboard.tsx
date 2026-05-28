@@ -390,23 +390,11 @@ export const AdminDashboard = () => {
             {/* HUB LOCATIONS MAP */}
 <Card
   className="
-    relative
-    overflow-hidden
-
-    rounded-2xl
-
-    border
-    border-gray-200
-    dark:border-gray-800
-
-    bg-white
-    dark:bg-white
-
-    shadow-xl
-
-    flex
-    flex-col
-
+    bg-white dark:bg-[#0F172A]
+        border border-gray-200 dark:border-gray-700
+        rounded-xl p-4
+        
+        p-2 md:p-4
     min-h-[220px]
     md:min-h-[500px]
   "
