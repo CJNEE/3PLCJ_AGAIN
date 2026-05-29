@@ -960,15 +960,14 @@ export const AdminHubsPage = () => {
   // EMPLOYMENT BAR DATA
   // ======================================
 
-  const employmentTypeData = useMemo(() => {
-    const map = new Map<string, number>();
+  const employmentTypeData = useMemo<Array<{ name: string; value: number }>>(() => {
+    const counts: Record<string, number> = {};
     hubEmployeesData.forEach((emp: Employee) => {
       const key = emp.position || 'Unassigned';
-      map.set(key, (map.get(key) || 0) + 1);
+      counts[key] = (counts[key] ?? 0) + 1;
     });
-    return Array.from(map.entries())
-      .map(([name, value]) => ({ name, value }))
-      .slice(0, 5);
+    const entries = Object.entries(counts) as [string, number][];
+    return entries.map(([name, value]) => ({ name, value })).slice(0, 5);
   }, [hubEmployeesData]);
 
   // ======================================
