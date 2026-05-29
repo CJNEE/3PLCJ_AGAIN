@@ -11,6 +11,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import HubsEmployeeChart from '@/components/HubsEmployeeChart';
 import { Sidebar } from '@/components/Sidebar';
+import { MobileAdminDashboardView } from './MobileAdminDashboardView';
 
 
 const FitBoundsComponent = ({
@@ -253,7 +254,33 @@ export const AdminDashboard = () => {
   }
 
   return (
-  <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
+    <>
+      {/* --- MOBILE UI --- */}
+      <div className="block md:hidden">
+        <MobileAdminDashboardView 
+           employee={employee}
+           employees={employees}
+           hubs={hubs}
+           allEmployees={allEmployees}
+           totalEmployees={totalEmployees}
+           statusData={statusData}
+           employmentTypeData={employmentTypeData}
+           hubEmployeeData={hubEmployeeData}
+           searchTerm={searchTerm}
+           setSearchTerm={setSearchTerm}
+           searchHubTerm={searchHubTerm}
+           setSearchHubTerm={setSearchHubTerm}
+           searchLocationTerm={searchLocationTerm}
+           setSearchLocationTerm={setSearchLocationTerm}
+           selectedEmployee={selectedEmployee}
+           setSelectedEmployee={setSelectedEmployee}
+           showEmployeeModal={showEmployeeModal}
+           setShowEmployeeModal={setShowEmployeeModal}
+        />
+      </div>
+
+      {/* --- DESKTOP UI --- */}
+      <div className="hidden md:block min-h-screen bg-gray-50 dark:bg-dark-bg">
 
   {/* DESKTOP SIDEBAR ONLY */}
   <div className="hidden lg:block">
@@ -1072,5 +1099,6 @@ export const AdminDashboard = () => {
 
       </div>
   </div>
+    </>
   );
 };
