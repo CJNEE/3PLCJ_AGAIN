@@ -55,7 +55,7 @@ export default function HubsEmployeeChart({ hubsData = [], employees = [] }: Pro
     : { top: 5, left: 60 };
 
   return (
-    <div style={{ width: '100%', overflowX: 'auto', overflowY: 'hidden' }} className="scrollbar-hide">
+    <div style={{ width: '100%', overflowX: 'auto', overflowY: 'hidden' }} className="thin-scrollbar pb-2">
       <BarChart
         dataset={filteredDataset}
 

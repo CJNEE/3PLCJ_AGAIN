@@ -598,39 +598,48 @@ export const AdminDashboard = () => {
           );
         })}
     </MapContainer>
+  </div>
 
-    {/* MAP HUB DETAILS (Overlaid at bottom left) */}
-    {selectedMapHub && (
-      <div className="absolute bottom-4 left-4 right-4 md:right-auto md:w-80 z-[1000] bg-white dark:bg-[#0F172A] rounded-xl shadow-2xl p-4 border border-gray-200 dark:border-gray-700 fade-in flex flex-col gap-3">
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="font-semibold text-sm text-gray-900 dark:text-white flex items-center gap-2">
-              {selectedMapHub.name}
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              {selectedMapHub.location || selectedMapHub.city}
-            </p>
-          </div>
-          <button 
-            onClick={() => setSelectedMapHub(null)}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-lg leading-none"
-          >
-            &times;
-          </button>
+  {/* MAP HUB DETAILS (Placed Below Map) */}
+  {selectedMapHub && (
+    <div className="bg-white dark:bg-[#0F172A] border-t border-gray-200 dark:border-gray-800 p-4 fade-in flex flex-col md:flex-row gap-4 items-start md:items-center justify-between z-10 relative">
+      <div className="flex justify-between items-start w-full md:w-auto">
+        <div>
+          <h3 className="font-semibold text-sm text-gray-900 dark:text-white flex items-center gap-2">
+            {selectedMapHub.name}
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+          </h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+            {selectedMapHub.location || selectedMapHub.city}
+          </p>
         </div>
-        <div className="rounded-lg bg-gray-50 dark:bg-gray-800/50 px-3 py-2 flex items-center justify-between border border-gray-100 dark:border-gray-800">
+        <button 
+          onClick={() => setSelectedMapHub(null)}
+          className="text-gray-400 hover:text-red-500 dark:hover:text-red-400 text-lg leading-none md:hidden ml-4"
+        >
+          &times;
+        </button>
+      </div>
+
+      <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
+        <div className="rounded-lg bg-gray-50 dark:bg-gray-800/50 px-3 py-2 flex items-center gap-3 border border-gray-100 dark:border-gray-800 w-full md:w-auto justify-between">
           <span className="text-xs text-gray-500 dark:text-gray-400">Employees</span>
           <span className="text-sm font-bold text-gray-900 dark:text-white">
             {allEmployees.filter((emp: any) => emp.hub === selectedMapHub.id).length}
           </span>
         </div>
-        <div className="text-[10px] text-gray-400">
-          {getHubCoordinates(selectedMapHub)[0].toFixed(4)}, {getHubCoordinates(selectedMapHub)[1].toFixed(4)}
+        
+        <div className="hidden md:flex flex-col items-end gap-1 ml-2">
+          <button 
+            onClick={() => setSelectedMapHub(null)}
+            className="text-gray-400 hover:text-red-500 text-xs font-medium bg-transparent px-2 py-1 rounded transition-colors"
+          >
+            Close
+          </button>
         </div>
       </div>
-    )}
-  </div>
+    </div>
+  )}
 </Card>
         
 
