@@ -46,8 +46,8 @@ export default function HubsEmployeeChart({ hubsData = [], employees = [] }: Pro
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
   const chartHeight = isMobile ? 160 : 450;
-  const itemWidth = isMobile ? 40 : 100;
-  const chartWidth = Math.max(isMobile ? 150 : 300, filteredDataset.length * itemWidth);
+  const itemWidth = isMobile ? 55 : 130;
+  const chartWidth = Math.max(isMobile ? 280 : 800, filteredDataset.length * itemWidth);
   const legendFontSize = isMobile ? 6 : 12;
   const tickFontSize = isMobile ? 6 : 11;
   const marginConfig = isMobile 
@@ -75,7 +75,7 @@ export default function HubsEmployeeChart({ hubsData = [], employees = [] }: Pro
         series={[
           { dataKey: 'active', label: 'Active', color: '#22C55E' },
           { dataKey: 'awol', label: 'AWOL', color: '#F59E0B' },
-          { dataKey: 'resign', label: 'Resigned', color: '#3B82F6' },
+          { dataKey: 'resign', label: 'Resign', color: '#3B82F6' },
           { dataKey: 'blacklist', label: 'Blacklist', color: '#EF4444' },
         ]}
 
@@ -90,6 +90,7 @@ export default function HubsEmployeeChart({ hubsData = [], employees = [] }: Pro
               fill: textColor,
               fontSize: tickFontSize,
             },
+            tickMinStep: 1,
           },
         ]}
 

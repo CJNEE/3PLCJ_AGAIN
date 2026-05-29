@@ -799,6 +799,9 @@ export const AdminDashboard = () => {
         </div>
       </Card>
 
+    </div> {/* closes p-4 lg:p-6 lg:ml-64 space-y-6 pb-20 lg:pb-6 */}
+  </div> {/* closes hidden md:block min-h-screen bg-gray-50 dark:bg-dark-bg */}
+
       {/* Employee Details Modal */}
       {showEmployeeModal && selectedEmployee && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && setShowEmployeeModal(false)}>
@@ -1095,10 +1098,6 @@ export const AdminDashboard = () => {
         </div>
             )}
 
-
-
-      </div>
-  </div>
     </>
   );
 };

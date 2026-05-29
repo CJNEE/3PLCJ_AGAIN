@@ -6,6 +6,8 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import HubsEmployeeChart from '@/components/HubsEmployeeChart';
+import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 // Shared Colors from AdminDashboard
 const STATUS_COLORS: Record<string, string> = {
@@ -62,6 +64,15 @@ export const MobileAdminDashboardView = ({
   setSelectedEmployee, setShowEmployeeModal
 }: any) => {
 
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+  const [showProfileDropdown, setShowProfileDropdown] = React.useState(false);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   const [showMapSearch, setShowMapSearch] = React.useState(false);
 
   const filteredHubs = React.useMemo(() => {
@@ -104,12 +115,33 @@ export const MobileAdminDashboardView = ({
           <h1 className="text-2xl font-bold text-white tracking-tight">Dashboard</h1>
           <p className="text-[10px] text-gray-400 uppercase tracking-wider mt-1">3PL BUSINESS SOLUTIONS | Admin overview</p>
         </div>
-        <div className="flex items-center gap-2 bg-[#111827] px-3 py-1.5 rounded-full border border-gray-800">
+        <div 
+          onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+          className="relative flex items-center gap-2 bg-[#111827] px-3 py-1.5 rounded-full border border-gray-800 cursor-pointer active:bg-gray-800 transition-all select-none"
+        >
           <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center">
             <User className="w-3.5 h-3.5 text-gray-300" />
           </div>
           <span className="text-xs font-medium text-gray-300">Admin</span>
           <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+
+          {showProfileDropdown && (
+            <div className="absolute right-0 top-full mt-2 w-36 bg-[#111827] border border-gray-800 rounded-xl shadow-xl p-1 z-[9999]">
+              <div className="px-3 py-1.5 border-b border-gray-800 text-[9px] text-gray-500 font-bold uppercase tracking-wider">
+                Admin Panel
+              </div>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleLogout();
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs text-red-400 hover:bg-red-500/10 active:bg-red-500/20 rounded-lg transition-colors"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Logout</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -282,7 +314,7 @@ export const MobileAdminDashboardView = ({
           
           <div className="h-[250px] w-full bg-[#0B1120]">
             <MapContainer center={[12.8797, 121.774]} zoom={5} zoomControl={false} attributionControl={false} style={{ width: '100%', height: '100%', background: '#0B1120' }}>
-              <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+              <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
               <FitBoundsComponent mapHubs={filteredHubs} getCoords={getHubCoordinates} />
               {filteredHubs.map((hub: any) => {
                 const [lat, lng] = getHubCoordinates(hub);
@@ -367,7 +399,7 @@ export const MobileAdminDashboardView = ({
             </table>
           </div>
           <div className="p-3 border-t border-gray-800 text-center">
-            <button className="text-[11px] text-gray-400 hover:text-white transition-colors">View all employees &gt;</button>
+            <button onClick={() => navigate('/admin/employees')} className="text-[11px] text-gray-400 hover:text-white transition-colors">View all employees &gt;</button>
           </div>
         </Card>
 
@@ -412,7 +444,7 @@ export const MobileAdminDashboardView = ({
             </table>
           </div>
           <div className="p-3 border-t border-gray-800 text-center">
-            <button className="text-[11px] text-gray-400 hover:text-white transition-colors">View all hubs &gt;</button>
+            <button onClick={() => navigate('/admin/hubs')} className="text-[11px] text-gray-400 hover:text-white transition-colors">View all hubs &gt;</button>
           </div>
         </Card>
 
@@ -420,24 +452,24 @@ export const MobileAdminDashboardView = ({
 
       {/* Floating Bottom Nav */}
       <div className="fixed bottom-0 left-0 right-0 h-16 bg-[#0B1120] border-t border-gray-800 flex justify-around items-center px-2 z-[9000]">
-        <div className="flex flex-col items-center justify-center w-16 gap-1 cursor-pointer">
+        <div onClick={() => navigate('/admin')} className="flex flex-col items-center justify-center w-16 gap-1 cursor-pointer">
           <Home className="w-5 h-5 text-blue-500" />
           <span className="text-[9px] text-blue-500 font-medium">Dashboard</span>
         </div>
-        <div className="flex flex-col items-center justify-center w-16 gap-1 cursor-pointer">
+        <div onClick={() => navigate('/admin/hubs')} className="flex flex-col items-center justify-center w-16 gap-1 cursor-pointer">
           <MapPin className="w-5 h-5 text-gray-500" />
           <span className="text-[9px] text-gray-500">Hubs</span>
         </div>
         <div className="relative -top-5">
-          <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.5)] cursor-pointer">
+          <div onClick={() => navigate('/admin/employees')} className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.5)] cursor-pointer">
             <Plus className="w-6 h-6 text-white" />
           </div>
         </div>
-        <div className="flex flex-col items-center justify-center w-16 gap-1 cursor-pointer">
+        <div onClick={() => navigate('/admin/employees')} className="flex flex-col items-center justify-center w-16 gap-1 cursor-pointer">
           <Users className="w-5 h-5 text-gray-500" />
           <span className="text-[9px] text-gray-500">Employees</span>
         </div>
-        <div className="flex flex-col items-center justify-center w-16 gap-1 cursor-pointer">
+        <div onClick={() => navigate('/admin/edit-requests')} className="flex flex-col items-center justify-center w-16 gap-1 cursor-pointer">
           <FileText className="w-5 h-5 text-gray-500" />
           <span className="text-[9px] text-gray-500">Edit</span>
         </div>
