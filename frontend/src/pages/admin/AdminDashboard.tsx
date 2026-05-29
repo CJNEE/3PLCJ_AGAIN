@@ -143,6 +143,7 @@ export const AdminDashboard = () => {
   const [searchLocationTerm, setSearchLocationTerm] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
+  const [selectedMapHub, setSelectedMapHub] = useState<any>(null);
 
 
   // Create beautiful custom SVG markers for Leaflet (remove ugly black shadows)
@@ -592,79 +593,43 @@ export const AdminDashboard = () => {
               key={hub.id}
               position={[lat, lng]}
               icon={modernMarker}
-            >
-              <Popup
-                autoPan={true}
-                keepInView={true}
-                closeButton={false}
-                offset={[0, -10]}
-              >
-                <div className="min-w-[190px]">
-                  {/* TOP */}
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-semibold text-sm">
-                        {hub.name}
-                      </h3>
-
-                      <p className="text-xs text-gray-500">
-                        {hub.location || hub.city}
-                      </p>
-                    </div>
-
-                    <div
-                      className="
-                        w-2
-                        h-2
-
-                        rounded-full
-
-                        bg-green-500
-
-                        animate-pulse
-                      "
-                    />
-                  </div>
-
-                  {/* STATS */}
-                  <div
-                    className="
-                      mt-3
-
-                      rounded-lg
-
-                      bg-gray-100
-
-                      px-3
-                      py-2
-                    "
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-500">
-                        Employees
-                      </span>
-
-                      <span className="text-sm font-bold text-gray-900">
-                        {
-                          allEmployees.filter(
-                            (emp: any) =>
-                              emp.hub === hub.id
-                          ).length
-                        }
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* COORDS */}
-                  <div className="mt-2 text-[10px] text-gray-400">
-                    {lat.toFixed(4)}, {lng.toFixed(4)}
-                  </div>
-                </div>
-              </Popup>
-            </Marker>
+              eventHandlers={{ click: () => setSelectedMapHub(hub) }}
+            />
           );
         })}
     </MapContainer>
+
+    {/* MAP HUB DETAILS (Overlaid at bottom left) */}
+    {selectedMapHub && (
+      <div className="absolute bottom-4 left-4 right-4 md:right-auto md:w-80 z-[1000] bg-white dark:bg-[#0F172A] rounded-xl shadow-2xl p-4 border border-gray-200 dark:border-gray-700 fade-in flex flex-col gap-3">
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="font-semibold text-sm text-gray-900 dark:text-white flex items-center gap-2">
+              {selectedMapHub.name}
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            </h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              {selectedMapHub.location || selectedMapHub.city}
+            </p>
+          </div>
+          <button 
+            onClick={() => setSelectedMapHub(null)}
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-lg leading-none"
+          >
+            &times;
+          </button>
+        </div>
+        <div className="rounded-lg bg-gray-50 dark:bg-gray-800/50 px-3 py-2 flex items-center justify-between border border-gray-100 dark:border-gray-800">
+          <span className="text-xs text-gray-500 dark:text-gray-400">Employees</span>
+          <span className="text-sm font-bold text-gray-900 dark:text-white">
+            {allEmployees.filter((emp: any) => emp.hub === selectedMapHub.id).length}
+          </span>
+        </div>
+        <div className="text-[10px] text-gray-400">
+          {getHubCoordinates(selectedMapHub)[0].toFixed(4)}, {getHubCoordinates(selectedMapHub)[1].toFixed(4)}
+        </div>
+      </div>
+    )}
   </div>
 </Card>
         
@@ -681,7 +646,7 @@ export const AdminDashboard = () => {
             <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-[#EF4444]"></div><span className="text-xs text-gray-600 dark:text-gray-400">Blacklist</span></div>
           </div>
 
-          <div className="min-h-[250px] w-full overflow-x-auto">
+          <div className="min-h-[250px] w-full overflow-x-auto thin-scrollbar pb-2">
             {hubEmployeeData.length > 0 && allEmployees.length > 0 ? (
               <HubsEmployeeChart hubsData={hubs} employees={allEmployees} />
             ) : (

@@ -34,6 +34,23 @@ body {
   @apply bg-gray-400 dark:bg-gray-600 rounded-full hover:bg-gray-500 dark:hover:bg-gray-500;
 }
 
+/* Thin Scrollbar for Charts */
+.thin-scrollbar::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 8px;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #4B5563;
+}
+
 /* Custom animations */
 .fade-in {
   animation: fadeIn 0.3s ease-in-out;

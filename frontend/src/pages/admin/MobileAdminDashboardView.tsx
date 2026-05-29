@@ -347,7 +347,7 @@ export const MobileAdminDashboardView = ({
             <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-[#EF4444]"></div><span className="text-[10px] text-gray-400">Blacklist</span></div>
           </div>
           
-          <div className="h-[220px] w-full overflow-x-auto hide-scrollbar">
+          <div className="h-[220px] w-full overflow-x-auto thin-scrollbar pb-2">
             {hubEmployeeData.length > 0 ? (
                <HubsEmployeeChart hubsData={hubs} employees={allEmployees} />
             ) : (
