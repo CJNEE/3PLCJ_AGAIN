@@ -672,13 +672,38 @@ export const AdminDashboard = () => {
         {/* Hub Employee Distribution */}
         <Card className="p-4 md:p-6 overflow-hidden">
           <h2 className="text-sm md:text-lg font-semibold mb-3 md:mb-4">Hub Employee Distribution</h2>
-          <div className="min-h-[250px] w-full">
+
+          {/* Fixed Legend */}
+          <div className="flex items-center gap-5 mb-4 flex-wrap">
+            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-[#22C55E]"></div><span className="text-xs text-gray-600 dark:text-gray-400">Active</span></div>
+            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-[#F59E0B]"></div><span className="text-xs text-gray-600 dark:text-gray-400">AWOL</span></div>
+            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-[#6B7280]"></div><span className="text-xs text-gray-600 dark:text-gray-400">Resign</span></div>
+            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-[#EF4444]"></div><span className="text-xs text-gray-600 dark:text-gray-400">Blacklist</span></div>
+          </div>
+
+          <div className="min-h-[250px] w-full overflow-x-auto">
             {hubEmployeeData.length > 0 && allEmployees.length > 0 ? (
               <HubsEmployeeChart hubsData={hubs} employees={allEmployees} />
             ) : (
               <EmptyState title="No hub data" />
             )}
           </div>
+
+          {/* Insight Box */}
+          {hubEmployeeData.length > 0 && (
+            <div className="mt-4 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-md bg-gray-200 dark:bg-gray-800 flex items-center justify-center shrink-0 border border-gray-300 dark:border-gray-700">
+                <div className="flex gap-0.5 items-end h-3.5">
+                  <div className="w-1 h-2 bg-gray-400 dark:bg-gray-500 rounded-sm"></div>
+                  <div className="w-1 h-3.5 bg-gray-600 dark:bg-gray-300 rounded-sm"></div>
+                  <div className="w-1 h-1.5 bg-gray-400 dark:bg-gray-500 rounded-sm"></div>
+                </div>
+              </div>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                <span className="text-gray-900 dark:text-white font-medium">{hubEmployeeData.reduce((prev: any, current: any) => (prev.Active > current.Active) ? prev : current).name} Hub</span> has the highest number of active employees.
+              </p>
+            </div>
+          )}
         </Card>
       </div>
 
@@ -769,7 +794,7 @@ export const AdminDashboard = () => {
                   <tr>
                     <th className="px-3 md:px-4 py-2 md:py-3 text-left font-medium">Hub Name</th>
                     <th className="px-3 md:px-4 py-2 md:py-3 text-left font-medium">Location</th>
-                    <th className="px-3 md:px-4 py-2 md:py-3 text-left font-medium">Employees</th>
+                    <th className="px-3 md:px-4 py-2 md:py-3 text-center font-medium">Employees</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -786,7 +811,7 @@ export const AdminDashboard = () => {
                         <tr key={hub.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                           <td className="px-3 md:px-4 py-2 md:py-3 font-semibold text-gray-900 dark:text-white">{hub.name}</td>
                           <td className="px-3 md:px-4 py-2 md:py-3 text-gray-700 dark:text-gray-300">{hub.location || hub.city || 'N/A'}</td>
-                          <td className="px-3 md:px-4 py-2 md:py-3 font-semibold text-red-700">{hubEmployeeCount}</td>
+                          <td className="px-3 md:px-4 py-2 md:py-3 font-semibold text-red-700 text-center">{hubEmployeeCount}</td>
                         </tr>
                       );
                     })}

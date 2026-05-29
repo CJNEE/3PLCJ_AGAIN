@@ -45,14 +45,14 @@ export default function HubsEmployeeChart({ hubsData = [], employees = [] }: Pro
   const gridColor = isDarkMode ? '#4B5563' : '#E5E7EB';
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-  const chartHeight = isMobile ? 160 : 450;
+  const chartHeight = isMobile ? 200 : 450;
   const itemWidth = isMobile ? 55 : 130;
   const chartWidth = Math.max(isMobile ? 280 : 800, filteredDataset.length * itemWidth);
   const legendFontSize = isMobile ? 6 : 12;
   const tickFontSize = isMobile ? 6 : 11;
   const marginConfig = isMobile 
-    ? { top: 20, left: 30, bottom: 20, right: 10 } 
-    : { top: 40, left: 60 };
+    ? { top: 5, left: 30, bottom: 20, right: 10 } 
+    : { top: 5, left: 60 };
 
   return (
     <div style={{ width: '100%', overflowX: 'auto', overflowY: 'hidden' }} className="scrollbar-hide">
@@ -75,7 +75,7 @@ export default function HubsEmployeeChart({ hubsData = [], employees = [] }: Pro
         series={[
           { dataKey: 'active', label: 'Active', color: '#22C55E' },
           { dataKey: 'awol', label: 'AWOL', color: '#F59E0B' },
-          { dataKey: 'resign', label: 'Resign', color: '#3B82F6' },
+          { dataKey: 'resign', label: 'Resign', color: '#6B7280' },
           { dataKey: 'blacklist', label: 'Blacklist', color: '#EF4444' },
         ]}
 
@@ -126,11 +126,7 @@ export default function HubsEmployeeChart({ hubsData = [], employees = [] }: Pro
           },
           // Legend layout & text
           '& .MuiChartsLegend-root': {
-            gap: isMobile ? '4px !important' : '16px !important',
-            marginBlock: isMobile ? '2px !important' : '8px !important',
-            marginInline: isMobile ? '2px !important' : '8px !important',
-            paddingInlineStart: '0 !important',
-            justifyContent: 'center',
+            display: 'none !important',
           },
           '& .MuiChartsLegend-series': {
             gap: isMobile ? '2px !important' : '8px !important',

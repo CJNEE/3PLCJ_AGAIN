@@ -1,13 +1,14 @@
 import React from 'react';
 import { Card, Badge, EmptyState } from '@/components/common';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-import { Search, MapPin, Users, ChevronDown, User, LogOut, Home, FileText, Plus } from 'lucide-react';
+import { Search, MapPin, Users, ChevronDown, User, LogOut, Home, FileText, Plus, Sun, Moon } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import HubsEmployeeChart from '@/components/HubsEmployeeChart';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '@/context/ThemeContext';
 
 // Shared Colors from AdminDashboard
 const STATUS_COLORS: Record<string, string> = {
@@ -66,6 +67,7 @@ export const MobileAdminDashboardView = ({
 
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const [showProfileDropdown, setShowProfileDropdown] = React.useState(false);
 
   const handleLogout = () => {
@@ -130,6 +132,16 @@ export const MobileAdminDashboardView = ({
               <div className="px-3 py-1.5 border-b border-gray-800 text-[9px] text-gray-500 font-bold uppercase tracking-wider">
                 Admin Panel
               </div>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleDarkMode();
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs text-gray-300 hover:bg-gray-700/50 active:bg-gray-700 rounded-lg transition-colors"
+              >
+                {isDarkMode ? <Sun className="w-3.5 h-3.5 text-yellow-400" /> : <Moon className="w-3.5 h-3.5 text-blue-400" />}
+                <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
+              </button>
               <button 
                 onClick={(e) => {
                   e.stopPropagation();
@@ -211,10 +223,6 @@ export const MobileAdminDashboardView = ({
                 })}
               </div>
             </div>
-            <div className="mt-4 pt-3 border-t border-gray-800 flex justify-between items-center text-xs">
-              <span className="text-gray-500">Total Employees</span>
-              <span className="text-gray-400 font-medium">{totalEmployees}</span>
-            </div>
           </Card>
 
           {/* Employment Type */}
@@ -239,10 +247,6 @@ export const MobileAdminDashboardView = ({
                 );
               })}
             </div>
-            <div className="mt-4 pt-3 border-t border-gray-800 flex justify-between items-center text-xs">
-              <span className="text-gray-500">Total Employees</span>
-              <span className="text-gray-400 font-medium">{totalEmployees}</span>
-            </div>
           </Card>
 
           {/* Workforce Status */}
@@ -256,10 +260,6 @@ export const MobileAdminDashboardView = ({
                   <span className="text-[11px] font-semibold" style={{ color: STATUS_COLORS[entry.name] }}>{entry.value}</span>
                 </div>
               ))}
-            </div>
-            <div className="mt-4 pt-3 border-t border-gray-800 flex justify-between items-center text-xs">
-              <span className="text-gray-500">Total Employees</span>
-              <span className="text-gray-400 font-medium">{totalEmployees}</span>
             </div>
           </Card>
 
@@ -332,14 +332,22 @@ export const MobileAdminDashboardView = ({
 
         {/* Hub Employee Distribution Chart */}
         <Card className="bg-[#111827] border-gray-800 p-4">
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 mb-3">
             <div className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center border border-gray-700">
               <Users className="w-4 h-4 text-gray-300" />
             </div>
             <h3 className="text-sm font-semibold text-white">Hub Employee Distribution</h3>
           </div>
+
+          {/* Fixed Legend */}
+          <div className="flex items-center gap-4 mb-3 flex-wrap">
+            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-[#22C55E]"></div><span className="text-[10px] text-gray-400">Active</span></div>
+            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-[#F59E0B]"></div><span className="text-[10px] text-gray-400">AWOL</span></div>
+            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-[#6B7280]"></div><span className="text-[10px] text-gray-400">Resign</span></div>
+            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-[#EF4444]"></div><span className="text-[10px] text-gray-400">Blacklist</span></div>
+          </div>
           
-          <div className="h-[180px] w-full">
+          <div className="h-[220px] w-full overflow-x-auto hide-scrollbar">
             {hubEmployeeData.length > 0 ? (
                <HubsEmployeeChart hubsData={hubs} employees={allEmployees} />
             ) : (
@@ -418,7 +426,7 @@ export const MobileAdminDashboardView = ({
                 <tr>
                   <th className="px-4 py-2.5 font-medium">Hub Name</th>
                   <th className="px-4 py-2.5 font-medium">Location</th>
-                  <th className="px-4 py-2.5 font-medium">Employees</th>
+                  <th className="px-4 py-2.5 font-medium text-center">Employees</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800">
@@ -436,7 +444,7 @@ export const MobileAdminDashboardView = ({
                       <tr key={hub.id} className="hover:bg-gray-800/30 transition-colors">
                         <td className="px-4 py-3 text-gray-200">{hub.name}</td>
                         <td className="px-4 py-3 text-gray-400">{hub.location || hub.city || 'N/A'}</td>
-                        <td className="px-4 py-3 font-semibold text-emerald-500">{cnt}</td>
+                        <td className="px-4 py-3 font-semibold text-emerald-500 text-center">{cnt}</td>
                       </tr>
                     )
                   })}
