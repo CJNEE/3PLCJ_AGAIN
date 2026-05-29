@@ -1,4 +1,3 @@
-
 import React, {
   useState,
   useMemo,
@@ -11,14 +10,9 @@ import {
   LoadingSpinner
 } from '@/components/common';
 
-import { GlassCard } from '@/components/GlassCard';
-
 import {
   useGetHubs,
-  useGetEmployees,
-  useCreateHub,
-  useDeleteHub,
-  useUpdateHub
+  useGetEmployees
 } from '@/hooks/useQueries';
 
 import {
@@ -26,18 +20,11 @@ import {
   X,
   Search,
   Navigation,
-  ChevronLeft,
-  ChevronRight,
   Users,
   Footprints,
   Bike,
   Car,
-  Plus,
-  Route,
-  Shield,
-  Building2,
-  CloudSun,
-  Clock3
+  Plus
 } from 'lucide-react';
 
 import { normalizeApiResponse } from '@/utils/apiResponseHandler';
@@ -60,17 +47,48 @@ import { fetchWeather } from '@/utils/weather';
 
 import { useAuth } from '@/hooks/useAuth';
 
-const OSRM_BASE = 'https://router.project-osrm.org/route/v1';
+// ===============================
+// CONSTANTS
+// ===============================
 
-// ===============================
-// BETTER SPEEDS
-// ===============================
+const OSRM_BASE =
+  'https://router.project-osrm.org/route/v1';
 
 const WALKING_SPEED_KMH = 4.8;
 const CYCLING_SPEED_KMH = 15;
 const DRIVING_SPEED_KMH = 35;
 
 // ===============================
+// TYPES
+// ===============================
+
+interface Hub {
+  id: number;
+  name: string;
+  location?: string;
+  city?: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+interface Employee {
+  id: number;
+  hub: number;
+  full_name?: string;
+  position?: string;
+  status?: string;
+}
+
+interface WeatherData {
+  temp: number;
+  label: string;
+  icon: string;
+}
+
+interface HubState {
+  selectedHub: Hub | null;
+}
 
 export type ParsedOsrmRoute = {
   coordinates: [number, number][];
@@ -84,6 +102,10 @@ export type ParsedOsrmRoute = {
   turnCount: number;
 };
 
+// ===============================
+// UTILITIES
+// ===============================
+
 function estimateTravelTime(
   distanceMeters: number,
   speedKmH: number
@@ -95,17 +117,84 @@ function estimateTravelTime(
   return Math.round(hours * 3600);
 }
 
+function formatDistance(
+  meters: number
+) {
+  return `${(
+    meters / 1000
+  ).toFixed(1)} km`;
+}
+
+function formatDuration(
+  seconds: number
+) {
+  const mins = Math.round(
+    seconds / 60
+  );
+
+  if (mins < 60) {
+    return `${mins} mins`;
+  }
+
+  const hrs = Math.floor(
+    mins / 60
+  );
+
+  const rem = mins % 60;
+
+  return `${hrs}h ${rem}m`;
+}
+
+// ===============================
+// OSRM PARSER
+// ===============================
+
 function parseOsrmResponse(
-  data: any,
-  mode: 'walking' | 'cycling' | 'driving'
+  data: unknown,
+  mode:
+    | 'walking'
+    | 'cycling'
+    | 'driving'
 ): ParsedOsrmRoute | null {
-  if (!data?.routes?.length) return null;
 
-  const route = data.routes[0];
+  const routeData = data as {
+    routes?: Array<{
+      distance: number;
+      duration: number;
+      geometry: {
+        coordinates: [number, number][];
+      };
+      legs?: Array<{
+        steps?: Array<{
+          distance?: number;
+          duration?: number;
+          maneuver?: {
+            instruction?: string;
+            type?: string;
+          };
+        }>;
+      }>;
+    }>;
+  };
 
-  const coordinates: [number, number][] =
+  if (
+    !routeData?.routes?.length
+  ) {
+    return null;
+  }
+
+  const route =
+    routeData.routes[0];
+
+  const coordinates:
+    [number, number][] =
     route.geometry.coordinates.map(
-      (coord: [number, number]) => [
+      (
+        coord: [
+          number,
+          number
+        ]
+      ) => [
         coord[1],
         coord[0]
       ]
@@ -119,549 +208,774 @@ function parseOsrmResponse(
 
   let turnCount = 0;
 
-  route.legs?.forEach((leg: any) => {
-    (leg.steps || []).forEach((step: any) => {
-      const instr = step.maneuver?.instruction;
+  route.legs?.forEach(
+    (leg) => {
 
-      if (instr) {
-        turns.push({
-          instruction: instr,
-          distance: Math.round(step.distance ?? 0),
-          duration: Math.round(step.duration ?? 0)
-        });
-      }
+      leg.steps?.forEach(
+        (step) => {
 
-      const t = step.maneuver?.type;
+          const instr =
+            step.maneuver
+              ?.instruction;
 
-      if (
-        t &&
-        t !== 'depart' &&
-        t !== 'arrive'
-      ) {
-        turnCount += 1;
-      }
-    });
-  });
+          if (instr) {
 
-  // ===============================
-  // BETTER DURATION ESTIMATION
-  // ===============================
+            turns.push({
+              instruction:
+                instr,
+              distance:
+                Math.round(
+                  step.distance ??
+                    0
+                ),
+              duration:
+                Math.round(
+                  step.duration ??
+                    0
+                )
+            });
 
-  let duration = route.duration;
+          }
+
+          const t =
+            step.maneuver?.type;
+
+          if (
+            t &&
+            t !== 'depart' &&
+            t !== 'arrive'
+          ) {
+            turnCount += 1;
+          }
+
+        }
+      );
+    }
+  );
+
+  let duration =
+    route.duration;
 
   if (mode === 'walking') {
-    duration = estimateTravelTime(
-      route.distance,
-      WALKING_SPEED_KMH
-    );
+    duration =
+      estimateTravelTime(
+        route.distance,
+        WALKING_SPEED_KMH
+      );
   }
 
   if (mode === 'cycling') {
-    duration = estimateTravelTime(
-      route.distance,
-      CYCLING_SPEED_KMH
-    );
+    duration =
+      estimateTravelTime(
+        route.distance,
+        CYCLING_SPEED_KMH
+      );
   }
 
   if (mode === 'driving') {
-    duration = estimateTravelTime(
-      route.distance,
-      DRIVING_SPEED_KMH
-    );
+    duration =
+      estimateTravelTime(
+        route.distance,
+        DRIVING_SPEED_KMH
+      );
   }
 
   return {
     coordinates,
-    distanceM: route.distance,
+    distanceM:
+      route.distance,
     durationSec: duration,
     turns,
     turnCount
   };
 }
 
+// ===============================
+// FETCH ROUTE
+// ===============================
+
 async function fetchOsrmProfile(
   profile: string,
-  mode: 'walking' | 'cycling' | 'driving',
+  mode:
+    | 'walking'
+    | 'cycling'
+    | 'driving',
   startLat: number,
   startLon: number,
   endLat: number,
   endLon: number
 ): Promise<ParsedOsrmRoute | null> {
+
   const url =
     `${OSRM_BASE}/${profile}/${startLon},${startLat};${endLon},${endLat}` +
     `?steps=true&geometries=geojson&overview=full`;
 
-  const response = await fetch(url);
+  const response =
+    await fetch(url);
 
-  const data = await response.json();
+  const data =
+    await response.json();
 
-  return parseOsrmResponse(data, mode);
+  return parseOsrmResponse(
+    data,
+    mode
+  );
 }
 
-function formatDistance(meters: number) {
-  return `${(meters / 1000).toFixed(1)} km`;
-}
+// ===============================
+// MAIN COMPONENT
+// ===============================
 
-function formatDuration(seconds: number) {
-  const mins = Math.round(seconds / 60);
+export const AdminHubsPage =
+  () => {
 
-  if (mins < 60) {
-    return `${mins} mins`;
-  }
+    useAuth();
 
-  const hrs = Math.floor(mins / 60);
+    const [
+      searchTerm,
+      setSearchTerm
+    ] = useState('');
 
-  const rem = mins % 60;
+    const [
+      employeeSearch,
+      setEmployeeSearch
+    ] = useState('');
 
-  return `${hrs}h ${rem}m`;
-}
+    const [
+      currentPage,
+      setCurrentPage
+    ] = useState(1);
 
-interface HubState {
-  selectedHub: any | null;
-}
+    const itemsPerPage = 10;
 
-export const AdminHubsPage = () => {
-  const { canViewEmployees } = useAuth();
-
-  const [searchTerm, setSearchTerm] =
-    useState('');
-
-  const [employeeSearch, setEmployeeSearch] =
-    useState('');
-
-  const [currentPage, setCurrentPage] =
-    useState(1);
-
-  const itemsPerPage = 10;
-
-  const [hubState, setHubState] =
-    useState<HubState>({
+    const [
+      hubState,
+      setHubState
+    ] = useState<HubState>({
       selectedHub: null
     });
 
-  const [sidebarOpen, setSidebarOpen] =
-    useState(false);
+    const [
+      sidebarOpen,
+      setSidebarOpen
+    ] = useState(false);
 
-  const [userLocation, setUserLocation] =
-    useState<[number, number] | null>(null);
+    const [
+      userLocation,
+      setUserLocation
+    ] = useState<
+      [number, number] | null
+    >(null);
 
-  const [showDirections, setShowDirections] =
-    useState(false);
+    const [
+      showDirections,
+      setShowDirections
+    ] = useState(false);
 
-  const [routeData, setRouteData] =
-    useState<any>(null);
+    const [
+      routeData,
+      setRouteData
+    ] = useState<{
+      walking: ParsedOsrmRoute;
+      riding: ParsedOsrmRoute;
+      car: ParsedOsrmRoute;
+    } | null>(null);
 
-  const [weatherData, setWeatherData] =
-    useState<any>(null);
-
-  const [loadingRoute, setLoadingRoute] =
-    useState(false);
-
-  const mapRef = useRef(null);
-
-  const { data, isLoading } = useGetHubs();
-
-  const { data: employeesData } =
-    useGetEmployees();
-
-  const createHubMutation =
-    useCreateHub();
-
-  const updateHubMutation =
-    useUpdateHub();
-
-  const deleteHubMutation =
-    useDeleteHub();
-
-  const [showAddModal, setShowAddModal] =
-    useState(false);
-
-  const [editingHubId, setEditingHubId] =
-    useState<number | null>(null);
-
-  const [newHub, setNewHub] = useState({
-    name: '',
-    location: '',
-    city: 'Quezon',
-    address: '',
-    latitude: 14.676,
-    longitude: 121.0437
-  });
-
-  const hubs = normalizeApiResponse(data);
-
-  const allEmployees =
-    normalizeApiResponse(employeesData);
-
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation([
-            position.coords.latitude,
-            position.coords.longitude
-          ]);
-        }
+    const [
+      weatherData,
+      setWeatherData
+    ] =
+      useState<WeatherData | null>(
+        null
       );
-    }
-  }, []);
 
-  const cityCoords: Record<
-    string,
-    [number, number]
-  > = {
-    manila: [14.5995, 120.9842],
-    quezon: [14.676, 121.0437],
-    cebu: [10.3157, 123.8854],
-    davao: [7.0731, 125.6121]
-  };
+    const [
+      loadingRoute,
+      setLoadingRoute
+    ] = useState(false);
 
-  const getHubCoordinates = (
-    hub: any
-  ): [number, number] => {
-    if (hub.latitude && hub.longitude) {
-      return [hub.latitude, hub.longitude];
-    }
+    const mapRef =
+      useRef<L.Map | null>(
+        null
+      );
 
-    const city = hub.city?.toLowerCase();
+    const {
+      data,
+      isLoading
+    } = useGetHubs();
 
-    return (
-      cityCoords[city] || [
+    const {
+      data: employeesData
+    } = useGetEmployees();
+
+    const hubs: Hub[] =
+      normalizeApiResponse(
+        data
+      );
+
+    const allEmployees:
+      Employee[] =
+      normalizeApiResponse(
+        employeesData
+      );
+
+    // ===============================
+    // GEOLOCATION
+    // ===============================
+
+    useEffect(() => {
+
+      if (
+        navigator.geolocation
+      ) {
+
+        navigator.geolocation.getCurrentPosition(
+          (
+            position
+          ) => {
+
+            setUserLocation([
+              position.coords
+                .latitude,
+              position.coords
+                .longitude
+            ]);
+
+          }
+        );
+
+      }
+
+    }, []);
+
+    // ===============================
+    // WEATHER
+    // ===============================
+
+    useEffect(() => {
+
+      async function loadWeather() {
+
+        try {
+
+          if (
+            hubState.selectedHub
+          ) {
+
+            const coords =
+              getHubCoordinates(
+                hubState.selectedHub
+              );
+
+            const weather =
+              await fetchWeather(
+                coords[0],
+                coords[1]
+              );
+
+            setWeatherData(
+              weather
+            );
+          }
+
+        } catch (
+          error
+        ) {
+
+          console.error(
+            error
+          );
+
+        }
+
+      }
+
+      loadWeather();
+
+    }, [
+      hubState.selectedHub
+    ]);
+
+    // ===============================
+    // COORDS
+    // ===============================
+
+    const cityCoords:
+      Record<
+        string,
+        [number, number]
+      > = {
+      manila: [
         14.5995,
         120.9842
+      ],
+      quezon: [
+        14.6760,
+        121.0437
+      ],
+      cebu: [
+        10.3157,
+        123.8854
+      ],
+      davao: [
+        7.0731,
+        125.6121
       ]
-    );
-  };
+    };
 
-  // ===============================
-  // WEATHER
-  // ===============================
+    const getHubCoordinates =
+      (
+        hub: Hub
+      ): [
+        number,
+        number
+      ] => {
 
-  useEffect(() => {
-    async function loadWeather() {
-      try {
-        if (hubState.selectedHub) {
-          const coords = getHubCoordinates(
+        if (
+          hub.latitude &&
+          hub.longitude
+        ) {
+          return [
+            hub.latitude,
+            hub.longitude
+          ];
+        }
+
+        const city =
+          hub.city?.toLowerCase() ??
+          '';
+
+        return (
+          cityCoords[
+            city
+          ] || [
+            14.5995,
+            120.9842
+          ]
+        );
+
+      };
+
+    // ===============================
+    // ICONS
+    // ===============================
+
+    const hubIcon =
+      useMemo(
+        () =>
+          L.divIcon({
+            className:
+              'custom-hub-marker',
+
+            html: `
+            <div
+              style="
+                width:22px;
+                height:22px;
+                background:#dc2626;
+                border-radius:999px;
+                border:4px solid white;
+                box-shadow:0 8px 20px rgba(220,38,38,.4);
+              "
+            ></div>
+          `,
+
+            iconSize: [
+              22,
+              22
+            ]
+          }),
+        []
+      );
+
+    const userIcon =
+      useMemo(
+        () =>
+          L.divIcon({
+            className:
+              'custom-user-marker',
+
+            html: `
+            <div
+              style="
+                width:22px;
+                height:22px;
+                background:#2563eb;
+                border-radius:999px;
+                border:4px solid white;
+                box-shadow:0 8px 20px rgba(37,99,235,.4);
+              "
+            ></div>
+          `,
+
+            iconSize: [
+              22,
+              22
+            ]
+          }),
+        []
+      );
+
+    // ===============================
+    // FILTERED HUBS
+    // ===============================
+
+    const filteredHubs =
+      useMemo(() => {
+
+        return hubs.filter(
+          (
+            hub: Hub
+          ) =>
+            !searchTerm ||
+
+            hub.name
+              ?.toLowerCase()
+              .includes(
+                searchTerm.toLowerCase()
+              ) ||
+
+            hub.location
+              ?.toLowerCase()
+              .includes(
+                searchTerm.toLowerCase()
+              ) ||
+
+            hub.city
+              ?.toLowerCase()
+              .includes(
+                searchTerm.toLowerCase()
+              )
+        );
+
+      }, [
+        hubs,
+        searchTerm
+      ]);
+
+    const getHubEmployeeCount =
+      (
+        hubId: number
+      ) => {
+
+        return allEmployees.filter(
+          (
+            emp: Employee
+          ) =>
+            emp.hub === hubId
+        ).length;
+
+      };
+
+    const hubEmployeesData =
+      useMemo(() => {
+
+        if (
+          !hubState.selectedHub
+        ) {
+          return [];
+        }
+
+        return allEmployees.filter(
+          (
+            emp: Employee
+          ) =>
+
+            emp.hub ===
+              hubState
+                .selectedHub
+                ?.id &&
+
+            (
+              emp.full_name
+                ?.toLowerCase()
+                .includes(
+                  employeeSearch.toLowerCase()
+                ) ||
+
+              emp.position
+                ?.toLowerCase()
+                .includes(
+                  employeeSearch.toLowerCase()
+                )
+            )
+        );
+
+      }, [
+        hubState.selectedHub,
+        employeeSearch,
+        allEmployees
+      ]);
+
+    const totalPages =
+      Math.ceil(
+        hubEmployeesData.length /
+          itemsPerPage
+      );
+
+    const paginatedEmployees =
+      useMemo(() => {
+
+        const startIdx =
+          (currentPage - 1) *
+          itemsPerPage;
+
+        return hubEmployeesData.slice(
+          startIdx,
+          startIdx +
+            itemsPerPage
+        );
+
+      }, [
+        hubEmployeesData,
+        currentPage
+      ]);
+
+    // ===============================
+    // ROUTES
+    // ===============================
+
+    const fetchRealRoute =
+      async (
+        startLat: number,
+        startLon: number,
+        endLat: number,
+        endLon: number
+      ) => {
+
+        setLoadingRoute(
+          true
+        );
+
+        try {
+
+          const [
+            walking,
+            riding,
+            car
+          ] =
+            await Promise.all([
+              fetchOsrmProfile(
+                'foot',
+                'walking',
+                startLat,
+                startLon,
+                endLat,
+                endLon
+              ),
+
+              fetchOsrmProfile(
+                'cycling',
+                'cycling',
+                startLat,
+                startLon,
+                endLat,
+                endLon
+              ),
+
+              fetchOsrmProfile(
+                'driving',
+                'driving',
+                startLat,
+                startLon,
+                endLat,
+                endLon
+              )
+            ]);
+
+          if (
+            walking &&
+            riding &&
+            car
+          ) {
+
+            setRouteData({
+              walking,
+              riding,
+              car
+            });
+
+            setShowDirections(
+              true
+            );
+
+          }
+
+        } catch (
+          error
+        ) {
+
+          console.error(
+            error
+          );
+
+        } finally {
+
+          setLoadingRoute(
+            false
+          );
+
+        }
+
+      };
+
+    const handleGetDirections =
+      () => {
+
+        if (
+          !userLocation ||
+          !hubState.selectedHub
+        ) {
+          return;
+        }
+
+        const coords =
+          getHubCoordinates(
             hubState.selectedHub
           );
 
-          const weather = await fetchWeather(
-            coords[0],
-            coords[1]
-          );
+        fetchRealRoute(
+          userLocation[0],
+          userLocation[1],
+          coords[0],
+          coords[1]
+        );
 
-          setWeatherData(weather);
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    }
+      };
 
-    loadWeather();
-  }, [hubState.selectedHub]);
+    const handleMarkerClick =
+      (
+        hub: Hub
+      ) => {
 
-  // ===============================
-  // ICONS
-  // ===============================
-
-  const hubIcon = useMemo(
-    () =>
-      L.divIcon({
-        className: '',
-        html: `
-        <div
-          style="
-            width:20px;
-            height:20px;
-            background:#ef4444;
-            border-radius:999px;
-            border:4px solid white;
-            box-shadow:0 8px 20px rgba(239,68,68,.45);
-          "
-        ></div>
-      `,
-        iconSize: [20, 20]
-      }),
-    []
-  );
-
-  const userIcon = useMemo(
-    () =>
-      L.divIcon({
-        className: '',
-        html: `
-        <div
-          style="
-            width:20px;
-            height:20px;
-            background:#3b82f6;
-            border-radius:999px;
-            border:4px solid white;
-            box-shadow:0 8px 20px rgba(59,130,246,.45);
-          "
-        ></div>
-      `,
-        iconSize: [20, 20]
-      }),
-    []
-  );
-
-  // ===============================
-  // FILTERED HUBS
-  // ===============================
-
-  const filteredHubs = useMemo(() => {
-    return hubs.filter((hub: any) => {
-      return (
-        hub.name
-          ?.toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        hub.location
-          ?.toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        hub.city
-          ?.toLowerCase()
-          .includes(searchTerm.toLowerCase())
-      );
-    });
-  }, [searchTerm, hubs]);
-
-  const getHubEmployeeCount = (
-    hubId: number
-  ) => {
-    return allEmployees.filter(
-      (emp: any) => emp.hub === hubId
-    ).length;
-  };
-
-  // ===============================
-  // EMPLOYEE FILTER
-  // ===============================
-
-  const hubEmployeesData = useMemo(() => {
-    if (!hubState.selectedHub) return [];
-
-    return allEmployees.filter((emp: any) => {
-      return (
-        emp.hub ===
-          hubState.selectedHub.id &&
-        (emp.full_name
-          ?.toLowerCase()
-          .includes(
-            employeeSearch.toLowerCase()
-          ) ||
-          emp.position
-            ?.toLowerCase()
-            .includes(
-              employeeSearch.toLowerCase()
-            ))
-      );
-    });
-  }, [
-    hubState.selectedHub,
-    employeeSearch,
-    allEmployees
-  ]);
-
-  const totalPages = Math.ceil(
-    hubEmployeesData.length / itemsPerPage
-  );
-
-  const paginatedEmployees = useMemo(() => {
-    const start =
-      (currentPage - 1) * itemsPerPage;
-
-    return hubEmployeesData.slice(
-      start,
-      start + itemsPerPage
-    );
-  }, [hubEmployeesData, currentPage]);
-
-  // ===============================
-  // ROUTE FETCH
-  // ===============================
-
-  const fetchRoute = async (
-    startLat: number,
-    startLon: number,
-    endLat: number,
-    endLon: number
-  ) => {
-    setLoadingRoute(true);
-
-    try {
-      const [walking, riding, car] =
-        await Promise.all([
-          fetchOsrmProfile(
-            'foot',
-            'walking',
-            startLat,
-            startLon,
-            endLat,
-            endLon
-          ),
-
-          fetchOsrmProfile(
-            'cycling',
-            'cycling',
-            startLat,
-            startLon,
-            endLat,
-            endLon
-          ),
-
-          fetchOsrmProfile(
-            'driving',
-            'driving',
-            startLat,
-            startLon,
-            endLat,
-            endLon
-          )
-        ]);
-
-      if (walking && riding && car) {
-        setRouteData({
-          walking,
-          riding,
-          car
+        setHubState({
+          selectedHub:
+            hub
         });
 
-        setShowDirections(true);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingRoute(false);
+        setEmployeeSearch(
+          ''
+        );
+
+        setCurrentPage(1);
+
+      };
+
+    const handleCloseHub =
+      () => {
+
+        setHubState({
+          selectedHub:
+            null
+        });
+
+        setShowDirections(
+          false
+        );
+
+        setRouteData(
+          null
+        );
+
+      };
+
+    // ===============================
+    // LOADING
+    // ===============================
+
+    if (isLoading) {
+
+      return (
+        <div className="min-h-screen bg-gray-50">
+
+          <Sidebar
+            open={
+              sidebarOpen
+            }
+            onToggle={() =>
+              setSidebarOpen(
+                !sidebarOpen
+              )
+            }
+          />
+
+          <div className="p-4 lg:p-6 lg:ml-64 flex items-center justify-center min-h-[50vh]">
+
+            <LoadingSpinner />
+
+          </div>
+
+        </div>
+      );
+
     }
-  };
 
-  const handleGetDirections = () => {
-    if (
-      !userLocation ||
-      !hubState.selectedHub
-    )
-      return;
+    // ===============================
+    // MAIN
+    // ===============================
 
-    const coords = getHubCoordinates(
-      hubState.selectedHub
-    );
-
-    fetchRoute(
-      userLocation[0],
-      userLocation[1],
-      coords[0],
-      coords[1]
-    );
-  };
-
-  const handleMarkerClick = (hub: any) => {
-    setHubState({
-      selectedHub: hub
-    });
-
-    setCurrentPage(1);
-
-    setEmployeeSearch('');
-  };
-
-  const handleCloseHub = () => {
-    setHubState({
-      selectedHub: null
-    });
-
-    setShowDirections(false);
-
-    setRouteData(null);
-  };
-
-  // ===============================
-  // LOADING
-  // ===============================
-
-  if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#f4f7fb]">
+      <>
+
         <Sidebar
-          open={sidebarOpen}
+          open={
+            sidebarOpen
+          }
           onToggle={() =>
-            setSidebarOpen(!sidebarOpen)
+            setSidebarOpen(
+              !sidebarOpen
+            )
           }
         />
 
-        <div className="lg:ml-64 p-6">
-          <div className="h-40 rounded-[28px] bg-white animate-pulse mb-4" />
-
-          <div className="h-[650px] rounded-[28px] bg-white animate-pulse" />
-        </div>
-      </div>
-    );
-  }
-
-  // ===============================
-  // MAIN
-  // ===============================
-
-  return (
-    <>
-      <Sidebar
-        open={sidebarOpen}
-        onToggle={() =>
-          setSidebarOpen(!sidebarOpen)
-        }
-      />
-
-      <div className="min-h-screen bg-[#f4f7fb] lg:ml-64">
-
-        <div className="p-5 lg:p-8 space-y-6">
+        <div className="p-4 lg:p-6 lg:ml-64 space-y-5">
 
           {/* HEADER */}
 
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
 
             <div>
-              <h1 className="text-4xl font-bold text-gray-900">
+
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                 Hub Management
               </h1>
 
-              <p className="text-gray-500 mt-2">
-                Manage hubs, employees,
-                routes and analytics
+              <p className="text-gray-500 dark:text-gray-400 mt-1">
+                {
+                  filteredHubs.length
+                }{' '}
+                hub locations
               </p>
+
             </div>
 
             <button
-              onClick={() =>
-                setShowAddModal(true)
-              }
               className="
                 h-12
                 px-6
                 rounded-2xl
-                bg-gradient-to-r
-                from-red-500
-                to-red-600
-                hover:scale-[1.02]
-                active:scale-[0.98]
-                transition-all
+                bg-red-600
+                hover:bg-red-700
                 text-white
                 font-semibold
                 flex
                 items-center
                 gap-2
-                shadow-lg
-                shadow-red-500/20
+                transition-all
               "
             >
+
               <Plus size={18} />
+
               Add Hub
+
             </button>
 
           </div>
 
           {/* SEARCH */}
 
-          <Card className="rounded-[28px] border-0 bg-white shadow-sm p-5">
+          <Card className="rounded-3xl p-5">
 
             <div className="relative">
 
@@ -673,8 +987,12 @@ export const AdminHubsPage = () => {
               <input
                 type="text"
                 placeholder="Search hubs..."
-                value={searchTerm}
-                onChange={(e) =>
+                value={
+                  searchTerm
+                }
+                onChange={(
+                  e: React.ChangeEvent<HTMLInputElement>
+                ) =>
                   setSearchTerm(
                     e.target.value
                   )
@@ -683,15 +1001,16 @@ export const AdminHubsPage = () => {
                   w-full
                   h-14
                   rounded-2xl
-                  bg-[#f8fafc]
+                  bg-gray-50
+                  dark:bg-gray-800
                   border
                   border-gray-200
+                  dark:border-gray-700
                   pl-12
                   pr-4
                   outline-none
                   focus:ring-4
                   focus:ring-red-500/10
-                  text-gray-800
                 "
               />
 
@@ -699,92 +1018,111 @@ export const AdminHubsPage = () => {
 
           </Card>
 
-          {/* ANALYTICS */}
+          {/* ROUTE ANALYTICS */}
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
 
             {routeData ? (
+
               <>
                 {[
                   {
-                    title: 'Driving',
+                    title:
+                      'Driving',
                     icon: Car,
                     color:
-                      'from-blue-500 to-cyan-500',
-                    data: routeData.car
+                      'bg-red-600',
+                    data:
+                      routeData.car
                   },
 
                   {
-                    title: 'Cycling',
+                    title:
+                      'Cycling',
                     icon: Bike,
                     color:
-                      'from-emerald-500 to-green-500',
-                    data: routeData.riding
+                      'bg-blue-600',
+                    data:
+                      routeData.riding
                   },
 
                   {
-                    title: 'Walking',
-                    icon: Footprints,
+                    title:
+                      'Walking',
+                    icon:
+                      Footprints,
                     color:
-                      'from-orange-500 to-yellow-500',
-                    data: routeData.walking
+                      'bg-emerald-600',
+                    data:
+                      routeData.walking
                   }
-                ].map((item) => (
-                  <div
-                    key={item.title}
-                    className="
-                      rounded-[28px]
-                      bg-white
-                      p-5
-                      shadow-sm
-                      border
-                      border-gray-100
-                    "
-                  >
 
-                    <div
-                      className={`
-                        h-14
-                        w-14
-                        rounded-2xl
-                        bg-gradient-to-r
-                        ${item.color}
-                        flex
-                        items-center
-                        justify-center
-                        text-white
-                        mb-4
-                      `}
+                ].map(
+                  (
+                    item
+                  ) => (
+
+                    <Card
+                      key={
+                        item.title
+                      }
+                      className="rounded-3xl p-5"
                     >
-                      <item.icon size={24} />
-                    </div>
 
-                    <p className="text-gray-500 text-sm">
-                      {item.title}
-                    </p>
+                      <div
+                        className={`
+                          h-14
+                          w-14
+                          rounded-2xl
+                          ${item.color}
+                          flex
+                          items-center
+                          justify-center
+                          text-white
+                          mb-4
+                        `}
+                      >
+                        <item.icon
+                          size={
+                            24
+                          }
+                        />
+                      </div>
 
-                    <h2 className="text-3xl font-bold text-gray-900 mt-2">
-                      {formatDistance(
-                        item.data.distanceM
-                      )}
-                    </h2>
+                      <p className="text-gray-500 text-sm">
+                        {
+                          item.title
+                        }
+                      </p>
 
-                    <div className="flex items-center gap-2 mt-3 text-gray-500 text-sm">
-                      <Clock3 size={15} />
+                      <h2 className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+                        {formatDistance(
+                          item.data
+                            .distanceM
+                        )}
+                      </h2>
 
-                      {formatDuration(
-                        item.data.durationSec
-                      )}
-                    </div>
+                      <p className="text-sm text-gray-500 mt-2">
+                        {formatDuration(
+                          item.data
+                            .durationSec
+                        )}
+                      </p>
 
-                  </div>
-                ))}
+                    </Card>
+
+                  )
+                )}
               </>
+
             ) : (
-              <div className="md:col-span-3 rounded-[28px] bg-white h-40 flex items-center justify-center text-gray-400 border border-dashed border-gray-300">
-                Select a hub to generate
-                route analytics
+
+              <div className="md:col-span-3 rounded-3xl border border-dashed border-gray-300 bg-white dark:bg-gray-900 h-40 flex items-center justify-center text-gray-400">
+
+                Select a hub to generate route analytics
+
               </div>
+
             )}
 
           </div>
@@ -795,18 +1133,25 @@ export const AdminHubsPage = () => {
 
             {/* MAP */}
 
-            <div className="xl:col-span-8 rounded-[32px] overflow-hidden shadow-sm border border-gray-200 bg-white">
+            <div className="xl:col-span-8 rounded-[32px] overflow-hidden border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
 
               <div className="h-[700px]">
 
                 <MapContainer
-                  center={[14.5995, 120.9842]}
+                  center={[
+                    14.5995,
+                    120.9842
+                  ]}
                   zoom={6}
                   style={{
-                    height: '100%',
-                    width: '100%'
+                    height:
+                      '100%',
+                    width:
+                      '100%'
                   }}
-                  ref={mapRef}
+                  ref={
+                    mapRef
+                  }
                 >
 
                   <TileLayer
@@ -814,48 +1159,74 @@ export const AdminHubsPage = () => {
                   />
 
                   {userLocation && (
+
                     <Marker
-                      position={userLocation}
-                      icon={userIcon}
+                      position={
+                        userLocation
+                      }
+                      icon={
+                        userIcon
+                      }
                     >
+
                       <Popup>
                         Your Location
                       </Popup>
+
                     </Marker>
+
                   )}
 
                   {filteredHubs.map(
-                    (hub: any) => (
+                    (
+                      hub: Hub
+                    ) => (
+
                       <Marker
-                        key={hub.id}
+                        key={
+                          hub.id
+                        }
                         position={getHubCoordinates(
                           hub
                         )}
-                        icon={hubIcon}
+                        icon={
+                          hubIcon
+                        }
                         eventHandlers={{
-                          click: () =>
-                            handleMarkerClick(
-                              hub
-                            )
+                          click:
+                            () =>
+                              handleMarkerClick(
+                                hub
+                              )
                         }}
                       >
+
                         <Popup>
-                          {hub.name}
+                          {
+                            hub.name
+                          }
                         </Popup>
+
                       </Marker>
+
                     )
                   )}
 
                   {showDirections &&
                     routeData && (
+
                       <Polyline
                         positions={
-                          routeData.car
+                          routeData
+                            .car
                             .coordinates
                         }
-                        color="#ef4444"
-                        weight={6}
+                        color="#dc2626"
+                        weight={
+                          5
+                        }
                       />
+
                     )}
 
                 </MapContainer>
@@ -868,25 +1239,28 @@ export const AdminHubsPage = () => {
 
             <div className="xl:col-span-4">
 
-              <Card className="rounded-[32px] bg-white border-0 shadow-sm overflow-hidden">
+              <Card className="rounded-[32px] overflow-hidden h-full">
 
                 {hubState.selectedHub ? (
+
                   <div>
 
-                    <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                    <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
 
                       <div>
 
-                        <h2 className="text-2xl font-bold text-gray-900">
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                           {
-                            hubState.selectedHub
+                            hubState
+                              .selectedHub
                               .name
                           }
                         </h2>
 
                         <p className="text-gray-500 mt-1">
                           {
-                            hubState.selectedHub
+                            hubState
+                              .selectedHub
                               .city
                           }
                         </p>
@@ -897,31 +1271,24 @@ export const AdminHubsPage = () => {
                         onClick={
                           handleCloseHub
                         }
-                        className="
-                          h-11
-                          w-11
-                          rounded-2xl
-                          hover:bg-gray-100
-                          flex
-                          items-center
-                          justify-center
-                        "
+                        className="h-11 w-11 rounded-2xl hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center"
                       >
+
                         <X size={20} />
+
                       </button>
 
                     </div>
 
                     <div className="p-6 space-y-5">
 
-                      {/* WEATHER */}
-
                       {weatherData && (
-                        <div className="rounded-3xl bg-gradient-to-r from-sky-50 to-blue-50 border border-blue-100 p-5">
+
+                        <div className="rounded-3xl bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900 p-5">
 
                           <div className="flex items-center gap-4">
 
-                            <div className="h-16 w-16 rounded-3xl bg-white flex items-center justify-center text-3xl shadow-sm">
+                            <div className="h-16 w-16 rounded-3xl bg-white dark:bg-gray-900 flex items-center justify-center text-3xl">
                               {
                                 weatherData.icon
                               }
@@ -933,14 +1300,14 @@ export const AdminHubsPage = () => {
                                 Current Weather
                               </p>
 
-                              <h2 className="text-2xl font-bold text-gray-900">
+                              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                                 {
                                   weatherData.temp
                                 }
                                 °C
                               </h2>
 
-                              <p className="text-gray-600">
+                              <p className="text-gray-600 dark:text-gray-400">
                                 {
                                   weatherData.label
                                 }
@@ -951,16 +1318,17 @@ export const AdminHubsPage = () => {
                           </div>
 
                         </div>
-                      )}
 
-                      {/* STATS */}
+                      )}
 
                       <div className="grid grid-cols-2 gap-4">
 
-                        <div className="rounded-3xl bg-[#f8fafc] border border-gray-100 p-5">
+                        <div className="rounded-3xl bg-gray-50 dark:bg-gray-800 p-5">
 
                           <Users
-                            size={22}
+                            size={
+                              22
+                            }
                             className="text-red-500 mb-3"
                           />
 
@@ -968,7 +1336,7 @@ export const AdminHubsPage = () => {
                             Employees
                           </p>
 
-                          <h2 className="text-3xl font-bold text-gray-900 mt-2">
+                          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
                             {
                               hubEmployeesData.length
                             }
@@ -976,10 +1344,12 @@ export const AdminHubsPage = () => {
 
                         </div>
 
-                        <div className="rounded-3xl bg-[#f8fafc] border border-gray-100 p-5">
+                        <div className="rounded-3xl bg-gray-50 dark:bg-gray-800 p-5">
 
                           <MapPin
-                            size={22}
+                            size={
+                              22
+                            }
                             className="text-blue-500 mb-3"
                           />
 
@@ -987,7 +1357,7 @@ export const AdminHubsPage = () => {
                             City
                           </p>
 
-                          <h2 className="text-lg font-bold text-gray-900 mt-2">
+                          <h2 className="text-xl font-bold text-gray-900 dark:text-white mt-2">
                             {
                               hubState
                                 .selectedHub
@@ -998,8 +1368,6 @@ export const AdminHubsPage = () => {
                         </div>
 
                       </div>
-
-                      {/* BUTTON */}
 
                       <button
                         onClick={
@@ -1012,61 +1380,64 @@ export const AdminHubsPage = () => {
                           w-full
                           h-14
                           rounded-2xl
-                          bg-gradient-to-r
-                          from-red-500
-                          to-red-600
+                          bg-red-600
+                          hover:bg-red-700
                           text-white
                           font-semibold
-                          hover:scale-[1.01]
-                          active:scale-[0.99]
                           transition-all
                           flex
                           items-center
                           justify-center
                           gap-2
-                          shadow-lg
-                          shadow-red-500/20
                         "
                       >
-                        {loadingRoute ? (
-                          <LoadingSpinner size="sm" />
-                        ) : (
-                          <>
-                            <Navigation
-                              size={18}
-                            />
 
+                        {loadingRoute ? (
+
+                          <LoadingSpinner size="sm" />
+
+                        ) : (
+
+                          <>
+                            <Navigation size={18} />
                             Get Directions
                           </>
+
                         )}
+
                       </button>
 
                     </div>
 
                   </div>
+
                 ) : (
+
                   <div className="h-[700px] flex flex-col items-center justify-center text-center p-8">
 
                     <div className="h-24 w-24 rounded-[32px] bg-red-100 flex items-center justify-center mb-6">
 
-                      <Building2
-                        size={40}
+                      <MapPin
+                        size={
+                          40
+                        }
                         className="text-red-500"
                       />
 
                     </div>
 
-                    <h2 className="text-3xl font-bold text-gray-900">
+                    <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
                       Select a Hub
                     </h2>
 
-                    <p className="text-gray-500 mt-3 max-w-sm">
-                      Choose a hub marker from
-                      the map to see employees,
-                      routes and analytics.
+                    <p className="text-gray-500 dark:text-gray-400 mt-3 max-w-sm">
+
+                      Choose a hub marker from the map to see employees and route analytics.
+
                     </p>
 
                   </div>
+
                 )}
 
               </Card>
@@ -1075,91 +1446,9 @@ export const AdminHubsPage = () => {
 
           </div>
 
-          {/* HUB CARDS */}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-
-            {filteredHubs.map((hub: any) => {
-              const employeeCount =
-                getHubEmployeeCount(hub.id);
-
-              return (
-                <div
-                  key={hub.id}
-                  onClick={() =>
-                    handleMarkerClick(hub)
-                  }
-                  className="
-                    rounded-[30px]
-                    bg-white
-                    border
-                    border-gray-100
-                    p-6
-                    hover:shadow-xl
-                    hover:-translate-y-1
-                    transition-all
-                    cursor-pointer
-                  "
-                >
-
-                  <div className="flex items-start justify-between">
-
-                    <div>
-
-                      <div className="flex items-center gap-3">
-
-                        <div className="h-12 w-12 rounded-2xl bg-red-50 flex items-center justify-center">
-
-                          <MapPin
-                            size={20}
-                            className="text-red-500"
-                          />
-
-                        </div>
-
-                        <div>
-
-                          <h3 className="font-bold text-lg text-gray-900">
-                            {hub.name}
-                          </h3>
-
-                          <p className="text-sm text-gray-500">
-                            {hub.city}
-                          </p>
-
-                        </div>
-
-                      </div>
-
-                      <p className="text-sm text-gray-400 mt-4 line-clamp-2">
-                        {hub.address}
-                      </p>
-
-                    </div>
-
-                    <div className="text-right">
-
-                      <h2 className="text-4xl font-bold text-gray-900">
-                        {employeeCount}
-                      </h2>
-
-                      <p className="text-xs text-gray-500">
-                        Staff
-                      </p>
-
-                    </div>
-
-                  </div>
-
-                </div>
-              );
-            })}
-
-          </div>
-
         </div>
 
-      </div>
-    </>
-  );
+      </>
+    );
 };
+
