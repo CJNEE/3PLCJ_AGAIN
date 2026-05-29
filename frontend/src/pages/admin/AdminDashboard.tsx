@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { Card, Badge, LoadingSpinner, EmptyState } from '@/components/common';
 import { useGetEmployees, useGetHubs, useGetAttendance, useGetSecurityAlerts, useGetActivityLogs } from '@/hooks/useQueries';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { Search, Eye, X, User, Phone, Briefcase, Shield, Clock, Landmark } from 'lucide-react';
 import { normalizeApiResponse } from '@/utils/apiResponseHandler';
@@ -279,13 +280,13 @@ export const AdminDashboard = () => {
       {/* Top Stats Row */}
       <div className="grid grid-cols-6 lg:grid-cols-5 gap-2 md:gap-3">
         {/* Total Employees */}
-        <Card className="col-span-3 lg:col-span-1 flex flex-col items-center justify-center p-3 md:p-6 h-28 md:h-44 text-center">
+                <Card className="col-span-3 lg:col-span-1 flex flex-col items-center justify-center p-3 md:p-6 h-28 md:h-44 text-center transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-800 bg-white/30 dark:bg-gray-800/30 backdrop-blur-lg">
           <p className="text-gray-600 dark:text-gray-400 text-[9px] md:text-xs font-semibold uppercase tracking-wider">Total Employees</p>
           <p className="text-5xl md:text-7xl font-black text-red-700 dark:text-white mt-2 md:mt-4 leading-none text-center w-full">{totalEmployees}</p>
         </Card>
 
         {/* Total Hubs */}
-        <Card className="col-span-3 lg:col-span-1 flex flex-col items-center justify-center p-3 md:p-6 h-28 md:h-44 text-center">
+                <Card className="col-span-3 lg:col-span-1 flex flex-col items-center justify-center p-3 md:p-6 h-28 md:h-44 text-center transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-800 bg-white/30 dark:bg-gray-800/30 backdrop-blur-lg">
           <p className="text-gray-600 dark:text-gray-400 text-[9px] md:text-xs font-semibold uppercase tracking-wider">Total Hubs</p>
           <p className="text-5xl md:text-7xl font-black text-red-700 dark:text-white mt-2 md:mt-4 leading-none text-center w-full">{hubs.length}</p>
         </Card>
@@ -369,7 +370,7 @@ export const AdminDashboard = () => {
         </Card>
 
         {/* Workforce Status */}
-        <Card className="col-span-2 lg:col-span-1 p-2 md:p-4">
+                <Card className="col-span-2 lg:col-span-1 p-2 md:p-4 bg-white/30 dark:bg-gray-800/30 backdrop-blur-lg transition-transform duration-200 hover:scale-105">
           <p className="text-gray-600 dark:text-gray-400 text-[8px] md:text-xs font-medium mb-2 md:mb-3">Workforce Status</p>
           <div className="space-y-1 md:space-y-2 text-[7px] md:text-sm">
             {statusData.slice(0, 5).map((item, idx) => (
@@ -388,17 +389,7 @@ export const AdminDashboard = () => {
       <div className="grid grid-cols-2 lg:grid-cols-2 gap-2 md:gap-4">
 
             {/* HUB LOCATIONS MAP */}
-<Card
-  className="
-    bg-white dark:bg-[#0F172A]
-        border border-gray-200 dark:border-gray-700
-        rounded-xl p-4
-        
-        p-2 md:p-4
-    min-h-[220px]
-    md:min-h-[500px]
-  "
->
+        <Card className="bg-white/30 dark:bg-gray-800/30 backdrop-blur-lg p-4 md:p-6 min-h-[220px] md:min-h-[500px] transition-transform duration-200 hover:scale-105">
   {/* HEADER */}
   <div
     className="
@@ -480,29 +471,7 @@ export const AdminDashboard = () => {
         value={searchLocationTerm}
         onChange={(e) => setSearchLocationTerm(e.target.value)}
         className="
-          w-full
-          h-10
-          md:h-12
-          rounded-xl
-          border
-          border-gray-300
-          dark:border-gray-600
-          bg-gray-100
-          dark:bg-gray-800
-          pl-10
-          pr-3
-          text-sm
-          md:text-base
-          text-gray-900
-          dark:text-gray-200
-          placeholder-gray-500
-          dark:placeholder-gray-400
-          outline-none
-          transition-colors
-          duration-200
-          focus:border-red-500
-          focus:ring-2
-          focus:ring-red-500/20
+          w-full h-10 md:h-12 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 pl-10 pr-3 text-sm md:text-base text-gray-900 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 outline-none transition-colors duration-200 focus:border-red-500 focus:ring-2 focus:ring-red-500/30
         "
         aria-label="Search hubs"
       />
@@ -824,7 +793,7 @@ export const AdminDashboard = () => {
       {showEmployeeModal && selectedEmployee && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && setShowEmployeeModal(false)}>
           
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden relative z-[9999] border border-gray-100 dark:border-gray-800" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white/30 dark:bg-gray-900/60 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden relative z-[9999] border border-white/10 backdrop-blur-lg" onClick={(e) => e.stopPropagation()}>
             
             {/* Header Banner */}
             <div className="relative shrink-0 overflow-hidden bg-gradient-to-r from-red-800 to-red-650 p-6 md:p-8 text-white">
