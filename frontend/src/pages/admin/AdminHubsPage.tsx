@@ -1235,220 +1235,628 @@ export const AdminHubsPage =
 
             </div>
 
-            {/* RIGHT PANEL */}
+          {/* =========================
+   RIGHT PANEL
+========================= */}
 
-            <div className="xl:col-span-4">
+<div className="xl:col-span-4">
+  <Card
+    className="
+      rounded-[32px]
+      bg-[#081224]
+      border
+      border-[#1e2b44]
+      shadow-2xl
+      overflow-hidden
+      h-full
+    "
+  >
+    {hubState.selectedHub ? (
+      <div className="flex flex-col h-full">
 
-              <Card className="rounded-[32px] overflow-hidden h-full">
+        {/* HEADER */}
 
-                {hubState.selectedHub ? (
+        <div className="p-6 border-b border-[#1e2b44] flex items-start justify-between">
 
-                  <div>
+          <div>
+            <h2 className="text-2xl font-black text-white leading-tight">
+              {hubState.selectedHub.name}
+            </h2>
 
-                    <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+            <p className="text-sm text-slate-400 mt-2">
+              {hubState.selectedHub.city}
+            </p>
+          </div>
 
-                      <div>
+          <button
+            onClick={handleCloseHub}
+            className="
+              h-11
+              w-11
+              rounded-2xl
+              hover:bg-white/5
+              flex
+              items-center
+              justify-center
+              transition-all
+              text-slate-400
+            "
+          >
+            <X size={22} />
+          </button>
 
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                          {
-                            hubState
-                              .selectedHub
-                              .name
-                          }
-                        </h2>
+        </div>
 
-                        <p className="text-gray-500 mt-1">
-                          {
-                            hubState
-                              .selectedHub
-                              .city
-                          }
-                        </p>
+        {/* CONTENT */}
+
+        <div className="p-6 space-y-5 flex-1 overflow-y-auto">
+
+          {/* SEARCH */}
+
+          <div className="relative">
+
+            <Search
+              size={18}
+              className="
+                absolute
+                left-4
+                top-1/2
+                -translate-y-1/2
+                text-slate-500
+              "
+            />
+
+            <input
+              type="text"
+              placeholder="Search Name"
+              value={employeeSearch}
+              onChange={(e) => {
+                setEmployeeSearch(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="
+                w-full
+                h-14
+                rounded-2xl
+                bg-[#0f1b31]
+                border
+                border-[#27344e]
+                pl-12
+                pr-4
+                outline-none
+                text-white
+                placeholder:text-slate-500
+                focus:ring-4
+                focus:ring-red-500/10
+              "
+            />
+
+          </div>
+
+          {/* WEATHER */}
+
+          {weatherData && (
+            <div
+              className="
+                rounded-3xl
+                bg-gradient-to-r
+                from-sky-500/10
+                to-blue-500/10
+                border
+                border-blue-500/20
+                p-5
+              "
+            >
+
+              <div className="flex items-center gap-4">
+
+                <div
+                  className="
+                    h-16
+                    w-16
+                    rounded-3xl
+                    bg-[#13203a]
+                    flex
+                    items-center
+                    justify-center
+                    text-3xl
+                    border
+                    border-[#27344e]
+                  "
+                >
+                  {weatherData.icon}
+                </div>
+
+                <div>
+
+                  <p className="text-slate-400 text-sm">
+                    Current Weather
+                  </p>
+
+                  <h2 className="text-3xl font-black text-white">
+                    {weatherData.temp}°C
+                  </h2>
+
+                  <p className="text-slate-300">
+                    {weatherData.label}
+                  </p>
+
+                </div>
+
+              </div>
+
+            </div>
+          )}
+
+          {/* EMPLOYMENT + TOTAL */}
+
+          <div className="grid grid-cols-2 gap-4">
+
+            {/* EMPLOYMENT */}
+
+            <div
+              className="
+                rounded-3xl
+                bg-[#0f1b31]
+                border
+                border-[#27344e]
+                p-5
+              "
+            >
+
+              <p
+                className="
+                  text-[11px]
+                  font-black
+                  uppercase
+                  tracking-widest
+                  text-slate-400
+                  mb-4
+                "
+              >
+                Employment
+              </p>
+
+              <div className="space-y-3">
+
+                {employmentTypeData.length > 0 ? (
+                  employmentTypeData.map((item: any) => {
+                    const total =
+                      hubEmployeesData.length || 1;
+
+                    const width =
+                      (item.value / total) * 100;
+
+                    return (
+                      <div key={item.name}>
+
+                        <div className="flex items-center justify-between mb-1">
+
+                          <span className="text-xs font-semibold text-slate-300">
+                            {item.name}
+                          </span>
+
+                          <span className="text-xs text-slate-500">
+                            {item.value}
+                          </span>
+
+                        </div>
+
+                        <div
+                          className="
+                            h-2
+                            rounded-full
+                            bg-[#1a2740]
+                            overflow-hidden
+                          "
+                        >
+                          <div
+                            className="
+                              h-full
+                              rounded-full
+                              bg-gradient-to-r
+                              from-red-500
+                              to-red-600
+                            "
+                            style={{
+                              width: `${width}%`
+                            }}
+                          />
+                        </div>
 
                       </div>
-
-                      <button
-                        onClick={
-                          handleCloseHub
-                        }
-                        className="h-11 w-11 rounded-2xl hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center"
-                      >
-
-                        <X size={20} />
-
-                      </button>
-
-                    </div>
-
-                    <div className="p-6 space-y-5">
-
-                      {weatherData && (
-
-                        <div className="rounded-3xl bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900 p-5">
-
-                          <div className="flex items-center gap-4">
-
-                            <div className="h-16 w-16 rounded-3xl bg-white dark:bg-gray-900 flex items-center justify-center text-3xl">
-                              {
-                                weatherData.icon
-                              }
-                            </div>
-
-                            <div>
-
-                              <p className="text-gray-500 text-sm">
-                                Current Weather
-                              </p>
-
-                              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                                {
-                                  weatherData.temp
-                                }
-                                °C
-                              </h2>
-
-                              <p className="text-gray-600 dark:text-gray-400">
-                                {
-                                  weatherData.label
-                                }
-                              </p>
-
-                            </div>
-
-                          </div>
-
-                        </div>
-
-                      )}
-
-                      <div className="grid grid-cols-2 gap-4">
-
-                        <div className="rounded-3xl bg-gray-50 dark:bg-gray-800 p-5">
-
-                          <Users
-                            size={
-                              22
-                            }
-                            className="text-red-500 mb-3"
-                          />
-
-                          <p className="text-gray-500 text-sm">
-                            Employees
-                          </p>
-
-                          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                            {
-                              hubEmployeesData.length
-                            }
-                          </h2>
-
-                        </div>
-
-                        <div className="rounded-3xl bg-gray-50 dark:bg-gray-800 p-5">
-
-                          <MapPin
-                            size={
-                              22
-                            }
-                            className="text-blue-500 mb-3"
-                          />
-
-                          <p className="text-gray-500 text-sm">
-                            City
-                          </p>
-
-                          <h2 className="text-xl font-bold text-gray-900 dark:text-white mt-2">
-                            {
-                              hubState
-                                .selectedHub
-                                .city
-                            }
-                          </h2>
-
-                        </div>
-
-                      </div>
-
-                      <button
-                        onClick={
-                          handleGetDirections
-                        }
-                        disabled={
-                          loadingRoute
-                        }
-                        className="
-                          w-full
-                          h-14
-                          rounded-2xl
-                          bg-red-600
-                          hover:bg-red-700
-                          text-white
-                          font-semibold
-                          transition-all
-                          flex
-                          items-center
-                          justify-center
-                          gap-2
-                        "
-                      >
-
-                        {loadingRoute ? (
-
-                          <LoadingSpinner size="sm" />
-
-                        ) : (
-
-                          <>
-                            <Navigation size={18} />
-                            Get Directions
-                          </>
-
-                        )}
-
-                      </button>
-
-                    </div>
-
-                  </div>
-
+                    );
+                  })
                 ) : (
-
-                  <div className="h-[700px] flex flex-col items-center justify-center text-center p-8">
-
-                    <div className="h-24 w-24 rounded-[32px] bg-red-100 flex items-center justify-center mb-6">
-
-                      <MapPin
-                        size={
-                          40
-                        }
-                        className="text-red-500"
-                      />
-
-                    </div>
-
-                    <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-                      Select a Hub
-                    </h2>
-
-                    <p className="text-gray-500 dark:text-gray-400 mt-3 max-w-sm">
-
-                      Choose a hub marker from the map to see employees and route analytics.
-
-                    </p>
-
+                  <div className="text-sm text-slate-500 italic">
+                    No employment data
                   </div>
-
                 )}
 
-              </Card>
+              </div>
+
+            </div>
+
+            {/* TOTAL */}
+
+            <div
+              className="
+                rounded-3xl
+                bg-[#0f1b31]
+                border
+                border-[#27344e]
+                p-5
+                flex
+                flex-col
+                justify-center
+                items-center
+              "
+            >
+
+              <p
+                className="
+                  text-[11px]
+                  font-black
+                  uppercase
+                  tracking-widest
+                  text-slate-400
+                "
+              >
+                Total
+              </p>
+
+              <h2 className="text-5xl font-black text-white mt-4">
+                {hubEmployeesData.length}
+              </h2>
 
             </div>
 
           </div>
 
+          {/* EMPLOYEE TABLE */}
+
+          <div
+            className="
+              rounded-3xl
+              border
+              border-[#27344e]
+              overflow-hidden
+              bg-[#0b1528]
+            "
+          >
+
+            {/* TABLE HEADER */}
+
+            <div
+              className="
+                bg-black
+                text-white
+                grid
+                grid-cols-12
+                px-4
+                py-3
+                text-[11px]
+                font-black
+                uppercase
+                tracking-widest
+              "
+            >
+
+              <div className="col-span-5">
+                Name
+              </div>
+
+              <div className="col-span-4">
+                Position
+              </div>
+
+              <div className="col-span-3 text-center">
+                Status
+              </div>
+
+            </div>
+
+            {/* TABLE BODY */}
+
+            <div className="max-h-[260px] overflow-y-auto">
+
+              {!canViewEmployees ? (
+
+                <div className="py-12 flex flex-col items-center justify-center text-center">
+
+                  <Shield
+                    size={28}
+                    className="text-slate-600 mb-3"
+                  />
+
+                  <p className="text-xs font-black uppercase tracking-widest text-slate-500">
+                    Restricted Access
+                  </p>
+
+                  <p className="text-xs text-slate-600 mt-1">
+                    Employee viewing permission disabled
+                  </p>
+
+                </div>
+
+              ) : paginatedEmployees.length > 0 ? (
+
+                paginatedEmployees.map((emp: any) => {
+
+                  const status =
+                    emp.status?.toLowerCase();
+
+                  return (
+                    <div
+                      key={emp.id}
+                      className="
+                        grid
+                        grid-cols-12
+                        px-4
+                        py-3
+                        border-b
+                        border-[#1e2b44]
+                        items-center
+                        hover:bg-white/[0.02]
+                        transition-all
+                      "
+                    >
+
+                      <div className="col-span-5 pr-2">
+
+                        <p className="text-sm font-bold text-white truncate">
+                          {emp.full_name}
+                        </p>
+
+                      </div>
+
+                      <div className="col-span-4 pr-2">
+
+                        <p className="text-xs text-slate-400 truncate">
+                          {emp.position || 'N/A'}
+                        </p>
+
+                      </div>
+
+                      <div className="col-span-3 flex justify-center">
+
+                        <div
+                          className={`
+                            h-2.5
+                            w-full
+                            rounded-full
+                            ${
+                              status === 'active'
+                                ? 'bg-green-500'
+                                : status === 'inactive'
+                                ? 'bg-yellow-500'
+                                : 'bg-red-500'
+                            }
+                          `}
+                        />
+
+                      </div>
+
+                    </div>
+                  );
+                })
+
+              ) : (
+
+                <div className="py-16 text-center text-slate-500 italic">
+                  No employees found
+                </div>
+
+              )}
+
+            </div>
+
+          </div>
+
+          {/* PAGINATION */}
+
+          <div className="flex items-center justify-center gap-5">
+
+            <button
+              onClick={() =>
+                setCurrentPage(
+                  Math.max(
+                    1,
+                    currentPage - 1
+                  )
+                )
+              }
+              disabled={currentPage === 1}
+              className="
+                text-slate-500
+                disabled:opacity-30
+              "
+            >
+              <ChevronLeft size={20} />
+            </button>
+
+            <span className="text-sm font-bold text-slate-400">
+              {currentPage} / {totalPages || 1}
+            </span>
+
+            <button
+              onClick={() =>
+                setCurrentPage(
+                  Math.min(
+                    totalPages,
+                    currentPage + 1
+                  )
+                )
+              }
+              disabled={
+                currentPage === totalPages ||
+                totalPages === 0
+              }
+              className="
+                text-slate-500
+                disabled:opacity-30
+              "
+            >
+              <ChevronRight size={20} />
+            </button>
+
+          </div>
+
+          {/* DIRECTION BUTTON */}
+
+          <button
+            onClick={handleGetDirections}
+            disabled={loadingRoute}
+            className="
+              w-full
+              h-14
+              rounded-2xl
+              bg-gradient-to-r
+              from-red-500
+              to-red-600
+              text-white
+              font-bold
+              hover:scale-[1.01]
+              active:scale-[0.99]
+              transition-all
+              flex
+              items-center
+              justify-center
+              gap-2
+              shadow-xl
+              shadow-red-500/20
+            "
+          >
+
+            {loadingRoute ? (
+              <LoadingSpinner size="sm" />
+            ) : (
+              <>
+                <Navigation size={18} />
+                Get Direction
+              </>
+            )}
+
+          </button>
+
         </div>
 
-      </>
-    );
-};
+      </div>
+    ) : (
 
+      /* EMPTY STATE */
+
+      <div className="h-[700px] flex flex-col items-center justify-center text-center p-8">
+
+        <div
+          className="
+            h-24
+            w-24
+            rounded-[32px]
+            bg-red-500/10
+            flex
+            items-center
+            justify-center
+            mb-6
+          "
+        >
+
+          <Building2
+            size={42}
+            className="text-red-500"
+          />
+
+        </div>
+
+        <h2 className="text-3xl font-black text-white">
+          Select a Hub
+        </h2>
+
+        <p className="text-slate-400 mt-3 max-w-sm">
+          Choose a hub marker from the map
+          to view employee records,
+          analytics and route directions.
+        </p>
+
+      </div>
+
+    )}
+  </Card>
+</div>
+
+{/* =========================
+   HUB CARDS LIST
+========================= */}
+
+<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+
+  {filteredHubs.map((hub: any) => {
+
+    const employeeCount =
+      getHubEmployeeCount(hub.id);
+
+    return (
+      <div
+        key={hub.id}
+        onClick={() =>
+          handleMarkerClick(hub)
+        }
+        className="
+          rounded-[30px]
+          bg-[#3b4658]
+          border
+          border-white/10
+          p-6
+          hover:shadow-2xl
+          hover:-translate-y-1
+          transition-all
+          cursor-pointer
+        "
+      >
+
+        <div className="flex justify-between items-start">
+
+          <div className="flex-1">
+
+            <div className="flex items-center gap-3">
+
+              <MapPin
+                size={18}
+                className="text-red-500"
+              />
+
+              <h3 className="font-black text-2xl text-white leading-tight">
+                {hub.name}
+              </h3>
+
+            </div>
+
+            <p className="text-xl font-bold text-slate-300 mt-4">
+              {hub.city}
+            </p>
+
+            <p className="text-sm text-slate-400 mt-3">
+              {hub.address}
+            </p>
+
+          </div>
+
+          <div className="text-right ml-4">
+
+            <h2 className="text-5xl font-black text-white leading-none">
+              {employeeCount}
+            </h2>
+
+            <p className="text-[11px] font-black uppercase tracking-widest text-slate-300 mt-2">
+              Staff
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+    );
+  })}
+
+</div>
