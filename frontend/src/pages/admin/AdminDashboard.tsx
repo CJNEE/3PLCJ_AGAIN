@@ -280,31 +280,31 @@ export const AdminDashboard = () => {
       {/* Top Stats Row */}
       <div className="grid grid-cols-6 lg:grid-cols-5 gap-2 md:gap-3">
         {/* Total Employees */}
-                <Card className="col-span-3 lg:col-span-1 flex flex-col items-center justify-center p-3 md:p-6 h-full text-center transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-800">
-          <p className="text-gray-600 dark:text-gray-400 text-[9px] md:text-xs font-semibold uppercase tracking-wider">Total Employees</p>
-          <p className="text-5xl md:text-7xl font-black text-red-700 dark:text-white mt-2 md:mt-4 leading-none text-center w-full">{totalEmployees}</p>
+                <Card className="col-span-3 lg:col-span-1 flex flex-col items-center justify-center p-4 md:p-6 h-full text-center">
+          <p className="text-gray-600 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider">Total Employees</p>
+          <p className="text-5xl md:text-6xl font-black text-red-700 dark:text-white mt-3 md:mt-4 leading-none text-center w-full">{totalEmployees}</p>
         </Card>
 
         {/* Total Hubs */}
-                <Card className="col-span-3 lg:col-span-1 flex flex-col items-center justify-center p-3 md:p-6 h-full text-center transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-800">
-          <p className="text-gray-600 dark:text-gray-400 text-[9px] md:text-xs font-semibold uppercase tracking-wider">Total Hubs</p>
-          <p className="text-5xl md:text-7xl font-black text-red-700 dark:text-white mt-2 md:mt-4 leading-none text-center w-full">{hubs.length}</p>
+                <Card className="col-span-3 lg:col-span-1 flex flex-col items-center justify-center p-4 md:p-6 h-full text-center">
+          <p className="text-gray-600 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider">Total Hubs</p>
+          <p className="text-5xl md:text-6xl font-black text-red-700 dark:text-white mt-3 md:mt-4 leading-none text-center w-full">{hubs.length}</p>
         </Card>
 
         {/* Employee Status Pie Chart with Percentages */}
-        <Card className="col-span-2 lg:col-span-1 p-2 md:p-4">
-          <p className="text-gray-600 dark:text-gray-400 text-[8px] md:text-xs font-medium mb-1 md:mb-2">Employee Status</p>
+        <Card className="col-span-2 lg:col-span-1 p-4">
+          <p className="text-gray-600 dark:text-gray-400 text-xs md:text-sm font-medium mb-2">Employee Status</p>
           {statusData.length > 0 ? (
             <div className="flex flex-col md:flex-row items-center justify-between md:h-auto">
-              <div className="w-full h-16 md:h-auto md:w-[60%] flex items-center justify-center">
-                <ResponsiveContainer width="100%" height={80} className="md:h-[100px]">
+              <div className="w-full h-24 md:h-auto md:w-[60%] flex items-center justify-center">
+                <ResponsiveContainer width="100%" height={100} className="md:h-[100px]">
                   <PieChart>
                     <Pie
                       data={statusData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={15}
-                      outerRadius={30}
+                      innerRadius={20}
+                      outerRadius={40}
                       fill="#8884d8"
                       dataKey="value"
                     >
@@ -315,20 +315,20 @@ export const AdminDashboard = () => {
                   </PieChart>
                 </ResponsiveContainer>
               </div>
-              <div className="flex flex-col gap-0.5 md:gap-1 text-[7px] md:text-xs mt-1 md:mt-0 w-full md:w-auto px-1 md:px-0">
+              <div className="flex flex-col gap-1.5 md:gap-1 text-xs md:text-sm mt-2 md:mt-0 w-full md:w-auto px-2 md:px-0">
                 {statusData.map((entry, index) => {
                   const total = statusData.reduce((sum, item) => sum + item.value, 0);
                   const percentage = Math.round((entry.value / total) * 100);
                   return (
                     <div key={index} className="flex items-center justify-between md:justify-start md:gap-2">
-                      <div className="flex items-center gap-1 md:gap-2">
+                      <div className="flex items-center gap-2">
                         <div 
-                          className="w-1.5 h-1.5 md:w-3 md:h-3 rounded-full" 
+                          className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full" 
                           style={{ backgroundColor: STATUS_COLORS[entry.name] || '#3B82F6' }}
                         />
                         <span className="text-gray-600 dark:text-gray-400">{entry.name}</span>
                       </div>
-                      <span className="font-semibold text-gray-900 dark:text-white">{percentage}%</span>
+                      <span className="font-semibold text-gray-900 dark:text-white ml-2">{percentage}%</span>
                     </div>
                   );
                 })}
@@ -338,22 +338,22 @@ export const AdminDashboard = () => {
         </Card>
 
         {/* Employment Type Horizontal Bar */}
-        <Card className="col-span-2 lg:col-span-1 p-2 md:p-4">
-          <p className="text-gray-600 dark:text-gray-400 text-[8px] md:text-xs font-medium mb-2 md:mb-4">Employment Type</p>
+        <Card className="col-span-2 lg:col-span-1 p-4">
+          <p className="text-gray-600 dark:text-gray-400 text-xs md:text-sm font-medium mb-3">Employment Type</p>
           {employmentTypeData.length > 0 ? (
-            <div className="space-y-2 md:space-y-4">
+            <div className="space-y-3 md:space-y-4">
               {employmentTypeData.map((entry, index) => {
                   const total = employmentTypeData.reduce((sum, d) => sum + d.value, 0);
                   const barPct = total ? (entry.value / total) * 100 : 0;
                   return (
                 <div key={index} className="flex flex-col gap-1 md:gap-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-[7px] md:text-sm font-medium text-gray-700 dark:text-gray-300">{entry.name}</span>
-                    <span className="text-[7px] md:text-sm text-gray-600 dark:text-gray-400 tabular-nums">
+                    <span className="text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300">{entry.name}</span>
+                    <span className="text-xs md:text-sm text-gray-600 dark:text-gray-400 tabular-nums">
                       {entry.value} <span className="text-gray-400">({Math.round(barPct)}%)</span>
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 md:h-6 overflow-hidden">
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 md:h-6 overflow-hidden">
                     <div 
                       className="h-full rounded-full transition-all duration-300"
                       style={{ 
@@ -370,13 +370,13 @@ export const AdminDashboard = () => {
         </Card>
 
         {/* Workforce Status */}
-                <Card className="col-span-2 lg:col-span-1 p-2 md:p-4">
-          <p className="text-gray-600 dark:text-gray-400 text-[8px] md:text-xs font-medium mb-2 md:mb-3">Workforce Status</p>
-          <div className="space-y-1 md:space-y-2 text-[7px] md:text-sm">
+                <Card className="col-span-2 lg:col-span-1 p-4">
+          <p className="text-gray-600 dark:text-gray-400 text-xs md:text-sm font-medium mb-3">Workforce Status</p>
+          <div className="space-y-2 md:space-y-2 text-xs md:text-sm">
             {statusData.slice(0, 5).map((item, idx) => (
               <div key={idx} className="flex justify-between items-center">
                 <span className="text-gray-600 dark:text-gray-400">{item.name}</span>
-                <span className="font-semibold text-[9px] md:text-lg" style={{ color: STATUS_COLORS[item.name] }}>
+                <span className="font-semibold text-sm md:text-lg" style={{ color: STATUS_COLORS[item.name] }}>
                   {item.value}
                 </span>
               </div>
@@ -443,36 +443,14 @@ export const AdminDashboard = () => {
     </div>
 
     {/* SEARCH */}
-    <div
-      className="
-        relative
-
-        w-[150px]
-        md:w-[250px]
-      "
-    >
-      <Search
-        className="
-          absolute
-          left-3
-          top-1/2
-          -translate-y-1/2
-          w-4
-          h-4
-          text-gray-400
-          dark:text-gray-300
-        "
-        aria-label="Search hubs"
-      />
-
+    <div className="relative w-32 md:w-64">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400" />
       <input
         type="text"
         placeholder="Search hub..."
         value={searchLocationTerm}
         onChange={(e) => setSearchLocationTerm(e.target.value)}
-        className="
-          w-full h-10 md:h-12 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 pl-10 pr-3 text-sm md:text-base text-gray-900 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 outline-none transition-colors duration-200 focus:border-red-500 focus:ring-2 focus:ring-red-500/30
-        "
+        className="w-full h-9 md:h-10 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 pl-9 pr-3 text-xs md:text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 outline-none transition-colors duration-200 focus:border-red-500 focus:ring-2 focus:ring-red-500/30"
         aria-label="Search hubs"
       />
     </div>
@@ -665,9 +643,9 @@ export const AdminDashboard = () => {
         
 
         {/* Hub Employee Distribution */}
-        <Card className="p-2 md:p-4">
-          <h2 className="text-[9px] md:text-lg font-semibold mb-1 md:mb-4">Hub Employee Distribution</h2>
-          <div className="h-[120px] md:h-auto">
+        <Card className="p-4 md:p-6 overflow-hidden">
+          <h2 className="text-sm md:text-lg font-semibold mb-3 md:mb-4">Hub Employee Distribution</h2>
+          <div className="min-h-[250px] w-full">
             {hubEmployeeData.length > 0 && allEmployees.length > 0 ? (
               <HubsEmployeeChart hubsData={hubs} employees={allEmployees} />
             ) : (
@@ -678,52 +656,54 @@ export const AdminDashboard = () => {
       </div>
 
       {/* Employees Table */}
-      <Card className="p-2 md:p-4">
-        <div className="space-y-2 md:space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-[10px] md:text-lg font-semibold">Employees</h2>
-            <input 
-              type="text" 
-              placeholder="Search employees..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full md:w-auto h-10 md:h-12 px-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition-colors"
-              aria-label="Search employees"
-            />
+      <Card className="p-4 md:p-6 overflow-hidden">
+        <div className="space-y-4">
+          <div className="flex justify-between items-center mb-1">
+            <h2 className="text-sm md:text-lg font-semibold">Employees</h2>
+            <div className="relative w-40 md:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400" />
+              <input 
+                type="text" 
+                placeholder="Search employees..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full h-9 md:h-10 pl-9 pr-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-xs md:text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition-colors"
+                aria-label="Search employees"
+              />
+            </div>
           </div>
 
           {employees.length > 0 ? (
-            <div className="overflow-x-auto rounded md:rounded-xl border border-gray-200 dark:border-gray-700">
-              <table className="w-full text-sm md:text-base">
+            <div className="overflow-x-auto rounded-lg md:rounded-xl border border-gray-200 dark:border-gray-700">
+              <table className="w-full min-w-[500px] text-xs md:text-sm">
                 <thead className="bg-red-700 text-white">
                   <tr>
-                    <th className="px-3 py-2 text-left">Name</th>
-                    <th className="px-3 py-2 text-left">Position</th>
-                    <th className="px-3 py-2 text-left">Hub</th>
-                    <th className="px-3 py-2 text-left">Status</th>
-                    <th className="px-3 py-2 text-center">Actions</th>
+                    <th className="px-3 md:px-4 py-2 md:py-3 text-left font-medium">Name</th>
+                    <th className="px-3 md:px-4 py-2 md:py-3 text-left font-medium">Position</th>
+                    <th className="px-3 md:px-4 py-2 md:py-3 text-left font-medium">Hub</th>
+                    <th className="px-3 md:px-4 py-2 md:py-3 text-left font-medium">Status</th>
+                    <th className="px-3 md:px-4 py-2 md:py-3 text-center font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {employees.slice(0, 10).map((emp: any) => (
-                    <tr key={emp.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
-                      <td className="px-3 py-2 font-medium text-gray-900 dark:text-white">{emp.full_name}</td>
-                      <td className="px-3 py-2 text-gray-700 dark:text-gray-300">{emp.position}</td>
-                      <td className="px-3 py-2 text-gray-700 dark:text-gray-300">{emp.hub_name || 'N/A'}</td>
-                      <td className="px-3 py-2">
-                        <Badge variant={emp.status === 'Active' ? 'success' : 'warning'} className="text-xs md:text-sm px-2 py-1 md:px-3 md:py-1">
+                    <tr key={emp.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                      <td className="px-3 md:px-4 py-2 md:py-3 font-semibold text-gray-900 dark:text-white">{emp.full_name}</td>
+                      <td className="px-3 md:px-4 py-2 md:py-3 text-gray-700 dark:text-gray-300">{emp.position}</td>
+                      <td className="px-3 md:px-4 py-2 md:py-3 text-gray-700 dark:text-gray-300">{emp.hub_name || 'N/A'}</td>
+                      <td className="px-3 md:px-4 py-2 md:py-3">
+                        <Badge variant={emp.status === 'Active' ? 'success' : 'warning'} className="text-xs px-2 py-1">
                           {emp.status}
                         </Badge>
                       </td>
-                      <td className="px-3 py-2 text-center">
+                      <td className="px-3 md:px-4 py-2 md:py-3 text-center">
                         <button 
                           onClick={() => {
                             setSelectedEmployee(emp);
                             setShowEmployeeModal(true);
                           }}
-                          className="inline-flex items-center justify-center px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-900/30 transition-colors"
+                          className="px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-blue-900 text-white rounded-lg hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-900/30 transition-colors font-medium shadow-sm"
                         >
-                          <Eye className="w-4 h-4 mr-1" />
                           View
                         </button>
                       </td>
@@ -739,27 +719,30 @@ export const AdminDashboard = () => {
       </Card>
 
       {/* Hubs Table */}
-      <Card className="p-2 md:p-4">
-        <div className="space-y-2 md:space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-[10px] md:text-lg font-semibold">Hubs</h2>
-            <input 
-              type="text" 
-              placeholder="Search..." 
-              value={searchHubTerm}
-              onChange={(e) => setSearchHubTerm(e.target.value)}
-              className="input-field text-[8px] md:text-sm flex-1 max-w-[120px] md:max-w-md !py-0.5 md:!py-2 h-5 md:h-10"
-            />
+      <Card className="p-4 md:p-6 overflow-hidden">
+        <div className="space-y-4">
+          <div className="flex justify-between items-center mb-1">
+            <h2 className="text-sm md:text-lg font-semibold">Hubs</h2>
+            <div className="relative w-32 md:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400" />
+              <input 
+                type="text" 
+                placeholder="Search hubs..." 
+                value={searchHubTerm}
+                onChange={(e) => setSearchHubTerm(e.target.value)}
+                className="w-full h-9 md:h-10 pl-9 pr-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-xs md:text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition-colors"
+              />
+            </div>
           </div>
 
           {hubs.length > 0 ? (
-            <div className="overflow-x-auto rounded md:rounded-xl border border-gray-200 dark:border-gray-700">
-              <table className="w-full text-[7px] md:text-sm">
+            <div className="overflow-x-auto rounded-lg md:rounded-xl border border-gray-200 dark:border-gray-700">
+              <table className="w-full min-w-[400px] text-xs md:text-sm">
                 <thead className="bg-red-700 text-white">
                   <tr>
-                    <th className="px-1 md:px-4 py-1 md:py-3 text-left">Hub Name</th>
-                    <th className="px-1 md:px-4 py-1 md:py-3 text-left">Location</th>
-                    <th className="px-1 md:px-4 py-1 md:py-3 text-left">Employees</th>
+                    <th className="px-3 md:px-4 py-2 md:py-3 text-left font-medium">Hub Name</th>
+                    <th className="px-3 md:px-4 py-2 md:py-3 text-left font-medium">Location</th>
+                    <th className="px-3 md:px-4 py-2 md:py-3 text-left font-medium">Employees</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -773,10 +756,10 @@ export const AdminDashboard = () => {
                     .map((hub: any) => {
                       const hubEmployeeCount = allEmployees.filter((emp: any) => emp.hub === hub.id).length;
                       return (
-                        <tr key={hub.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
-                          <td className="px-1 md:px-4 py-1 md:py-3 font-medium">{hub.name}</td>
-                          <td className="px-1 md:px-4 py-1 md:py-3">{hub.location || hub.city || 'N/A'}</td>
-                          <td className="px-1 md:px-4 py-1 md:py-3 font-semibold text-red-700">{hubEmployeeCount}</td>
+                        <tr key={hub.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                          <td className="px-3 md:px-4 py-2 md:py-3 font-semibold text-gray-900 dark:text-white">{hub.name}</td>
+                          <td className="px-3 md:px-4 py-2 md:py-3 text-gray-700 dark:text-gray-300">{hub.location || hub.city || 'N/A'}</td>
+                          <td className="px-3 md:px-4 py-2 md:py-3 font-semibold text-red-700">{hubEmployeeCount}</td>
                         </tr>
                       );
                     })}
