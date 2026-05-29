@@ -266,7 +266,7 @@ export const AdminDashboard = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
+          <h1 className="text-2xl md:text-3xl font-bold mb-2">Dashboard</h1>
           <p className="text-gray-600 dark:text-gray-400">
             {employee?.role === 'HR'
               ? '3PL BUSINESS SOLUTIONS | HR overview'
@@ -466,56 +466,45 @@ export const AdminDashboard = () => {
           left-3
           top-1/2
           -translate-y-1/2
-
           w-4
           h-4
-
           text-gray-400
+          dark:text-gray-300
         "
+        aria-label="Search hubs"
       />
 
       <input
         type="text"
         placeholder="Search hub..."
         value={searchLocationTerm}
-        onChange={(e) =>
-          setSearchLocationTerm(e.target.value)
-        }
+        onChange={(e) => setSearchLocationTerm(e.target.value)}
         className="
           w-full
-
-          h-9
-          md:h-10
-
+          h-10
+          md:h-12
           rounded-xl
-
           border
-          border-gray-200
-          dark:border-gray-700
-
+          border-gray-300
+          dark:border-gray-600
           bg-gray-100
-          dark:bg-gray-100
-
-          pl-9
+          dark:bg-gray-800
+          pl-10
           pr-3
-
-          text-xs
-          md:text-sm
-
+          text-sm
+          md:text-base
           text-gray-900
-          dark:text-white
-
-          placeholder:text-gray-400
-
+          dark:text-gray-200
+          placeholder-gray-500
+          dark:placeholder-gray-400
           outline-none
-
-          transition-all
-          duration-300
-
-          focus:border-red-400
-          focus:ring-4
-          focus:ring-red-500/10
+          transition-colors
+          duration-200
+          focus:border-red-500
+          focus:ring-2
+          focus:ring-red-500/20
         "
+        aria-label="Search hubs"
       />
     </div>
   </div>
@@ -726,46 +715,47 @@ export const AdminDashboard = () => {
             <h2 className="text-[10px] md:text-lg font-semibold">Employees</h2>
             <input 
               type="text" 
-              placeholder="Search..." 
+              placeholder="Search employees..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="input-field text-[8px] md:text-sm flex-1 max-w-[120px] md:max-w-md !py-0.5 md:!py-2 h-5 md:h-10"
+              className="w-full md:w-auto h-10 md:h-12 px-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition-colors"
+              aria-label="Search employees"
             />
           </div>
 
           {employees.length > 0 ? (
             <div className="overflow-x-auto rounded md:rounded-xl border border-gray-200 dark:border-gray-700">
-              <table className="w-full text-[7px] md:text-sm">
+              <table className="w-full text-sm md:text-base">
                 <thead className="bg-red-700 text-white">
                   <tr>
-                    <th className="px-1 md:px-4 py-1 md:py-3 text-left">Name</th>
-                    <th className="px-1 md:px-4 py-1 md:py-3 text-left">Position</th>
-                    <th className="px-1 md:px-4 py-1 md:py-3 text-left">Hub</th>
-                    <th className="px-1 md:px-4 py-1 md:py-3 text-left">Status</th>
-                    <th className="px-1 md:px-4 py-1 md:py-3 text-center">Actions</th>
+                    <th className="px-3 py-2 text-left">Name</th>
+                    <th className="px-3 py-2 text-left">Position</th>
+                    <th className="px-3 py-2 text-left">Hub</th>
+                    <th className="px-3 py-2 text-left">Status</th>
+                    <th className="px-3 py-2 text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {employees.slice(0, 10).map((emp: any) => (
                     <tr key={emp.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
-                      <td className="px-1 md:px-4 py-1 md:py-3 font-medium">{emp.full_name}</td>
-                      <td className="px-1 md:px-4 py-1 md:py-3">{emp.position}</td>
-                      <td className="px-1 md:px-4 py-1 md:py-3">{emp.hub_name || 'N/A'}</td>
-                      <td className="px-1 md:px-4 py-1 md:py-3">
-                        <Badge variant={emp.status === 'Active' ? 'success' : 'warning'} className="text-[6px] md:text-xs px-1 py-0 md:px-2 md:py-0.5">
+                      <td className="px-3 py-2 font-medium text-gray-900 dark:text-white">{emp.full_name}</td>
+                      <td className="px-3 py-2 text-gray-700 dark:text-gray-300">{emp.position}</td>
+                      <td className="px-3 py-2 text-gray-700 dark:text-gray-300">{emp.hub_name || 'N/A'}</td>
+                      <td className="px-3 py-2">
+                        <Badge variant={emp.status === 'Active' ? 'success' : 'warning'} className="text-xs md:text-sm px-2 py-1 md:px-3 md:py-1">
                           {emp.status}
                         </Badge>
                       </td>
-                      <td className="px-1 md:px-4 py-1 md:py-3 text-center">
+                      <td className="px-3 py-2 text-center">
                         <button 
                           onClick={() => {
                             setSelectedEmployee(emp);
                             setShowEmployeeModal(true);
                           }}
-                          className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 justify-center mx-auto"
+                          className="inline-flex items-center justify-center px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500/30 transition-colors"
                         >
-                          <Eye className="w-2 h-2 md:w-3.5 md:h-3.5" />
-                          <span className="hidden md:inline">View</span>
+                          <Eye className="w-4 h-4 mr-1" />
+                          View
                         </button>
                       </td>
                     </tr>
