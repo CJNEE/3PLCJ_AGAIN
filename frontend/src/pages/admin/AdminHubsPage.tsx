@@ -859,7 +859,15 @@ export const AdminHubsPage = () => {
 
   const itemsPerPage = 8;
 
-  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  useEffect(() => {
+  const closeMenu = () => setShowProfileDropdown(false);
+
+  window.addEventListener('click', closeMenu);
+
+  return () => {
+    window.removeEventListener('click', closeMenu);
+  };
+}, []);
   const [hubState, setHubState] = useState<HubState>({ selectedHub: null });
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -1109,18 +1117,29 @@ export const AdminHubsPage = () => {
       <Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
 
       <div className="min-h-screen bg-gray-50 dark:bg-[#020817] lg:ml-64 transition-colors duration-300">
-        <div className="p-5 lg:p-8 space-y-6 max-w-[1600px] mx-auto">
-        <div className="flex items-start justify-between gap-4">
+        <div className="
+          p-3
+          sm:p-5
+          lg:p-8
+          space-y-5
+          max-w-[1600px]
+          mx-auto
+          "
+          >
+        <div className="flex items-start justify-between gap-4 mb-2">
   <div>
-    <h1
-      className="
-      text-[24px]
-      sm:text-3xl
-      font-bold
-      leading-tight
-      tracking-tight
-      "
-      >
+   <h1
+    className="
+    text-2xl
+    sm:text-3xl
+    lg:text-4xl
+    font-bold
+    leading-tight
+    tracking-tight
+    text-gray-900
+    dark:text-white
+    "
+    >
       Hub Management
       </h1>
 
@@ -1604,9 +1623,12 @@ transition={{
 }}
 className="h-16 w-16 rounded-2xl bg-red-50 dark:bg-red-500/10 flex items-center justify-center mb-5"
 >
-                      <Building2 size={32} className="text-red-500" />
+                      <Building2
+                        size={42}
+                        className="text-red-500"
+                        />
                     </motion.div>
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                       Select a Hub
                     </h2>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 max-w-[260px] leading-relaxed">
@@ -1686,8 +1708,8 @@ className="h-16 w-16 rounded-2xl bg-red-50 dark:bg-red-500/10 flex items-center 
             className="
             sm:hidden
             fixed
-            bottom-28
-            right-6
+            bottom-24
+            right-4
             z-40
             h-14
             w-14
