@@ -66,13 +66,13 @@ export const AdminEmployeesPage = () => {
         {/* MOBILE HEADER */}
         <div className="md:hidden flex justify-between items-start">
           <div>
-            <h1 className="text-[2rem] leading-[1.05] font-bold text-gray-900 dark:text-white tracking-tight">
+            <h1 className="text-2xl font-bold leading-tight tracking-tight text-gray-900 dark:text-white">
               Employee
               <br />
               Management
             </h1>
 
-            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 max-w-[220px]">
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 max-w-[220px] leading-relaxed">
               Manage employees and their information
             </p>
           </div>
@@ -83,31 +83,31 @@ export const AdminEmployeesPage = () => {
                 setShowProfileDropdown(!showProfileDropdown)
               }
               className="
-                flex
-                items-center
-                gap-2
-                h-12
-                px-4
-                rounded-full
-                bg-white
-                dark:bg-[#111827]
-                border
-                border-gray-200
-                dark:border-gray-700
-                shadow-sm
-                transition-all
-              "
+              flex
+              items-center
+              gap-2
+              px-2.5
+              py-1.5
+              rounded-full
+              bg-white
+              dark:bg-[#111827]
+              border
+              border-gray-200
+              dark:border-gray-700
+              shadow-sm
+              transition-all
+"
             >
-              <div className="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                <User className="w-3.5 h-3.5 text-gray-500 dark:text-gray-300" />
+              <div className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                <User className="w-3 h-3 text-gray-500 dark:text-gray-300" />
               </div>
 
-              <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 max-w-[90px] truncate">
+              <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-200 max-w-[80px] truncate">
                 {user?.username || 'Admin'}
               </span>
 
               <ChevronDown
-                className={`w-4 h-4 text-gray-400 transition-transform ${
+              className={`w-3 h-3 text-gray-400 transition-transform ${
                   showProfileDropdown ? 'rotate-180' : ''
                 }`}
               />
@@ -120,7 +120,7 @@ export const AdminEmployeesPage = () => {
                   right-0
                   top-full
                   mt-2
-                  w-48
+                  w-4
                   overflow-hidden
                   rounded-2xl
                   bg-white
@@ -133,11 +133,11 @@ export const AdminEmployeesPage = () => {
                 "
               >
                 <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                 <p className="text-[11px] font-semibold text-gray-900 dark:text-white truncate">
                     {user?.username || 'Admin'}
                   </p>
 
-                  <p className="text-[10px] uppercase tracking-wider text-gray-500">
+                 <p className="text-[9px] uppercase tracking-wider text-gray-500">
                     {user?.role || 'Administrator'}
                   </p>
                 </div>
@@ -150,7 +150,7 @@ export const AdminEmployeesPage = () => {
                       <Moon className="w-4 h-4 text-blue-400" />
                     )}
 
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                   <span className="text-xs text-gray-700 dark:text-gray-300">
                       {isDarkMode ? 'Light Mode' : 'Dark Mode'}
                     </span>
                   </div>
@@ -181,7 +181,7 @@ export const AdminEmployeesPage = () => {
                   "
                 >
                   <LogOut className="w-4 h-4" />
-                  <span className="text-sm">Logout</span>
+                  <span className="text-xs">Logout</span>
                 </button>
               </div>
             )}
