@@ -1110,101 +1110,97 @@ export const AdminHubsPage = () => {
 
       <div className="min-h-screen bg-gray-50 dark:bg-[#020817] lg:ml-64 transition-colors duration-300">
         <div className="p-5 lg:p-8 space-y-6 max-w-[1600px] mx-auto">
-          <div className="block sm:hidden flex justify-end">
-  <div
-    onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-    className="relative flex items-center gap-2 bg-[#111827] px-3 py-1.5 rounded-full border border-gray-800 cursor-pointer active:bg-gray-800 transition-all select-none"
-  >
-    <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center">
-      <User className="w-3.5 h-3.5 text-gray-300" />
-    </div>
+         <div className="flex items-start justify-between gap-3">
 
-    <span className="text-xs font-medium text-gray-300">Admin</span>
-
-    <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
-
-    {showProfileDropdown && (
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="absolute right-0 top-full mt-2 w-40 bg-[#111827] border border-gray-800 rounded-xl shadow-xl p-1 z-[9999]"
-      >
-        <div className="px-3 py-1.5 border-b border-gray-800 text-[9px] text-gray-500 font-bold uppercase tracking-wider">
-          Admin Panel
-        </div>
-
-        {/* THEME TOGGLE */}
-        <div className="w-full flex items-center justify-between px-3 py-2 text-left text-xs text-gray-300 rounded-lg">
-          <div className="flex items-center gap-2">
-            {isDarkMode ? (
-              <Sun className="w-3.5 h-3.5 text-yellow-400" />
-            ) : (
-              <Moon className="w-3.5 h-3.5 text-blue-400" />
-            )}
-            <span className="text-xs">
-              {isDarkMode ? 'Light Mode' : 'Dark Mode'}
-            </span>
-          </div>
-
-          <div onClick={(e) => e.stopPropagation()}>
-            <ThemeToggle />
-          </div>
-        </div>
-
-        {/* LOGOUT */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleLogout();
-          }}
-          className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs text-red-400 hover:bg-red-500/10 active:bg-red-500/20 rounded-lg transition-colors"
-        >
-          <LogOut className="w-3.5 h-3.5" />
-          <span>Logout</span>
-        </button>
-      </div>
-    )}
-  </div>
-</div>
-          <div className="flex flex-row items-center justify-between gap-3">
-
-  {/* LEFT SIDE TEXT */}
-  <div className="min-w-0">
-    <h1 className="
-text-xl
-sm:text-2xl
-lg:text-[28px]
-font-bold
-text-gray-900
-dark:text-white
-tracking-tight
-leading-tight
-"
-> 
+  {/* LEFT */}
+  <div className="min-w-0 flex-1">
+    <h1
+      className="
+      text-2xl
+      lg:text-[28px]
+      font-bold
+      text-gray-900
+      dark:text-white
+      tracking-tight
+      "
+    >
       Hub Management
     </h1>
 
-    <p className="
-text-xs
-sm:text-sm
-text-gray-500
-dark:text-gray-400
-mt-1
-"
->
+    <p
+      className="
+      text-sm
+      text-gray-500
+      dark:text-gray-400
+      mt-1
+      "
+    >
       Manage hubs, employees, and routes across all locations
     </p>
   </div>
 
-  {/* RIGHT SIDE BUTTON */}
+  {/* MOBILE ADMIN DROPDOWN */}
+  <div className="sm:hidden shrink-0">
+    <div
+      onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+      className="
+      relative
+      flex
+      items-center
+      gap-2
+      bg-[#111827]
+      px-3
+      py-2
+      rounded-full
+      border
+      border-gray-800
+      cursor-pointer
+      "
+    >
+      <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center">
+        <User className="w-3.5 h-3.5 text-gray-300" />
+      </div>
+
+      <span className="text-xs font-medium text-gray-300">
+        Admin
+      </span>
+
+      <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+
+      {/* dropdown menu */}
+      {showProfileDropdown && (
+        <div className="absolute right-0 top-full mt-2 w-40 bg-[#111827] border border-gray-800 rounded-xl shadow-xl p-1 z-[9999]">
+          ...
+        </div>
+      )}
+    </div>
+  </div>
+
+  {/* DESKTOP ADD HUB */}
   <button
     onClick={() => setShowAddModal(true)}
-    className="hidden sm:flex h-10 px-5 rounded-xl bg-gradient-to-r from-red-500 to-rose-600 text-white text-sm font-semibold items-center gap-2 shadow-lg shadow-red-500/20 hover:shadow-red-500/30 hover:brightness-110 active:scale-[0.97] transition-all"
+    className="
+    hidden
+    sm:flex
+    h-10
+    px-5
+    rounded-xl
+    bg-gradient-to-r
+    from-red-500
+    to-rose-600
+    text-white
+    text-sm
+    font-semibold
+    items-center
+    gap-2
+    "
   >
     <Plus size={16} />
     Add Hub
   </button>
 
 </div>
+        
 
           {/* ========== SEARCH ========== */}
           <div className="relative">
