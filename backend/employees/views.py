@@ -22,6 +22,8 @@ from .serializers import (
     LiveLocationSerializer, PayrollSerializer, ActivityLogSerializer, SecurityAlertSerializer, HRPermissionSerializer
 )
 
+from datetime import timedelta
+
 def _client_ip(request):
     xff = request.META.get('HTTP_X_FORWARDED_FOR')
     if xff:
@@ -352,6 +354,35 @@ class EmployeeViewSet(viewsets.ModelViewSet):
         if x_forwarded_for:
             return x_forwarded_for.split(',')[0]
         return request.META.get('REMOTE_ADDR')
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def online_employees(request):
+    """Return employees considered online.
+
+    Heuristic: an employee is online if they have a LiveLocation timestamp within
+    the last 5 minutes OR their linked Django User `last_login` is within 5 minutes.
+    """
+    try:
+        window_minutes = int(request.query_params.get('minutes', 5))
+    except (TypeError, ValueError):
+        window_minutes = 5
+
+    threshold = timezone.now() - timedelta(minutes=window_minutes)
+
+    # Employees with recent live location
+    recent_location_emp_ids = LiveLocation.objects.filter(timestamp__gte=threshold).values_list('employee_id', flat=True).distinct()
+
+    # Employees whose user last_login is recent
+    recent_user_emp_ids = Employee.objects.filter(user__last_login__gte=threshold).values_list('id', flat=True)
+
+    online_ids = set(list(recent_location_emp_ids) + list(recent_user_emp_ids))
+
+    employees = Employee.objects.filter(id__in=online_ids)
+    serializer = EmployeeSerializer(employees, many=True, context={'request': request})
+
+    return Response({'count': employees.count(), 'employees': serializer.data, 'ids': list(online_ids)})
 
 
 # Helper: compute government deductions based on hub-specific rates or defaults

@@ -15,6 +15,7 @@ import {
   Lock,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme, ThemeToggle } from '@/context/ThemeContext';
 
 const iconMap: Record<string, any> = {
   '/admin': Grid,
@@ -44,6 +45,7 @@ const subtitleMap: Record<string, string> = {
 
 export const AdminMobileProfile: React.FC<{ title?: string; subtitle?: string }> = ({ title, subtitle }) => {
   const { user, logout } = useAuth();
+  const { isDarkMode } = useTheme();
   const [open, setOpen] = React.useState(false);
 
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '/admin';
@@ -61,10 +63,10 @@ export const AdminMobileProfile: React.FC<{ title?: string; subtitle?: string }>
       <div
         className="w-full rounded-b-2xl text-white"
         style={{
-          paddingTop: 'env(safe-area-inset-top,12px)',
-          height: 92,
-          background: 'linear-gradient(90deg, #240046 0%, #3C096C 40%, #0B1D51 100%)',
-          boxShadow: '0 10px 30px rgba(90,24,154,0.25), 0 2px 8px rgba(12,15,40,0.6)',
+          paddingTop: 'env(safe-area-inset-top,10px)',
+          height: 78,
+          background: 'linear-gradient(90deg, #05233A 0%, #0B4286 50%, #04263A 100%)',
+          boxShadow: '0 8px 22px rgba(2,8,23,0.35), 0 2px 6px rgba(4,6,14,0.6)',
         }}
       >
         <div className="flex items-center justify-between px-4" style={{ height: '100%' }}>
@@ -93,10 +95,10 @@ export const AdminMobileProfile: React.FC<{ title?: string; subtitle?: string }>
               onClick={() => setOpen(!open)}
               className="flex items-center gap-3 px-3 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md cursor-pointer select-none"
               style={{
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.02), 0 6px 22px rgba(60,9,108,0.18)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.02), 0 6px 18px rgba(4,36,134,0.18)',
                 borderRadius: 9999,
-                minWidth: 180,
-                maxWidth: 220,
+                minWidth: 150,
+                maxWidth: 200,
               }}
             >
               <div style={{ position: 'relative' }}>
@@ -118,9 +120,15 @@ export const AdminMobileProfile: React.FC<{ title?: string; subtitle?: string }>
             </div>
 
             {open && (
-              <div className="absolute right-4 mt-20 w-48 bg-white/5 border border-white/10 rounded-xl shadow-xl p-2 z-50 backdrop-blur-md">
+              <div className="absolute right-4 mt-20 w-56 bg-white/5 border border-white/10 rounded-xl shadow-xl p-2 z-50 backdrop-blur-md">
                 <div className="px-3 py-1.5 border-b border-white/8 text-xs text-white/80 font-bold uppercase tracking-wider">
                   Account
+                </div>
+                <div className="px-3 py-3 flex items-center justify-between">
+                  <div className="text-xs text-white/80 font-medium">{isDarkMode ? 'Dark' : 'Light'} Mode</div>
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <ThemeToggle />
+                  </div>
                 </div>
                 <button
                   onClick={handleLogout}

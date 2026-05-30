@@ -113,6 +113,11 @@ export const employeeAPI = {
     return response.data;
   },
 
+  getOnlineEmployees: async (params?: Record<string, unknown>) => {
+    const response = await apiClient.get(API_ENDPOINTS.EMPLOYEES_ONLINE, { params });
+    return response.data;
+  },
+
   bulkToggleLogin: async (employeeIds: number[], canLogin: boolean) => {
     const response = await apiClient.post(
       `${API_ENDPOINTS.EMPLOYEES}bulk_toggle_login/`,

@@ -9,6 +9,7 @@ import HubsEmployeeChart from '@/components/HubsEmployeeChart';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useTheme, ThemeToggle } from '@/context/ThemeContext';
+import AdminMobileProfile from '@/components/AdminMobileProfile';
 
 // Shared Colors from AdminDashboard
 const STATUS_COLORS: Record<string, string> = {
@@ -112,32 +113,7 @@ export const MobileAdminDashboardView = ({
       `}</style>
       
       {/* Top Header */}
-      <div className="flex justify-between items-start px-5 pt-5 pb-4">
-        <div>
-          <h1
-            className="
-            text-2xl
-            font-bold
-            leading-tight
-            tracking-tight
-            text-white
-            "
-          >
-            Dashboard
-          </h1>
-        
-         <p
-          className="
-          text-xs
-          text-gray-400
-          mt-1
-          max-w-[220px]
-          leading-relaxed
-          "
-        >
-          3PL BUSINESS SOLUTIONS | ADMIN OVERVIEW
-        </p>
-        </div>
+      <AdminMobileProfile />
         <div
           onClick={() => setShowProfileDropdown(!showProfileDropdown)}
           className="

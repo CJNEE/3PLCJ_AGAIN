@@ -23,6 +23,7 @@ urlpatterns = [
     path('login/', views.LoginView.as_view(), name='login'),
     path('current-user/', views.CurrentUserView.as_view(), name='current_user'),
     path('stats/', views.EmployeeStatsView.as_view(), name='stats'),
+    path('employees/online/', views.online_employees, name='employees_online'),
     path('', include(router.urls)),
     path('toggle-account/<int:user_id>/', views.toggle_account_status, name='toggle_account_status'),
     path('lock-unlock-account/<int:employee_id>/', views.lock_unlock_account, name='lock_unlock_account'),

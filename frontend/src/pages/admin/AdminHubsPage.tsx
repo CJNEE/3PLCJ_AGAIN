@@ -1308,7 +1308,7 @@ export const AdminHubsPage = () => {
             shadow-lg
             "
             >
-              <div className="h-[300px] sm:h-[450px] lg:h-[550px]">
+              <div className="h-[300px] sm:h-[450px] lg:h-[550px] xl:h-[calc(100vh-220px)]">
                 <MapContainer
                   center={[14.5995, 120.9842]}
                   zoom={6}
