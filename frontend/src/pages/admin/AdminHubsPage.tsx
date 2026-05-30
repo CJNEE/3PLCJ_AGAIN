@@ -57,7 +57,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useTheme, ThemeToggle } from '@/context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-
+import { useNavigate } from 'react-router-dom';
 // ======================================
 // CONSTANTS
 // ======================================
