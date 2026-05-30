@@ -1676,27 +1676,27 @@ className="h-16 w-16 rounded-2xl bg-red-50 dark:bg-red-500/10 flex items-center 
       {/* ========== MOBILE FAB ========== */}
       <button
         onClick={() => setShowAddModal(true)}
-       className="
-sm:hidden
-fixed
-bottom-28
-right-4
-z-40
-h-14
-w-14
-rounded-full
-bg-gradient-to-br
-from-red-500
-to-rose-600
-text-white
-flex
-items-center
-justify-center
-shadow-2xl
-shadow-red-500/30
-active:scale-90
-transition-all
-"
+            className="
+            sm:hidden
+            fixed
+            bottom-28
+            right-6
+            z-40
+            h-14
+            w-14
+            rounded-full
+            bg-gradient-to-br
+            from-red-500
+            to-rose-600
+            text-white
+            flex
+            items-center
+            justify-center
+            shadow-2xl
+            shadow-red-500/30
+            active:scale-90
+            transition-all
+            "
       >
         <Plus size={24} />
       </button>
