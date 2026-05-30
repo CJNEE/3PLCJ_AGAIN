@@ -1110,18 +1110,17 @@ export const AdminHubsPage = () => {
 
       <div className="min-h-screen bg-gray-50 dark:bg-[#020817] lg:ml-64 transition-colors duration-300">
         <div className="p-5 lg:p-8 space-y-6 max-w-[1600px] mx-auto">
-         <div className="flex items-start justify-between gap-3">
+         <div className="flex items-start justify-between gap-4">
 
   {/* LEFT */}
-  <div className="min-w-0 flex-1">
-    <h1
+  <h1
       className="
-      text-2xl
-      lg:text-[28px]
+      text-[34px]
+      sm:text-3xl
       font-bold
+      leading-none
       text-gray-900
       dark:text-white
-      tracking-tight
       "
     >
       Hub Management
@@ -1169,10 +1168,58 @@ export const AdminHubsPage = () => {
 
       {/* dropdown menu */}
       {showProfileDropdown && (
-        <div className="absolute right-0 top-full mt-2 w-40 bg-[#111827] border border-gray-800 rounded-xl shadow-xl p-1 z-[9999]">
-          ...
-        </div>
-      )}
+       {showProfileDropdown && (
+  <div
+    className="
+    absolute
+    right-0
+    top-full
+    mt-2
+    w-48
+    rounded-2xl
+    bg-[#0F172A]
+    border
+    border-white/10
+    shadow-2xl
+    p-2
+    z-[9999]
+    "
+  >
+    <div className="px-3 py-2 border-b border-white/10">
+      <p className="text-[10px] uppercase tracking-wider text-gray-500">
+        Admin Panel
+      </p>
+    </div>
+
+    <div className="flex items-center justify-between px-3 py-3">
+      <div className="flex items-center gap-2">
+        <Sun size={14} className="text-yellow-400" />
+        <span className="text-sm text-white">Light Mode</span>
+      </div>
+
+      <ThemeToggle />
+    </div>
+
+    <button
+      onClick={handleLogout}
+      className="
+      w-full
+      flex
+      items-center
+      gap-2
+      px-3
+      py-3
+      text-red-400
+      hover:bg-red-500/10
+      rounded-xl
+      transition
+      "
+    >
+      <LogOut size={15} />
+      Logout
+    </button>
+  </div>
+)}
     </div>
   </div>
 
@@ -1633,7 +1680,7 @@ className="h-16 w-16 rounded-2xl bg-red-50 dark:bg-red-500/10 flex items-center 
        className="
 sm:hidden
 fixed
-bottom-20
+bottom-28
 right-4
 z-40
 h-14
