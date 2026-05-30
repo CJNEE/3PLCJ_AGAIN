@@ -12,7 +12,7 @@ import {
   LogOut,
   Sun,
   Moon,
-  Plus
+  Plus,
 } from 'lucide-react';
 
 export const AdminEmployeesPage = () => {
@@ -29,11 +29,9 @@ export const AdminEmployeesPage = () => {
     navigate('/login');
   };
 
-  // Add Employee Page
   if (showAdd) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
-        {/* Desktop Sidebar */}
         <div className="hidden lg:block">
           <Sidebar
             open={sidebarOpen}
@@ -63,57 +61,98 @@ export const AdminEmployeesPage = () => {
       </div>
 
       <div className="p-4 lg:p-6 lg:ml-64 space-y-6 max-md:space-y-4 pb-32 lg:pb-6 max-md:p-3">
-        
+
         {/* MOBILE HEADER */}
         <div className="flex items-center justify-between md:hidden">
           <div>
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">
               Employee Management
             </h1>
+
             <p className="text-xs text-gray-500 dark:text-gray-400">
               Manage employees and their information
             </p>
           </div>
 
-          <div
-            onClick={() =>
-              setShowProfileDropdown(!showProfileDropdown)
-            }
-            className="relative flex items-center gap-2 bg-[#111827] px-3 py-1.5 rounded-full border border-gray-800 cursor-pointer active:bg-gray-800 transition-all select-none"
-          >
-           <div className="w-5 h-5 rounded-full bg-gray-700 flex items-center justify-center">
-            <span className="text-[9px] font-semibold text-gray-300">
-              {user?.username?.charAt(0)?.toUpperCase() || 'A'}
-            </span>
-          </div>
+          <div className="relative">
+            <button
+              onClick={() =>
+                setShowProfileDropdown(!showProfileDropdown)
+              }
+              className="
+                flex
+                items-center
+                gap-2
+                px-3
+                py-2
+                rounded-full
+                bg-gray-900/80
+                dark:bg-gray-800/80
+                border
+                border-gray-700/50
+                backdrop-blur-sm
+                shadow-sm
+                cursor-pointer
+                transition-all
+                active:scale-95
+                select-none
+              "
+            >
+              <div className="w-5 h-5 rounded-full bg-gray-700 flex items-center justify-center">
+                <span className="text-[9px] font-semibold text-gray-300">
+                  {user?.username?.charAt(0)?.toUpperCase() || 'A'}
+                </span>
+              </div>
 
-            <span className="text-xs font-medium text-gray-300 max-w-[90px] truncate">
-              {user?.username || 'Admin'}
-            </span>
+              <span className="text-xs font-medium text-gray-200 max-w-[90px] truncate">
+                {user?.username || 'Admin'}
+              </span>
 
-            <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+              <ChevronDown
+                className={`w-3.5 h-3.5 text-gray-400 transition-transform ${
+                  showProfileDropdown ? 'rotate-180' : ''
+                }`}
+              />
+            </button>
 
             {showProfileDropdown && (
-              <div className="absolute right-0 top-full mt-2 w-48 bg-[#111827] border border-gray-800 rounded-xl shadow-xl p-1 z-[9999]">
-                <div className="px-3 py-2 border-b border-gray-800">
-                  <p className="text-xs font-semibold text-white truncate">
+              <div
+                className="
+                  absolute
+                  right-0
+                  top-full
+                  mt-2
+                  w-52
+                  overflow-hidden
+                  rounded-2xl
+                  border
+                  border-gray-700/50
+                  bg-gray-900
+                  dark:bg-gray-800
+                  shadow-2xl
+                  backdrop-blur-xl
+                  z-[9999]
+                "
+              >
+                <div className="px-4 py-3 border-b border-gray-700/50">
+                  <p className="text-sm font-semibold text-white truncate">
                     {user?.username || 'Admin'}
                   </p>
-                
-                  <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">
+
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wider mt-1">
                     {user?.role || 'Administrator'}
                   </p>
                 </div>
 
-                <div className="w-full flex items-center justify-between px-3 py-2 text-left text-xs text-gray-300 rounded-lg">
+                <div className="flex items-center justify-between px-4 py-3">
                   <div className="flex items-center gap-2">
                     {isDarkMode ? (
-                      <Sun className="w-3.5 h-3.5 text-yellow-400" />
+                      <Sun className="w-4 h-4 text-yellow-400" />
                     ) : (
-                      <Moon className="w-3.5 h-3.5 text-blue-400" />
+                      <Moon className="w-4 h-4 text-blue-400" />
                     )}
 
-                    <span className="text-xs">
+                    <span className="text-sm text-gray-200">
                       {isDarkMode ? 'Light Mode' : 'Dark Mode'}
                     </span>
                   </div>
@@ -130,10 +169,20 @@ export const AdminEmployeesPage = () => {
                     e.stopPropagation();
                     handleLogout();
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs text-red-400 hover:bg-red-500/10 active:bg-red-500/20 rounded-lg transition-colors"
+                  className="
+                    w-full
+                    flex
+                    items-center
+                    gap-2
+                    px-4
+                    py-3
+                    text-red-400
+                    hover:bg-red-500/10
+                    transition-colors
+                  "
                 >
-                  <LogOut className="w-3.5 h-3.5" />
-                  <span>Logout</span>
+                  <LogOut className="w-4 h-4" />
+                  <span className="text-sm">Logout</span>
                 </button>
               </div>
             )}
@@ -143,11 +192,11 @@ export const AdminEmployeesPage = () => {
         {/* DESKTOP HEADER */}
         <div className="hidden md:flex items-center justify-between">
           <div>
-            <h1 className="text-3xl max-md:text-2xl font-bold mb-2 max-md:mb-1">
+            <h1 className="text-3xl font-bold mb-2">
               Employee Management
             </h1>
 
-            <p className="text-gray-600 dark:text-gray-400 max-md:text-xs">
+            <p className="text-gray-600 dark:text-gray-400">
               Manage employees and their information
             </p>
           </div>
