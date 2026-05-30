@@ -66,7 +66,7 @@ export const MobileAdminDashboardView = ({
 }: any) => {
 
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const { isDarkMode, toggleDarkMode } = useTheme();
   const [showProfileDropdown, setShowProfileDropdown] = React.useState(false);
 
@@ -121,16 +121,26 @@ export const MobileAdminDashboardView = ({
           onClick={() => setShowProfileDropdown(!showProfileDropdown)}
           className="relative flex items-center gap-2 bg-[#111827] px-3 py-1.5 rounded-full border border-gray-800 cursor-pointer active:bg-gray-800 transition-all select-none"
         >
-          <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center">
-            <User className="w-3.5 h-3.5 text-gray-300" />
+          <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
+            <span className="text-[10px] font-bold text-white">
+              {user?.username?.charAt(0).toUpperCase() || 'A'}
+            </span>
           </div>
-          <span className="text-xs font-medium text-gray-300">Admin</span>
+          <span className="text-xs font-medium text-gray-300">
+            {user?.username || 'Admin'}
+          </span>
           <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
 
           {showProfileDropdown && (
             <div className="absolute right-0 top-full mt-2 w-36 bg-[#111827] border border-gray-800 rounded-xl shadow-xl p-1 z-[9999]">
-              <div className="px-3 py-1.5 border-b border-gray-800 text-[9px] text-gray-500 font-bold uppercase tracking-wider">
-                Admin Panel
+              <div className="px-3 py-2 border-b border-gray-800">
+                <p className="text-xs font-semibold text-white truncate">
+                  {user?.username}
+                </p>
+              
+                <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">
+                  {user?.role}
+                </p>
               </div>
               <div className="w-full flex items-center justify-between px-3 py-2 text-left text-xs text-gray-300 rounded-lg">
                 <div className="flex items-center gap-2">
