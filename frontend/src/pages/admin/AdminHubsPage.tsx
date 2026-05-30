@@ -1110,10 +1110,9 @@ export const AdminHubsPage = () => {
 
       <div className="min-h-screen bg-gray-50 dark:bg-[#020817] lg:ml-64 transition-colors duration-300">
         <div className="p-5 lg:p-8 space-y-6 max-w-[1600px] mx-auto">
-         <div className="flex items-start justify-between gap-4">
-
-  {/* LEFT */}
-  <h1
+        <div className="flex items-start justify-between gap-4">
+  <div>
+    <h1
       className="
       text-[34px]
       sm:text-3xl
@@ -1137,6 +1136,7 @@ export const AdminHubsPage = () => {
       Manage hubs, employees, and routes across all locations
     </p>
   </div>
+
 
   {/* MOBILE ADMIN DROPDOWN */}
   <div className="sm:hidden shrink-0">
@@ -1167,86 +1167,85 @@ export const AdminHubsPage = () => {
       <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
 
       {/* dropdown menu */}
-      {showProfileDropdown && (
        {showProfileDropdown && (
-  <div
-    className="
-    absolute
-    right-0
-    top-full
-    mt-2
-    w-48
-    rounded-2xl
-    bg-[#0F172A]
-    border
-    border-white/10
-    shadow-2xl
-    p-2
-    z-[9999]
-    "
-  >
-    <div className="px-3 py-2 border-b border-white/10">
-      <p className="text-[10px] uppercase tracking-wider text-gray-500">
-        Admin Panel
-      </p>
-    </div>
-
-    <div className="flex items-center justify-between px-3 py-3">
-      <div className="flex items-center gap-2">
-        <Sun size={14} className="text-yellow-400" />
-        <span className="text-sm text-white">Light Mode</span>
+        <div
+          className="
+          absolute
+          right-0
+          top-full
+          mt-2
+          w-48
+          rounded-2xl
+          bg-[#0F172A]
+          border
+          border-white/10
+          shadow-2xl
+          p-2
+          z-[9999]
+          "
+        >
+          <div className="px-3 py-2 border-b border-white/10">
+            <p className="text-[10px] uppercase tracking-wider text-gray-500">
+              Admin Panel
+            </p>
+          </div>
+      
+          <div className="flex items-center justify-between px-3 py-3">
+            <div className="flex items-center gap-2">
+              <Sun size={14} className="text-yellow-400" />
+              <span className="text-sm text-white">Light Mode</span>
+            </div>
+      
+            <ThemeToggle />
+          </div>
+      
+          <button
+            onClick={handleLogout}
+            className="
+            w-full
+            flex
+            items-center
+            gap-2
+            px-3
+            py-3
+            text-red-400
+            hover:bg-red-500/10
+            rounded-xl
+            transition
+            "
+          >
+            <LogOut size={15} />
+            Logout
+          </button>
+        </div>
+      )}
+          </div>
+        </div>
+      
+        {/* DESKTOP ADD HUB */}
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="
+          hidden
+          sm:flex
+          h-10
+          px-5
+          rounded-xl
+          bg-gradient-to-r
+          from-red-500
+          to-rose-600
+          text-white
+          text-sm
+          font-semibold
+          items-center
+          gap-2
+          "
+        >
+          <Plus size={16} />
+          Add Hub
+        </button>
+      
       </div>
-
-      <ThemeToggle />
-    </div>
-
-    <button
-      onClick={handleLogout}
-      className="
-      w-full
-      flex
-      items-center
-      gap-2
-      px-3
-      py-3
-      text-red-400
-      hover:bg-red-500/10
-      rounded-xl
-      transition
-      "
-    >
-      <LogOut size={15} />
-      Logout
-    </button>
-  </div>
-)}
-    </div>
-  </div>
-
-  {/* DESKTOP ADD HUB */}
-  <button
-    onClick={() => setShowAddModal(true)}
-    className="
-    hidden
-    sm:flex
-    h-10
-    px-5
-    rounded-xl
-    bg-gradient-to-r
-    from-red-500
-    to-rose-600
-    text-white
-    text-sm
-    font-semibold
-    items-center
-    gap-2
-    "
-  >
-    <Plus size={16} />
-    Add Hub
-  </button>
-
-</div>
         
 
           {/* ========== SEARCH ========== */}
