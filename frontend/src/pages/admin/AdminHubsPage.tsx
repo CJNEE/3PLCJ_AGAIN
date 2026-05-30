@@ -37,11 +37,6 @@ import {
   MoreVertical,
   Globe,
   Hash,
-  User,
-  ChevronDown,
-  LogOut,
-  Moon,
-  Sun,
 } from 'lucide-react';
 
 import { normalizeApiResponse } from '@/utils/apiResponseHandler';
@@ -62,7 +57,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-
+import AdminMobileProfile from '@/components/AdminMobileProfile';
 
 // ======================================
 // CONSTANTS
@@ -822,18 +817,14 @@ const HubCard = ({
 // ======================================
 
 export const AdminHubsPage = () => {
-  const { canViewEmployees, logout } = useAuth();
-  const { isDarkMode, toggleTheme } = useTheme();
-
-  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const { canViewEmployees } = useAuth();
+  const { isDarkMode } = useTheme();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [employeeSearch, setEmployeeSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
-  const handleLogout = () => {
-    logout();
-  };
+
   const [hubState, setHubState] = useState<HubState>({ selectedHub: null });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
@@ -851,7 +842,7 @@ export const AdminHubsPage = () => {
   const [editingHub, setEditingHub] = useState<Hub | null>(null);
   const [deletingHub, setDeletingHub] = useState<Hub | null>(null);
 
- const mapRef = useRef<L.Map | null>(null);
+  const mapRef = useRef(null);
 
   const { data, isLoading } = useGetHubs();
   const { data: employeesData } = useGetEmployees();
@@ -951,13 +942,7 @@ export const AdminHubsPage = () => {
     (hubId: number) => allEmployees.filter((emp: Employee) => emp.hub === hubId).length,
     [allEmployees]
   );
-useEffect(() => {
-  const handleClickOutside = () => setShowProfileDropdown(false);
-  if (showProfileDropdown) {
-    window.addEventListener('click', handleClickOutside);
-  }
-  return () => window.removeEventListener('click', handleClickOutside);
-}, [showProfileDropdown]);
+
   // ======================================
   // EMPLOYEE FILTER
   // ======================================
@@ -1088,66 +1073,9 @@ useEffect(() => {
 
       <div className="min-h-screen bg-gray-50 dark:bg-[#020817] lg:ml-64 transition-colors duration-300">
         <div className="p-5 lg:p-8 space-y-6 max-w-[1600px] mx-auto">
-      
-
-  <div
-    onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-    className="relative flex items-center gap-2 bg-[#111827] px-3 py-1.5 rounded-full border border-gray-800 cursor-pointer"
-  >
-    <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center">
-      <User className="w-3.5 h-3.5 text-gray-300" />
-    </div>
-
-    <span className="text-xs font-medium text-gray-300">Admin</span>
-    <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
-
-    {showProfileDropdown && (
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="absolute right-0 top-full mt-2 w-44 bg-[#111827] border border-gray-800 rounded-xl shadow-xl p-1 z-[9999]"
-      >
-        <div className="px-3 py-1.5 border-b border-gray-800 text-[9px] text-gray-500 font-bold uppercase">
-          Admin Panel
-        </div>
-
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleTheme();
-          }}
-          className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-300 hover:bg-white/5 rounded-lg"
-        >
-          {isDarkMode ? (
-            <Sun className="w-3.5 h-3.5 text-yellow-400" />
-          ) : (
-            <Moon className="w-3.5 h-3.5 text-blue-400" />
-          )}
-          <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
-        </button>
-
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleLogout();
-          }}
-          className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-red-500/10 rounded-lg"
-        >
-          <LogOut className="w-3.5 h-3.5" />
-          Logout
-        </button>
-      </div>
-    )}
-  </div>
-</div>
-  <div>
-    <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-      Hub Management
-    </h1>
-    <p className="text-xs text-gray-500 dark:text-gray-400">
-      Manage hubs and employees
-    </p>
-  </div>
-
+          <div className="block sm:hidden">
+            <AdminMobileProfile />
+          </div>
           {/* ========== HEADER ========== */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
