@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/useToast';
 import { CheckCircle, XCircle, Clock, Trash2, Eye, Download, X } from 'lucide-react';
 import { useClearAllLeaveRequests } from '@/hooks/useQueries';
 import { Sidebar } from '@/components/Sidebar';
+import AdminMobileProfile from '@/components/AdminMobileProfile';
 import { apiUrl } from '@/constants/api';
 import { AttachmentPreviewModal } from './AttachmentPreviewModal';
 
@@ -184,6 +185,9 @@ export const LeaveRequestsPanel = ({ initialFilter = 'pending' }: { initialFilte
         onToggle={() => setSidebarOpen(!sidebarOpen)}
       />
       <div className="p-4 lg:p-6 lg:ml-64 space-y-6">
+        <div className="block md:hidden">
+          <AdminMobileProfile />
+        </div>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold mb-2">Leave Requests</h1>

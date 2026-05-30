@@ -8,7 +8,7 @@ import 'leaflet/dist/leaflet.css';
 import HubsEmployeeChart from '@/components/HubsEmployeeChart';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '@/context/ThemeContext';
+import { useTheme, ThemeToggle } from '@/context/ThemeContext';
 
 // Shared Colors from AdminDashboard
 const STATUS_COLORS: Record<string, string> = {
@@ -132,16 +132,15 @@ export const MobileAdminDashboardView = ({
               <div className="px-3 py-1.5 border-b border-gray-800 text-[9px] text-gray-500 font-bold uppercase tracking-wider">
                 Admin Panel
               </div>
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleDarkMode();
-                }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs text-gray-300 hover:bg-gray-700/50 active:bg-gray-700 rounded-lg transition-colors"
-              >
-                {isDarkMode ? <Sun className="w-3.5 h-3.5 text-yellow-400" /> : <Moon className="w-3.5 h-3.5 text-blue-400" />}
-                <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
-              </button>
+              <div className="w-full flex items-center justify-between px-3 py-2 text-left text-xs text-gray-300 rounded-lg">
+                <div className="flex items-center gap-2">
+                  {isDarkMode ? <Sun className="w-3.5 h-3.5 text-yellow-400" /> : <Moon className="w-3.5 h-3.5 text-blue-400" />}
+                  <span className="text-xs">{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
+                </div>
+                <div onClick={(e) => e.stopPropagation()}>
+                  <ThemeToggle />
+                </div>
+              </div>
               <button 
                 onClick={(e) => {
                   e.stopPropagation();

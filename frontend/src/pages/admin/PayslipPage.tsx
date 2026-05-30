@@ -5,6 +5,7 @@ import { PayslipDetailModal } from '@/components/PayslipDetailModal';
 import { useGetPayroll, useGetHubs, useGetEmployees } from '@/hooks/useQueries';
 import { Download, Search } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import AdminMobileProfile from '@/components/AdminMobileProfile';
 import { normalizeApiResponse } from '@/utils/apiResponseHandler';
 
 export const PayslipPage = () => {
@@ -304,6 +305,9 @@ export const PayslipPage = () => {
       />
 
       <div className="p-4 lg:p-6 lg:ml-64 space-y-6 max-md:p-3 max-md:space-y-4 max-md:pb-32 pb-32 lg:pb-6">
+        <div className="block md:hidden">
+          <AdminMobileProfile />
+        </div>
         <div>
           <h1 className="text-3xl max-md:text-2xl font-bold mb-2 max-md:mb-1">Payroll Management</h1>
           <p className="text-gray-600 dark:text-gray-400 max-md:text-xs">View and manage employee payrolls by hub</p>

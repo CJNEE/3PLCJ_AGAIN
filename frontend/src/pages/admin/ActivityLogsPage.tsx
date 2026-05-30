@@ -5,6 +5,7 @@ import { useGetActivityLogs, useClearAllActivityLogs } from '@/hooks/useQueries'
 import { normalizeApiResponse } from '@/utils/apiResponseHandler';
 import { formatDistanceToNow } from 'date-fns';
 import { Sidebar } from '@/components/Sidebar';
+import AdminMobileProfile from '@/components/AdminMobileProfile';
 import { useToast } from '@/hooks/useToast';
 
 export const ActivityLogsPage = () => {
@@ -121,6 +122,9 @@ export const ActivityLogsPage = () => {
       </div>
 
       <div className="p-4 lg:p-6 lg:ml-64 space-y-6 pb-32 lg:pb-6 max-md:p-3 max-md:space-y-4 max-md:pb-32">
+        <div className="block md:hidden">
+          <AdminMobileProfile />
+        </div>
 
       {/* Header */}
       <div className="flex items-center gap-3">

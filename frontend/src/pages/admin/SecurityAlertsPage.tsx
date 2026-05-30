@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/useToast';
 import { normalizeApiResponse } from '@/utils/apiResponseHandler';
 import { formatDistanceToNow } from 'date-fns';
 import { Sidebar } from '@/components/Sidebar';
+import AdminMobileProfile from '@/components/AdminMobileProfile';
 
 export const SecurityAlertsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -140,6 +141,9 @@ export const SecurityAlertsPage = () => {
       </div>
 
       <div className="p-4 lg:p-6 lg:ml-64 space-y-6 max-md:p-3 max-md:space-y-4 max-md:pb-32 pb-32 lg:pb-6">
+        <div className="block md:hidden">
+          <AdminMobileProfile />
+        </div>
         {/* Header */}
         <div className="flex items-center gap-3">
           <div className="p-3 max-md:p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">

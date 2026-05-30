@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/useToast';
 import { Check, X, Clock, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { useClearAllEditRequests } from '@/hooks/useQueries';
 import { Sidebar } from '@/components/Sidebar';
+import AdminMobileProfile from '@/components/AdminMobileProfile';
 
 import { apiUrl } from '@/constants/api';
 
@@ -168,6 +169,9 @@ export const EditRequestsPanel = () => {
       </div>
 
       <div className="p-4 lg:p-6 lg:ml-64 space-y-6 pb-32 lg:pb-6 max-md:p-3 max-md:space-y-4 max-md:pb-32">
+        <div className="block md:hidden">
+          <AdminMobileProfile />
+        </div>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl max-md:text-2xl font-bold mb-2 max-md:mb-1">Edit Requests</h1>

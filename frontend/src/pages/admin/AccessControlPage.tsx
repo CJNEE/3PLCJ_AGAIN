@@ -5,6 +5,7 @@ import { useGetEmployees, useGetActivityLogs, useGetSecurityAlerts } from '@/hoo
 import { Search } from 'lucide-react';
 import { normalizeApiResponse } from '@/utils/apiResponseHandler';
 import { Sidebar } from '@/components/Sidebar';
+import AdminMobileProfile from '@/components/AdminMobileProfile';
 
 
 export const AccessControlPage = () => {
@@ -123,6 +124,9 @@ export const AccessControlPage = () => {
       </div>
 
       <div className="p-4 lg:p-6 lg:ml-64 space-y-6 pb-32 lg:pb-6 max-md:p-3 max-md:space-y-4 max-md:pb-32">
+        <div className="block md:hidden">
+          <AdminMobileProfile />
+        </div>
         {/* Header */}
         <div>
           <h1 className="text-3xl max-md:text-2xl font-bold mb-2 max-md:mb-1">Access Control</h1>

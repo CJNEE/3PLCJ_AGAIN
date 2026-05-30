@@ -4,6 +4,7 @@ import { EmployeeManagePanel } from '@/components/EmployeeManagePanel';
 import { AddEmployee } from '@/pages/admin/AddEmployee';
 
 import { useAuth } from '@/hooks/useAuth';
+import AdminMobileProfile from '@/components/AdminMobileProfile';
 
 export const AdminEmployeesPage = () => {
   const { canEditEmployeeInfo } = useAuth();
@@ -36,6 +37,9 @@ export const AdminEmployeesPage = () => {
       </div>
 
       <div className="p-4 lg:p-6 lg:ml-64 space-y-6 max-md:space-y-4 pb-32 lg:pb-6 max-md:p-3">
+        <div className="block md:hidden">
+          <AdminMobileProfile />
+        </div>
         {/* Mobile bottom navigation */}
 
         <div className="flex items-center justify-between">

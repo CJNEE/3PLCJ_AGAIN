@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import Sidebar from '@/components/Sidebar';
+import AdminMobileProfile from '@/components/AdminMobileProfile';
 
 
 import { Card, Badge, LoadingSpinner, EmptyState } from '@/components/common';
@@ -258,6 +259,9 @@ export const AttendancePage = () => {
           onToggle={() => setSidebarOpen(!sidebarOpen)}
         />
     <div className="p-4 lg:p-6 lg:ml-64 space-y-6 max-md:p-3 max-md:space-y-4 max-md:pb-32 pb-32 lg:pb-6">
+      <div className="block md:hidden">
+        <AdminMobileProfile />
+      </div>
       {renderPhotoViewer()}
 
 

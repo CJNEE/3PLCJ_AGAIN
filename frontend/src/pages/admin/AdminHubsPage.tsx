@@ -57,6 +57,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import AdminMobileProfile from '@/components/AdminMobileProfile';
 
 // ======================================
 // CONSTANTS
@@ -1072,6 +1073,9 @@ export const AdminHubsPage = () => {
 
       <div className="min-h-screen bg-gray-50 dark:bg-[#020817] lg:ml-64 transition-colors duration-300">
         <div className="p-5 lg:p-8 space-y-6 max-w-[1600px] mx-auto">
+          <div className="block sm:hidden">
+            <AdminMobileProfile />
+          </div>
           {/* ========== HEADER ========== */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
