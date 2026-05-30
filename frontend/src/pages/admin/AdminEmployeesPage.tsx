@@ -13,6 +13,7 @@ import {
   Sun,
   Moon,
   Plus,
+  User,
 } from 'lucide-react';
 
 export const AdminEmployeesPage = () => {
@@ -60,16 +61,18 @@ export const AdminEmployeesPage = () => {
         />
       </div>
 
-      <div className="p-4 lg:p-6 lg:ml-64 space-y-6 max-md:space-y-4 pb-32 lg:pb-6 max-md:p-3">
+      <div className="px-4 pt-5 lg:p-6 lg:ml-64 space-y-6 max-md:space-y-4 pb-32 lg:pb-6">
 
         {/* MOBILE HEADER */}
-        <div className="flex items-center justify-between md:hidden">
+        <div className="md:hidden flex justify-between items-start">
           <div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-              Employee Management
+            <h1 className="text-[2rem] leading-[1.05] font-bold text-gray-900 dark:text-white tracking-tight">
+              Employee
+              <br />
+              Management
             </h1>
 
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 max-w-[220px]">
               Manage employees and their information
             </p>
           </div>
@@ -83,33 +86,28 @@ export const AdminEmployeesPage = () => {
                 flex
                 items-center
                 gap-2
-                px-3
-                py-2
+                h-12
+                px-4
                 rounded-full
-                bg-gray-900/80
-                dark:bg-gray-800/80
+                bg-white
+                dark:bg-[#111827]
                 border
-                border-gray-700/50
-                backdrop-blur-sm
+                border-gray-200
+                dark:border-gray-700
                 shadow-sm
-                cursor-pointer
                 transition-all
-                active:scale-95
-                select-none
               "
             >
-              <div className="w-5 h-5 rounded-full bg-gray-700 flex items-center justify-center">
-                <span className="text-[9px] font-semibold text-gray-300">
-                  {user?.username?.charAt(0)?.toUpperCase() || 'A'}
-                </span>
+              <div className="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                <User className="w-3.5 h-3.5 text-gray-500 dark:text-gray-300" />
               </div>
 
-              <span className="text-xs font-medium text-gray-200 max-w-[90px] truncate">
+              <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 max-w-[90px] truncate">
                 {user?.username || 'Admin'}
               </span>
 
               <ChevronDown
-                className={`w-3.5 h-3.5 text-gray-400 transition-transform ${
+                className={`w-4 h-4 text-gray-400 transition-transform ${
                   showProfileDropdown ? 'rotate-180' : ''
                 }`}
               />
@@ -122,24 +120,24 @@ export const AdminEmployeesPage = () => {
                   right-0
                   top-full
                   mt-2
-                  w-52
+                  w-48
                   overflow-hidden
                   rounded-2xl
+                  bg-white
+                  dark:bg-[#111827]
                   border
-                  border-gray-700/50
-                  bg-gray-900
-                  dark:bg-gray-800
-                  shadow-2xl
-                  backdrop-blur-xl
+                  border-gray-200
+                  dark:border-gray-700
+                  shadow-xl
                   z-[9999]
                 "
               >
-                <div className="px-4 py-3 border-b border-gray-700/50">
-                  <p className="text-sm font-semibold text-white truncate">
+                <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
                     {user?.username || 'Admin'}
                   </p>
 
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wider mt-1">
+                  <p className="text-[10px] uppercase tracking-wider text-gray-500">
                     {user?.role || 'Administrator'}
                   </p>
                 </div>
@@ -152,7 +150,7 @@ export const AdminEmployeesPage = () => {
                       <Moon className="w-4 h-4 text-blue-400" />
                     )}
 
-                    <span className="text-sm text-gray-200">
+                    <span className="text-sm text-gray-700 dark:text-gray-300">
                       {isDarkMode ? 'Light Mode' : 'Dark Mode'}
                     </span>
                   </div>
@@ -176,8 +174,9 @@ export const AdminEmployeesPage = () => {
                     gap-2
                     px-4
                     py-3
-                    text-red-400
-                    hover:bg-red-500/10
+                    text-red-500
+                    hover:bg-red-50
+                    dark:hover:bg-red-500/10
                     transition-colors
                   "
                 >
