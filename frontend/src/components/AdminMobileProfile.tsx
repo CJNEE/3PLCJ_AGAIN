@@ -63,10 +63,10 @@ export const AdminMobileProfile: React.FC<{ title?: string; subtitle?: string }>
       <div
         className="w-full rounded-b-2xl text-white"
         style={{
-          paddingTop: 'env(safe-area-inset-top,10px)',
-          height: 78,
-          background: 'linear-gradient(90deg, #05233A 0%, #0B4286 50%, #04263A 100%)',
-          boxShadow: '0 8px 22px rgba(2,8,23,0.35), 0 2px 6px rgba(4,6,14,0.6)',
+          paddingTop: 'env(safe-area-inset-top,8px)',
+          height: 68,
+          background: 'linear-gradient(90deg, #04263A 0%, #0B6B8A 50%, #03394A 100%)',
+          boxShadow: '0 6px 18px rgba(2,8,23,0.28), 0 1px 4px rgba(4,6,14,0.45)',
         }}
       >
         <div className="flex items-center justify-between px-4" style={{ height: '100%' }}>
@@ -102,7 +102,7 @@ export const AdminMobileProfile: React.FC<{ title?: string; subtitle?: string }>
               }}
             >
               <div style={{ position: 'relative' }}>
-                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center text-white font-bold">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-teal-400 flex items-center justify-center text-white font-bold">
                   {user?.username?.charAt(0)?.toUpperCase() || 'A'}
                 </div>
                 <span
@@ -120,12 +120,12 @@ export const AdminMobileProfile: React.FC<{ title?: string; subtitle?: string }>
             </div>
 
             {open && (
-              <div className="absolute right-4 mt-20 w-56 bg-white/5 border border-white/10 rounded-xl shadow-xl p-2 z-50 backdrop-blur-md">
+              <div className="absolute right-4 mt-20 w-56 bg-white/6 border border-white/12 rounded-xl shadow-xl p-2 z-50 backdrop-blur-sm">
                 <div className="px-3 py-1.5 border-b border-white/8 text-xs text-white/80 font-bold uppercase tracking-wider">
                   Account
                 </div>
                 <div className="px-3 py-3 flex items-center justify-between">
-                  <div className="text-xs text-white/80 font-medium">{isDarkMode ? 'Dark' : 'Light'} Mode</div>
+                  <div className="text-xs text-white/80 font-medium">Theme</div>
                   <div onClick={(e) => e.stopPropagation()}>
                     <ThemeToggle />
                   </div>

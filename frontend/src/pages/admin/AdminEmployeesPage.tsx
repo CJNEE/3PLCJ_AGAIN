@@ -44,14 +44,17 @@ const OnlinePresence: React.FC = () => {
       <div className="flex items-center gap-3 py-2">
         {online.map((e: any) => (
           <div key={e.id} className="flex flex-col items-center text-center w-16">
-            {e.profile_image ? (
-              <img src={e.profile_image} alt={e.full_name} className="w-10 h-10 rounded-full object-cover border-2 border-white" />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-white font-bold">{(e.firstname||'')[0]}{(e.lastname||'')[0]}</div>
-            )}
-            <div className="h-2 -mt-3 -ml-2">
-              <span className="inline-block w-3 h-3 rounded-full bg-green-400 border-2 border-white" />
+            <div className="relative w-10 h-10">
+              {e.profile_image ? (
+                <img src={e.profile_image} alt={e.full_name} className="w-10 h-10 rounded-full object-cover border-2 border-white" />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-teal-500 flex items-center justify-center text-white font-bold">{(e.firstname||'')[0]}{(e.lastname||'')[0]}</div>
+              )}
+
+              {/* Online indicator - small green ring at bottom-right */}
+              <span className="absolute right-0 bottom-0 inline-block w-3 h-3 rounded-full bg-green-400 ring-2 ring-white" />
             </div>
+
             <div className="text-xs text-gray-700 dark:text-gray-200 truncate mt-1">{e.full_name}</div>
           </div>
         ))}
@@ -110,10 +113,12 @@ export const AdminEmployeesPage = () => {
         {/* MOBILE HEADER */}
         <AdminMobileProfile />
 
-        {/* ONLINE PRESENCE */}
-        <div className="mt-3 md:mt-0">
-          <OnlinePresence />
-        </div>
+        {/* ONLINE PRESENCE (Admins/HR only) */}
+        {canViewEmployees && (
+          <div className="mt-3 md:mt-0">
+            <OnlinePresence />
+          </div>
+        )}
 
         {/* DESKTOP HEADER */}
         <div className="hidden md:flex items-center justify-between">

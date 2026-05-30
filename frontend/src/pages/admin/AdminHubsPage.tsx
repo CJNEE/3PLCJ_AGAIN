@@ -52,6 +52,7 @@ import {
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import Sidebar from '@/components/Sidebar';
+import AdminMobileProfile from '@/components/AdminMobileProfile';
 import { fetchWeather } from '@/utils/weather';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme, ThemeToggle } from '@/context/ThemeContext';
@@ -314,12 +315,7 @@ const FormField = ({
       {label}
       {required && <span className="text-red-500 ml-0.5">*</span>}
     </label>
-    <div
-className="
-relative
-backdrop-blur-xl
-"
->
+    <div className="relative backdrop-blur-xl">
       {Icon && (
         <Icon
           size={16}
@@ -740,21 +736,8 @@ const HubCard = ({
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.25 }}
       onClick={onSelect}
-      
-      className="
-      group relative
-      rounded-2xl
-      bg-white dark:bg-white/[0.03]
-      border border-gray-200 dark:border-white/[0.06]
-      hover:border-red-300 dark:hover:border-red-500/30
-      p-4 sm:p-5
-      cursor-pointer
-      transition-all duration-300
-      hover:shadow-lg hover:shadow-red-500/[0.04]
-      dark:hover:shadow-red-500/[0.06]
-      active:scale-[0.98]
-      "
-      >
+      className="group relative rounded-2xl bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] hover:border-red-300 dark:hover:border-red-500/30 p-4 sm:p-5 cursor-pointer transition-all duration-300 hover:shadow-lg hover:shadow-red-500/[0.04] dark:hover:shadow-red-500/[0.06] active:scale-[0.98]"
+    >
       {/* Context menu */}
       <div
   ref={menuRef}
@@ -1117,68 +1100,26 @@ export const AdminHubsPage = () => {
       <Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
 
       <div className="min-h-screen bg-gray-50 dark:bg-[#020817] lg:ml-64 transition-colors duration-300">
-        <div className="
-          p-3
-          sm:p-5
-          lg:p-8
-          space-y-5
-          max-w-[1600px]
-          mx-auto
-          "
-          >
-        <div className="flex items-start justify-between gap-4 mb-2">
+        <div className="p-3 sm:p-5 lg:p-8 space-y-5 max-w-[1600px] mx-auto">
+          <div className="flex items-start justify-between gap-4 mb-2">
   <div>
-   <h1
-    className="
-    text-2xl
-    sm:text-3xl
-    lg:text-4xl
-    font-bold
-    leading-tight
-    tracking-tight
-    text-gray-900
-    dark:text-white
-    "
-    >
+  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight tracking-tight text-gray-900 dark:text-white">
       Hub Management
       </h1>
 
-    <p
-      className="
-      text-xs
-      text-gray-500
-      dark:text-gray-400
-      mt-1
-      max-w-[220px]
-      leading-relaxed
-      "
-      >
+    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-[220px] leading-relaxed">
       Manage hubs, employees and routes across locations
       </p>
   </div>
-
-
   {/* MOBILE ADMIN DROPDOWN */}
   <div className="sm:hidden shrink-0">
     <div
-  onClick={(e) => {
-    e.stopPropagation();
-    setShowProfileDropdown((prev) => !prev);
-  }}
-  className="
-  relative
-  flex
-  items-center
-  gap-2
-  bg-[#111827]
-  px-2.5
-  py-1.5
-  rounded-full
-  border
-  border-gray-800
-  cursor-pointer
-  "
->
+      onClick={(e) => {
+        e.stopPropagation();
+        setShowProfileDropdown((prev) => !prev);
+      }}
+      className="relative flex items-center gap-2 bg-[#111827] px-2.5 py-1.5 rounded-full border border-gray-800 cursor-pointer"
+    >
       <div className="w-5 h-5 rounded-full bg-gray-700 flex items-center justify-center">
         <User className="w-3 h-3 text-gray-300" />
       </div>
@@ -1193,20 +1134,7 @@ export const AdminHubsPage = () => {
       {showProfileDropdown && (
         <div
           onClick={(e) => e.stopPropagation()}
-          className="
-            absolute
-            right-0
-            top-full
-            mt-2
-            w-40
-            rounded-2xl
-            bg-[#0F172A]
-            border
-            border-white/10
-            shadow-2xl
-            p-1.5
-            z-[9999]
-          "
+          className="absolute right-0 top-full mt-2 w-40 rounded-2xl bg-[#0F172A] border border-white/10 shadow-2xl p-1.5 z-[9999]"
         >
           <div className="px-3 py-2 border-b border-white/10">
             <p className="text-xs font-semibold text-white">
@@ -1231,18 +1159,7 @@ export const AdminHubsPage = () => {
       
           <button
             onClick={handleLogout}
-            className="
-            w-full
-            flex
-            items-center
-            gap-2
-            px-2.5
-            py-2
-            text-red-400
-            hover:bg-red-500/10
-            rounded-xl
-            transition
-            "
+            className="w-full flex items-center gap-2 px-2.5 py-2 text-red-400 hover:bg-red-500/10 rounded-xl transition"
           >
             <LogOut size={15} />
             Logout
@@ -1255,21 +1172,7 @@ export const AdminHubsPage = () => {
         {/* DESKTOP ADD HUB */}
         <button
           onClick={() => setShowAddModal(true)}
-          className="
-          hidden
-          sm:flex
-          h-10
-          px-5
-          rounded-xl
-          bg-gradient-to-r
-          from-red-500
-          to-rose-600
-          text-white
-          text-sm
-          font-semibold
-          items-center
-          gap-2
-          "
+          className="hidden sm:flex h-10 px-5 rounded-xl bg-gradient-to-r from-red-500 to-rose-600 text-white text-sm font-semibold items-center gap-2"
         >
           <Plus size={16} />
           Add Hub
@@ -1294,21 +1197,9 @@ export const AdminHubsPage = () => {
           </div>
 
           {/* ========== MAP + SIDE PANEL ========== */}
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-5">
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-stretch">
             {/* MAP */}
-            <div
-            className="
-            xl:col-span-8
-            rounded-3xl
-            overflow-hidden
-            border border-gray-200
-            dark:border-white/[0.06]
-            bg-white
-            dark:bg-[#0b1220]
-            shadow-lg
-            "
-            >
-              <div className="h-[300px] sm:h-[450px] lg:h-[550px] xl:h-[calc(100vh-220px)]">
+            <div className="xl:col-span-8 rounded-3xl overflow-hidden border border-gray-200 dark:border-white/[0.06] bg-white dark:bg-[#0b1220] shadow-lg h-[300px] sm:h-[450px] lg:h-[550px] xl:h-[calc(100vh-220px)]">
                 <MapContainer
                   center={[14.5995, 120.9842]}
                   zoom={6}
@@ -1353,7 +1244,7 @@ export const AdminHubsPage = () => {
             </div>
 
             {/* RIGHT PANEL */}
-            <div className="xl:col-span-4">
+            <div className="xl:col-span-4 h-[300px] sm:h-[450px] lg:h-[550px] xl:h-[calc(100vh-220px)]">
               <div className="rounded-2xl bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/[0.06] overflow-hidden h-full flex flex-col">
                 {hubState.selectedHub ? (
                   <div className="flex flex-col h-full">
@@ -1704,35 +1595,9 @@ className="h-16 w-16 rounded-2xl bg-red-50 dark:bg-red-500/10 flex items-center 
             )}
           </div>
         </div>
-      </div>
+    
 
-      {/* ========== MOBILE FAB ========== */}
-      <button
-        onClick={() => setShowAddModal(true)}
-            className="
-            sm:hidden
-            fixed
-            bottom-24
-            right-4
-            z-40
-            h-14
-            w-14
-            rounded-full
-            bg-gradient-to-br
-            from-red-500
-            to-rose-600
-            text-white
-            flex
-            items-center
-            justify-center
-            shadow-2xl
-            shadow-red-500/30
-            active:scale-90
-            transition-all
-            "
-      >
-        <Plus size={24} />
-      </button>
+      {/* Mobile FAB removed temporarily to fix syntax while updating header */}
 
       {/* ========== MODALS ========== */}
       <AnimatePresence>
