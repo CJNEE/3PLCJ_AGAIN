@@ -72,7 +72,7 @@ const OSRM_BASE = 'https://router.project-osrm.org/route/v1';
 const WALKING_SPEED_KMH = 4.8;
 const CYCLING_SPEED_KMH = 15;
 const DRIVING_SPEED_KMH = 35;
-
+const { isDarkMode, toggleTheme } = useTheme();
 // ======================================
 // TYPES
 // ======================================
@@ -951,7 +951,13 @@ export const AdminHubsPage = () => {
     (hubId: number) => allEmployees.filter((emp: Employee) => emp.hub === hubId).length,
     [allEmployees]
   );
-
+useEffect(() => {
+  const handleClickOutside = () => setShowProfileDropdown(false);
+  if (showProfileDropdown) {
+    window.addEventListener('click', handleClickOutside);
+  }
+  return () => window.removeEventListener('click', handleClickOutside);
+}, [showProfileDropdown]);
   // ======================================
   // EMPLOYEE FILTER
   // ======================================
@@ -1082,7 +1088,81 @@ export const AdminHubsPage = () => {
 
       <div className="min-h-screen bg-gray-50 dark:bg-[#020817] lg:ml-64 transition-colors duration-300">
         <div className="p-5 lg:p-8 space-y-6 max-w-[1600px] mx-auto">
-          <div className="sm:hidden flex items-center justify-between mb-4">
+          <div className="sm:hidden flex items-center justify-between mb-4 relative">
+  {/* LEFT TITLE */}
+  <div>
+    <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+      Hub Management
+    </h1>
+    <p className="text-xs text-gray-500 dark:text-gray-400">
+      Manage hubs and employees
+    </p>
+  </div>
+
+  {/* PROFILE DROPDOWN TRIGGER */}
+  <div
+    onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+    className="relative flex items-center gap-2 bg-[#111827] px-3 py-1.5 rounded-full border border-gray-800 cursor-pointer active:bg-gray-800 transition-all select-none"
+  >
+    <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center">
+      <User className="w-3.5 h-3.5 text-gray-300" />
+    </div>
+
+    <span className="text-xs font-medium text-gray-300">Admin</span>
+
+    <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+
+    {/* DROPDOWN */}
+    {showProfileDropdown && (
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="absolute right-0 top-full mt-2 w-44 bg-[#111827] border border-gray-800 rounded-xl shadow-xl p-1 z-[9999]"
+      >
+        <div className="px-3 py-1.5 border-b border-gray-800 text-[9px] text-gray-500 font-bold uppercase tracking-wider">
+          Admin Panel
+        </div>
+
+        {/* THEME TOGGLE */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleTheme();
+          }}
+          className="w-full flex items-center justify-between px-3 py-2 text-xs text-gray-300 hover:bg-white/5 rounded-lg transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            {isDarkMode ? (
+              <Sun className="w-3.5 h-3.5 text-yellow-400" />
+            ) : (
+              <Moon className="w-3.5 h-3.5 text-blue-400" />
+            )}
+            <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
+          </div>
+
+          <div className="h-5 w-9 bg-gray-700 rounded-full relative">
+            <div
+              className={`absolute top-0.5 h-4 w-4 bg-white rounded-full transition-all ${
+                isDarkMode ? 'left-4' : 'left-0.5'
+              }`}
+            />
+          </div>
+        </button>
+
+        {/* LOGOUT */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleLogout();
+          }}
+          className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+        >
+          <LogOut className="w-3.5 h-3.5" />
+          Logout
+        </button>
+      </div>
+    )}
+  </div>
+</div>
   <div>
     <h1 className="text-xl font-bold text-gray-900 dark:text-white">
       Hub Management
