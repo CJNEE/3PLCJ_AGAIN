@@ -81,8 +81,8 @@ export const AdminEmployeesPage = () => {
             }
             className="relative flex items-center gap-2 bg-[#111827] px-3 py-1.5 rounded-full border border-gray-800 cursor-pointer active:bg-gray-800 transition-all select-none"
           >
-           <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
-            <span className="text-[10px] font-bold text-white">
+           <div className="w-5 h-5 rounded-full bg-gray-700 flex items-center justify-center">
+            <span className="text-[9px] font-semibold text-gray-300">
               {user?.username?.charAt(0)?.toUpperCase() || 'A'}
             </span>
           </div>
