@@ -72,7 +72,7 @@ const OSRM_BASE = 'https://router.project-osrm.org/route/v1';
 const WALKING_SPEED_KMH = 4.8;
 const CYCLING_SPEED_KMH = 15;
 const DRIVING_SPEED_KMH = 35;
-const { isDarkMode, toggleTheme } = useTheme();
+
 // ======================================
 // TYPES
 // ======================================
@@ -823,7 +823,7 @@ const HubCard = ({
 
 export const AdminHubsPage = () => {
   const { canViewEmployees, logout } = useAuth();
-
+  const { isDarkMode, toggleTheme } = useTheme();
 
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
 
@@ -1088,8 +1088,7 @@ useEffect(() => {
 
       <div className="min-h-screen bg-gray-50 dark:bg-[#020817] lg:ml-64 transition-colors duration-300">
         <div className="p-5 lg:p-8 space-y-6 max-w-[1600px] mx-auto">
-         {/* MOBILE HEADER */}
-<div className="sm:hidden flex items-center justify-between mb-4 relative">
+        
   <div>
     <h1 className="text-xl font-bold text-gray-900 dark:text-white">
       Hub Management
