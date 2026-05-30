@@ -112,24 +112,42 @@ export const MobileAdminDashboardView = ({
       `}</style>
       
       {/* Top Header */}
-      <div className="flex justify-between items-center p-5 pt-8">
+      <div className="flex justify-between items-start px-5 pt-5 pb-4">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Dashboard</h1>
-          <p className="text-[10px] text-gray-400 uppercase tracking-wider mt-1">3PL BUSINESS SOLUTIONS | Admin overview</p>
+          <h1 className="text-[28px] leading-[32px] font-extrabold text-white tracking-tight">
+            Dashboard
+          </h1>
+        
+          <p className="text-sm text-gray-400 mt-2 max-w-[180px]">
+            3PL BUSINESS SOLUTIONS | ADMIN OVERVIEW
+          </p>
         </div>
         <div 
           onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-          className="relative flex items-center gap-2 bg-[#111827] px-3 py-1.5 rounded-full border border-gray-800 cursor-pointer active:bg-gray-800 transition-all select-none"
-        >
-          <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
-            <span className="text-[10px] font-bold text-white">
-              {user?.username?.charAt(0).toUpperCase() || 'A'}
-            </span>
-          </div>
-          <span className="text-xs font-medium text-gray-300">
+         className="
+          relative
+          flex
+          items-center
+          gap-3
+          h-11
+          px-4
+          rounded-full
+          bg-[#111827]
+          border
+          border-gray-700
+          shadow-[0_4px_20px_rgba(0,0,0,0.25)]
+          cursor-pointer
+          active:scale-[0.98]
+          transition-all
+          "
+          >
+         <div className="w-7 h-7 rounded-full bg-gray-700 flex items-center justify-center border border-gray-600">
+          <User className="w-3.5 h-3.5 text-gray-300" />
+        </div>
+         <span className="text-sm font-semibold text-gray-200">
             {user?.username || 'Admin'}
           </span>
-          <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+         <ChevronDown className="w-4 h-4 text-gray-500" />
 
           {showProfileDropdown && (
             <div className="absolute right-0 top-full mt-2 w-36 bg-[#111827] border border-gray-800 rounded-xl shadow-xl p-1 z-[9999]">
