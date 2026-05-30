@@ -273,8 +273,19 @@ const ModalShell = ({
       exit={{ opacity: 0, scale: 0.95, y: 12 }}
       transition={{ type: 'spring', stiffness: 400, damping: 30 }}
       onClick={(e) => e.stopPropagation()}
-      className={`${maxWidth} w-full rounded-2xl bg-white dark:bg-[#0c1425] border border-gray-200 dark:border-white/[0.08] shadow-2xl dark:shadow-black/40 overflow-hidden`}
-    >
+      className={`${maxWidth}
+      w-full
+      max-h-[90vh]
+      overflow-y-auto
+      rounded-3xl
+      bg-white
+      dark:bg-[#0c1425]
+      border border-gray-200
+      dark:border-white/[0.08]
+      shadow-2xl
+      overflow-hidden
+      `}
+      >
       {children}
     </motion.div>
   </Backdrop>
@@ -303,7 +314,12 @@ const FormField = ({
       {label}
       {required && <span className="text-red-500 ml-0.5">*</span>}
     </label>
-    <div className="relative">
+    <div
+className="
+relative
+backdrop-blur-xl
+"
+>
       {Icon && (
         <Icon
           size={16}
@@ -411,7 +427,7 @@ const AddHubModal = ({
             placeholder="Full street address"
             icon={MapPin}
           />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <FormField
               label="Latitude"
               value={formData.latitude}
@@ -724,21 +740,33 @@ const HubCard = ({
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.25 }}
       onClick={onSelect}
-      className="group relative rounded-2xl bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] hover:border-red-300 dark:hover:border-red-500/30 p-5 cursor-pointer transition-all duration-300 hover:shadow-lg hover:shadow-red-500/[0.04] dark:hover:shadow-red-500/[0.06] hover:-translate-y-0.5"
-    >
+      
+      className="
+      group relative
+      rounded-2xl
+      bg-white dark:bg-white/[0.03]
+      border border-gray-200 dark:border-white/[0.06]
+      hover:border-red-300 dark:hover:border-red-500/30
+      p-4 sm:p-5
+      cursor-pointer
+      transition-all duration-300
+      hover:shadow-lg hover:shadow-red-500/[0.04]
+      dark:hover:shadow-red-500/[0.06]
+      active:scale-[0.98]
+      "
+      >
       {/* Context menu */}
       <div
-        ref={menuRef}
-        className="absolute top-4 right-4 z-10"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-gray-100 dark:hover:bg-white/[0.08] flex items-center justify-center text-gray-400 dark:text-gray-500 transition-all"
-        >
-          <MoreVertical size={16} />
-        </button>
-
+  ref={menuRef}
+  className="absolute top-4 right-4 z-10"
+  onClick={(e) => e.stopPropagation()}
+>
+  <button
+    onClick={() => setMenuOpen(!menuOpen)}
+    className="h-8 w-8 rounded-lg hover:bg-gray-100 dark:hover:bg-white/[0.06] flex items-center justify-center text-gray-500"
+  >
+    <MoreVertical size={16} />
+  </button>
         <AnimatePresence>
           {menuOpen && (
             <motion.div
@@ -851,7 +879,7 @@ export const AdminHubsPage = () => {
   const [editingHub, setEditingHub] = useState<Hub | null>(null);
   const [deletingHub, setDeletingHub] = useState<Hub | null>(null);
 
-  const mapRef = useRef(null);
+  const mapRef = useRef<L.Map | null>(null);
 
   const { data, isLoading } = useGetHubs();
   const { data: employeesData } = useGetEmployees();
@@ -1137,26 +1165,46 @@ export const AdminHubsPage = () => {
     )}
   </div>
 </div>
-          {/* ========== HEADER ========== */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl lg:text-[28px] font-bold text-gray-900 dark:text-white tracking-tight">
-                Hub Management
-              </h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Manage hubs, employees, and routes across all locations
-              </p>
-            </div>
+          <div className="flex flex-row items-center justify-between gap-3">
 
-            {/* Desktop add button */}
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="hidden sm:flex h-10 px-5 rounded-xl bg-gradient-to-r from-red-500 to-rose-600 text-white text-sm font-semibold items-center gap-2 shadow-lg shadow-red-500/20 hover:shadow-red-500/30 hover:brightness-110 active:scale-[0.97] transition-all"
-            >
-              <Plus size={16} />
-              Add Hub
-            </button>
-          </div>
+  {/* LEFT SIDE TEXT */}
+  <div className="min-w-0">
+    <h1 className="
+text-xl
+sm:text-2xl
+lg:text-[28px]
+font-bold
+text-gray-900
+dark:text-white
+tracking-tight
+leading-tight
+"
+> 
+      Hub Management
+    </h1>
+
+    <p className="
+text-xs
+sm:text-sm
+text-gray-500
+dark:text-gray-400
+mt-1
+"
+>
+      Manage hubs, employees, and routes across all locations
+    </p>
+  </div>
+
+  {/* RIGHT SIDE BUTTON */}
+  <button
+    onClick={() => setShowAddModal(true)}
+    className="hidden sm:flex h-10 px-5 rounded-xl bg-gradient-to-r from-red-500 to-rose-600 text-white text-sm font-semibold items-center gap-2 shadow-lg shadow-red-500/20 hover:shadow-red-500/30 hover:brightness-110 active:scale-[0.97] transition-all"
+  >
+    <Plus size={16} />
+    Add Hub
+  </button>
+
+</div>
 
           {/* ========== SEARCH ========== */}
           <div className="relative">
@@ -1169,15 +1217,26 @@ export const AdminHubsPage = () => {
               placeholder="Search hubs by name, city, or location..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-12 rounded-xl bg-white dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] pl-11 pr-4 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 dark:focus:border-red-500/50 transition-all"
+              className="w-full h-12 sm:h-14 rounded-2xl bg-white dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] pl-11 pr-4 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 dark:focus:border-red-500/50 transition-all"
             />
           </div>
 
           {/* ========== MAP + SIDE PANEL ========== */}
           <div className="grid grid-cols-1 xl:grid-cols-12 gap-5">
             {/* MAP */}
-            <div className="xl:col-span-8 rounded-2xl overflow-hidden border border-gray-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02]">
-              <div className="h-[450px] lg:h-[550px]">
+            <div
+            className="
+            xl:col-span-8
+            rounded-3xl
+            overflow-hidden
+            border border-gray-200
+            dark:border-white/[0.06]
+            bg-white
+            dark:bg-[#0b1220]
+            shadow-lg
+            "
+            >
+              <div className="h-[300px] sm:h-[450px] lg:h-[550px]">
                 <MapContainer
                   center={[14.5995, 120.9842]}
                   zoom={6}
@@ -1342,14 +1401,21 @@ export const AdminHubsPage = () => {
                       </div>
 
                       {/* Employee table */}
-                      <div className="rounded-xl border border-gray-200 dark:border-white/[0.06] overflow-hidden">
+                      <div className="
+                      rounded-2xl
+                      border border-gray-200
+                      dark:border-white/[0.06]
+                      overflow-hidden
+                      shadow-sm
+                      "
+                      >
                         <div className="bg-gray-50 dark:bg-white/[0.04] grid grid-cols-12 px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                           <div className="col-span-5">Name</div>
                           <div className="col-span-4">Position</div>
                           <div className="col-span-3 text-center">Status</div>
                         </div>
 
-                        <div className="max-h-[240px] overflow-y-auto">
+                        <div className="max-h-[320px] overflow-y-auto">
                           {!canViewEmployees ? (
                             <div className="py-10 flex flex-col items-center justify-center text-center">
                               <Shield size={24} className="text-gray-300 dark:text-gray-600 mb-2" />
@@ -1478,10 +1544,19 @@ export const AdminHubsPage = () => {
                   </div>
                 ) : (
                   /* Empty state for panel */
-                  <div className="h-[450px] lg:h-[550px] flex flex-col items-center justify-center text-center p-8">
-                    <div className="h-16 w-16 rounded-2xl bg-red-50 dark:bg-red-500/10 flex items-center justify-center mb-5">
+                  <div className="h-auto min-h-[350px] lg:h-[550px] flex flex-col items-center justify-center text-center p-8">
+                    <motion.div
+animate={{
+  y: [0, -6, 0]
+}}
+transition={{
+  repeat: Infinity,
+  duration: 2
+}}
+className="h-16 w-16 rounded-2xl bg-red-50 dark:bg-red-500/10 flex items-center justify-center mb-5"
+>
                       <Building2 size={32} className="text-red-500" />
-                    </div>
+                    </motion.div>
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                       Select a Hub
                     </h2>
@@ -1506,7 +1581,14 @@ export const AdminHubsPage = () => {
             </div>
 
             {filteredHubs.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              <div className="
+              grid
+              grid-cols-1
+              sm:grid-cols-2
+              xl:grid-cols-3
+              2xl:grid-cols-4
+              gap-4
+              ">
                 <AnimatePresence mode="popLayout">
                   {filteredHubs.map((hub) => (
                     <HubCard
@@ -1552,8 +1634,27 @@ export const AdminHubsPage = () => {
       {/* ========== MOBILE FAB ========== */}
       <button
         onClick={() => setShowAddModal(true)}
-        className="sm:hidden fixed bottom-24 right-5 z-40 h-14 w-14 rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 text-white flex items-center justify-center shadow-xl shadow-red-500/30 hover:shadow-red-500/40 active:scale-90 transition-all"
-        aria-label="Add Hub"
+       className="
+sm:hidden
+fixed
+bottom-20
+right-4
+z-40
+h-14
+w-14
+rounded-full
+bg-gradient-to-br
+from-red-500
+to-rose-600
+text-white
+flex
+items-center
+justify-center
+shadow-2xl
+shadow-red-500/30
+active:scale-90
+transition-all
+"
       >
         <Plus size={24} />
       </button>
