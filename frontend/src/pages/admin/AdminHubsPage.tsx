@@ -856,9 +856,9 @@ export const AdminHubsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [employeeSearch, setEmployeeSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const itemsPerPage = 8;
-
+  
   useEffect(() => {
   const closeMenu = () => setShowProfileDropdown(false);
 
@@ -1161,21 +1161,24 @@ export const AdminHubsPage = () => {
   {/* MOBILE ADMIN DROPDOWN */}
   <div className="sm:hidden shrink-0">
     <div
-      onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-      className="
-      relative
-      flex
-      items-center
-      gap-2
-      bg-[#111827]
-      px-2.5
-      py-1.5
-      rounded-full
-      border
-      border-gray-800
-      cursor-pointer
-      "
-    >
+  onClick={(e) => {
+    e.stopPropagation();
+    setShowProfileDropdown((prev) => !prev);
+  }}
+  className="
+  relative
+  flex
+  items-center
+  gap-2
+  bg-[#111827]
+  px-2.5
+  py-1.5
+  rounded-full
+  border
+  border-gray-800
+  cursor-pointer
+  "
+>
       <div className="w-5 h-5 rounded-full bg-gray-700 flex items-center justify-center">
         <User className="w-3 h-3 text-gray-300" />
       </div>
@@ -1187,21 +1190,22 @@ export const AdminHubsPage = () => {
      <ChevronDown className="w-3 h-3 text-gray-500" />
 
       {/* dropdown menu */}
-       {showProfileDropdown && (
+      {showProfileDropdown && (
         <div
+          onClick={(e) => e.stopPropagation()}
           className="
-          absolute
-          right-0
-          top-full
-          mt-2
-          w-40
-          rounded-2xl
-          bg-[#0F172A]
-          border
-          border-white/10
-          shadow-2xl
-          p-1.5
-          z-[9999]
+            absolute
+            right-0
+            top-full
+            mt-2
+            w-40
+            rounded-2xl
+            bg-[#0F172A]
+            border
+            border-white/10
+            shadow-2xl
+            p-1.5
+            z-[9999]
           "
         >
           <div className="px-3 py-2 border-b border-white/10">
