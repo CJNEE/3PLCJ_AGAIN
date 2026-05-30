@@ -54,10 +54,9 @@ import 'leaflet/dist/leaflet.css';
 import Sidebar from '@/components/Sidebar';
 import { fetchWeather } from '@/utils/weather';
 import { useAuth } from '@/hooks/useAuth';
-import { useTheme } from '@/context/ThemeContext';
+import { useTheme, ThemeToggle } from '@/context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import AdminMobileProfile from '@/components/AdminMobileProfile';
 
 // ======================================
 // CONSTANTS
@@ -67,7 +66,7 @@ const OSRM_BASE = 'https://router.project-osrm.org/route/v1';
 const WALKING_SPEED_KMH = 4.8;
 const CYCLING_SPEED_KMH = 15;
 const DRIVING_SPEED_KMH = 35;
-const { logout: handleLogout } = useAuth();
+
 // ======================================
 // TYPES
 // ======================================
@@ -817,27 +816,37 @@ const HubCard = ({
 // ======================================
 
 export const AdminHubsPage = () => {
-  const { canViewEmployees } = useAuth();
+  const { canViewEmployees, logout } = useAuth();
   const { isDarkMode } = useTheme();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   const [searchTerm, setSearchTerm] = useState('');
   const [employeeSearch, setEmployeeSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+
   const itemsPerPage = 8;
+
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [hubState, setHubState] = useState<HubState>({ selectedHub: null });
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [showDirections, setShowDirections] = useState(false);
   const [loadingRoute, setLoadingRoute] = useState(false);
+
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+
   const [routeData, setRouteData] = useState<{
     walking: ParsedOsrmRoute;
     riding: ParsedOsrmRoute;
     car: ParsedOsrmRoute;
   } | null>(null);
 
-  // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingHub, setEditingHub] = useState<Hub | null>(null);
   const [deletingHub, setDeletingHub] = useState<Hub | null>(null);
