@@ -1,4 +1,4 @@
-import { useState } from 'react';
+  import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -464,35 +464,20 @@ export const LoginScreen = () => {
                         />
 
                         <input
-                          type={
-                            showPassword
-                              ? 'text'
-                              : 'password'
-                          }
+                          type={showPassword ? 'text' : 'password'}
                           value={password}
-                          onChange={(e) =>
-                            setPassword(
-                              e.target.value
-                            )
-                          }
+                          onChange={(e) => setPassword(e.target.value)}
                           placeholder="Enter your password"
-                          className="h-full w-full bg-transparent text-lg text-white placeholder:text-red-100 outline-none"
+                          className="h-full w-full bg-transparent text-lg text-white placeholder:text-red-100 outline-none pr-12"
                         />
 
                         <button
                           type="button"
-                          onClick={() =>
-                            setShowPassword(
-                              !showPassword
-                            )
-                          }
-                          className="text-white"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="text-white absolute right-4"
+                          aria-label="toggle password visibility"
                         >
-                          {showPassword ? (
-                            <EyeOff size={24} />
-                          ) : (
-                            <Eye size={24} />
-                          )}
+                          {showPassword ? <EyeOff size={24} /> : <Eye size={24} />}
                         </button>
                       </div>
                     </div>

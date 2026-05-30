@@ -9,6 +9,7 @@ import { ChangePasswordModal } from '../../components/ChangePasswordModal';
 import apiClient from '@/api/apiService';
 import Sidebar from '@/components/Sidebar';
 import { ThemeToggle } from '@/context/ThemeContext';
+import { useGetHubs } from '@/hooks/useQueries';
 
 interface EmployeeData {
   id: number;
@@ -63,7 +64,7 @@ const FIELD_CONFIG = {
   permanent_address: { label: 'Permanent Address', type: 'textarea' },
   hired_date: { label: 'Hired Date', type: 'date' },
   jtp_code: { label: 'JTP Code', type: 'text' },
-  employee_id: { label: 'Employee ID', type: 'text', disabled: true },
+  employee_id: { label: 'Employee ID', type: 'text' },
   emergency_contact_name: { label: 'Emergency Contact Name', type: 'text' },
   emergency_contact_phone: { label: 'Emergency Contact Phone', type: 'tel' },
   tin: { label: 'TIN', type: 'text' },
@@ -75,7 +76,8 @@ const FIELD_CONFIG = {
   marital_status: { label: 'Marital Status', type: 'select', options: ['Single', 'Married', 'Divorced', 'Widowed'] },
   position: { label: 'Position', type: 'text' },
   employment_type: { label: 'Employment Type', type: 'select', options: ['Full-time', 'OCW'] },
-  status: { label: 'Status', type: 'select', options: ['Active', 'Resign', 'AWOL', 'Blacklist'], disabled: true },
+  status: { label: 'Status', type: 'select', options: ['Active', 'Resign', 'AWOL', 'Blacklist'] },
+  hub: { label: 'Hub', type: 'select', options: [] },
   role: { label: 'Role', type: 'select', options: ['Employee', 'HR', 'Admin'] },
   can_login: { label: 'Can Login', type: 'checkbox' },
   can_edit_info: { label: 'Can Edit Info', type: 'checkbox' },
@@ -105,6 +107,9 @@ export const EmployeeProfileDetailPage = () => {
   const isOwnProfile = currentEmployee?.id === Number(id);
   const { isAdmin, isHR, canEditEmployeeInfo } = useAuth();
   const isHRorAdmin = isAdmin || isHR;
+
+  const { data: hubsData } = useGetHubs();
+  const hubOptions = (hubsData?.results || hubsData || []).map((h: any) => ({ value: h.id, label: h.name || h.hub_name || h.city || String(h.id) }));
   
   // HR can only edit if they have the permission
   const canEdit = isAdmin || (isHR && canEditEmployeeInfo) || isOwnProfile;
@@ -380,9 +385,20 @@ export const EmployeeProfileDetailPage = () => {
                     <span className="w-6 h-0.5 bg-red-600"></span> Employment Scope
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {['position', 'employment_type', 'status', 'role', 'hired_date', 'jtp_code', 'employee_id'].map(field => (
-                      <FormField key={field} field={field} value={(formData as any)[field] || ''} config={(FIELD_CONFIG as any)[field]} isEditing={isEditing} onChange={handleFieldChange} />
-                    ))}
+                    {['position', 'employment_type', 'status', 'role', 'hired_date', 'jtp_code', 'employee_id', 'hub'].map(field => {
+                      const baseConfig = (FIELD_CONFIG as any)[field] || {};
+                      const config = { ...baseConfig };
+                      // restrict sensitive fields to HR/Admin only
+                      if (['employee_id', 'hub', 'status'].includes(field) && !isHRorAdmin) {
+                        config.disabled = true;
+                      }
+                      if (field === 'hub') {
+                        config.options = hubOptions;
+                      }
+                      return (
+                        <FormField key={field} field={field} value={(formData as any)[field] ?? ''} config={config} isEditing={isEditing} onChange={handleFieldChange} />
+                      );
+                    })}
                   </div>
                 </Card>
 
@@ -461,12 +477,23 @@ const FormField = ({ field, value, config, isEditing, onChange }: FormFieldProps
             />
           ) : type === 'select' ? (
             <select
-              value={value || ''}
-              onChange={e => onChange(field, e.target.value)}
+              value={value ?? ''}
+              onChange={e => {
+                const val = e.target.value;
+                // if numeric id expected, coerce to number for hub
+                if (field === 'hub') onChange(field, val === '' ? '' : Number(val));
+                else onChange(field, val);
+              }}
               className="w-full px-4 py-2.5 text-xs font-bold border rounded-xl dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-red-600 outline-none appearance-none transition-all"
             >
               <option value="">{label}</option>
-              {options.map((opt: string) => <option key={opt} value={opt}>{opt}</option>)}
+              {options && options.map((opt: any) => (
+                typeof opt === 'object' ? (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ) : (
+                  <option key={opt} value={opt}>{opt}</option>
+                )
+              ))}
             </select>
           ) : type === 'checkbox' ? (
             <input
