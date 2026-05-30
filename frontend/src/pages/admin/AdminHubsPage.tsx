@@ -62,7 +62,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import ThemeToggle from '@/components/ThemeToggle';
+
 
 // ======================================
 // CONSTANTS
@@ -1125,10 +1125,19 @@ export const AdminHubsPage = () => {
             </span>
           </div>
 
-          <div onClick={(e) => e.stopPropagation()}>
-            <ThemeToggle />
-          </div>
-        </div>
+          <button
+  onClick={(e) => {
+    e.stopPropagation();
+    toggleTheme();
+  }}
+  className="h-6 w-11 rounded-full bg-gray-700 relative transition-all"
+>
+  <div
+    className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${
+      isDarkMode ? 'left-5' : 'left-0.5'
+    }`}
+  />
+</button>
 
         <button
           onClick={(e) => {
