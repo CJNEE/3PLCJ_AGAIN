@@ -38,7 +38,7 @@ import {
   Globe,
   Hash,
 } from 'lucide-react';
-
+import { User, ChevronDown, Sun, Moon, LogOut } from 'lucide-react';
 import { normalizeApiResponse } from '@/utils/apiResponseHandler';
 
 import {
@@ -67,7 +67,7 @@ const OSRM_BASE = 'https://router.project-osrm.org/route/v1';
 const WALKING_SPEED_KMH = 4.8;
 const CYCLING_SPEED_KMH = 15;
 const DRIVING_SPEED_KMH = 35;
-
+const { logout: handleLogout } = useAuth();
 // ======================================
 // TYPES
 // ======================================
@@ -824,7 +824,7 @@ export const AdminHubsPage = () => {
   const [employeeSearch, setEmployeeSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
-
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [hubState, setHubState] = useState<HubState>({ selectedHub: null });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
@@ -1073,9 +1073,61 @@ export const AdminHubsPage = () => {
 
       <div className="min-h-screen bg-gray-50 dark:bg-[#020817] lg:ml-64 transition-colors duration-300">
         <div className="p-5 lg:p-8 space-y-6 max-w-[1600px] mx-auto">
-          <div className="block sm:hidden">
-            <AdminMobileProfile />
+          <div className="block sm:hidden flex justify-end">
+  <div
+    onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+    className="relative flex items-center gap-2 bg-[#111827] px-3 py-1.5 rounded-full border border-gray-800 cursor-pointer active:bg-gray-800 transition-all select-none"
+  >
+    <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center">
+      <User className="w-3.5 h-3.5 text-gray-300" />
+    </div>
+
+    <span className="text-xs font-medium text-gray-300">Admin</span>
+
+    <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+
+    {showProfileDropdown && (
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="absolute right-0 top-full mt-2 w-40 bg-[#111827] border border-gray-800 rounded-xl shadow-xl p-1 z-[9999]"
+      >
+        <div className="px-3 py-1.5 border-b border-gray-800 text-[9px] text-gray-500 font-bold uppercase tracking-wider">
+          Admin Panel
+        </div>
+
+        {/* THEME TOGGLE */}
+        <div className="w-full flex items-center justify-between px-3 py-2 text-left text-xs text-gray-300 rounded-lg">
+          <div className="flex items-center gap-2">
+            {isDarkMode ? (
+              <Sun className="w-3.5 h-3.5 text-yellow-400" />
+            ) : (
+              <Moon className="w-3.5 h-3.5 text-blue-400" />
+            )}
+            <span className="text-xs">
+              {isDarkMode ? 'Light Mode' : 'Dark Mode'}
+            </span>
           </div>
+
+          <div onClick={(e) => e.stopPropagation()}>
+            <ThemeToggle />
+          </div>
+        </div>
+
+        {/* LOGOUT */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleLogout();
+          }}
+          className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs text-red-400 hover:bg-red-500/10 active:bg-red-500/20 rounded-lg transition-colors"
+        >
+          <LogOut className="w-3.5 h-3.5" />
+          <span>Logout</span>
+        </button>
+      </div>
+    )}
+  </div>
+</div>
           {/* ========== HEADER ========== */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
