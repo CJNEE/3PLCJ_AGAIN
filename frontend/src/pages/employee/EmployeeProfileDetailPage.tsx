@@ -219,7 +219,6 @@ export const EmployeeProfileDetailPage = () => {
           <Button variant="secondary" onClick={() => navigate(-1)}>
             <ArrowLeft size={18} className="mr-2" /> Back
           </Button>
-          {showAdminSidebar && <ThemeToggle />}
         </div>
 
         {isLoading && (
@@ -285,7 +284,7 @@ export const EmployeeProfileDetailPage = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-1 space-y-6">
+              <div className="lg:col-span-1 lg:sticky lg:top-4 h-fit space-y-6">
                 <Card className="overflow-hidden border-none shadow-2xl shadow-gray-200/50 dark:shadow-none">
                   <div className="relative group aspect-square">
                     {formData.profile_image_url ? (
@@ -304,8 +303,16 @@ export const EmployeeProfileDetailPage = () => {
                     )}
                   </div>
                   <div className="p-6 bg-white dark:bg-gray-900 border-t dark:border-gray-800">
-                    <div className="flex items-center justify-between mb-4">
-                      <Badge variant={formData.status === 'Active' ? 'success' : 'error'} className="font-black tracking-widest uppercase text-[9px] px-3">
+                    <div className="mb-4">
+                      <h2 className="text-2xl font-black text-gray-900 dark:text-white leading-tight uppercase tracking-tight">
+                        {formData.full_name}
+                      </h2>
+                      <p className="text-sm font-bold text-red-650 uppercase tracking-widest mt-1">
+                        {formData.position}
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between mb-4 border-t pt-4 dark:border-gray-800">
+                      <Badge variant={formData.status?.toLowerCase() === 'active' ? 'success' : formData.status?.toLowerCase() === 'resign' ? 'neutral' : formData.status?.toLowerCase() === 'awol' ? 'orange' : 'error'} className="font-black tracking-widest uppercase text-[9px] px-3">
                         {formData.status}
                       </Badge>
                       <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">#{formData.employee_id}</span>

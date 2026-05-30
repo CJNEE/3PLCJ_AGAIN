@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { ThemeToggle } from '@/context/ThemeContext';
+import { ThemeToggle, useTheme } from '@/context/ThemeContext';
 import {
   LogOut,
   Home,
@@ -28,6 +28,7 @@ interface SidebarProps {
 export const Sidebar = ({ open: _open, onToggle, hideThemeToggle = false }: SidebarProps) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { isDarkMode } = useTheme();
 
   const [employeeRequestOpen, setEmployeeRequestOpen] = useState(
     window.location.pathname === '/admin/edit-requests' ||
@@ -186,7 +187,7 @@ export const Sidebar = ({ open: _open, onToggle, hideThemeToggle = false }: Side
           {/* Logo */}
           <div>
             <img
-              src={logo}
+              src={isDarkMode ? '/MOBILELOGOLOGIN.png' : logo}
               alt="3PL Logo"
               className="h-36 w-auto object-contain mb-1 mx-auto"
             />
@@ -235,7 +236,7 @@ onClick={() => {
                               }}
                               className={`w-full text-left px-4 py-2 rounded-lg text-sm transition-all ${
                                 isChildActive
-                                  ? 'bg-[#8B0000] text-white shadow-md'
+                                  ? 'bg-[#8B0000] dark:bg-red-500 text-white shadow-md'
                                   : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
                               }`}
                             >
@@ -261,10 +262,9 @@ onClick={() => {
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-left ${
                     isActive
-                      ? 'bg-[#8B0000] text-white shadow-md'
+                      ? 'bg-[#8B0000] dark:bg-red-500 text-white shadow-md'
                       : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-                  }`}
-                >
+                  }`}                >
                   <Icon size={20} />
                   <span className="font-medium">{item.label}</span>
                 </button>

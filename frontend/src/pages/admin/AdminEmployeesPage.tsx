@@ -220,7 +220,7 @@ export const AdminEmployeesPage = () => {
             className="
               md:hidden
               fixed
-              bottom-24
+              bottom-20
               right-4
               z-50
               w-14

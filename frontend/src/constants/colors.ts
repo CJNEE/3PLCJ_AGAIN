@@ -10,15 +10,16 @@ export const COLORS = {
 } as const;
 
 export const STATUS_COLORS = {
-  active: '#10B981',
-  inactive: '#6B7280',
-  awol: '#F59E0B',
+  active: '#22C55E',
+  resign: '#9CA3AF',
+  inactive: '#9CA3AF',
+  awol: '#F97316',
   blacklist: '#EF4444',
-  present: '#10B981',
-  late: '#F59E0B',
+  present: '#22C55E',
+  late: '#F97316',
   absent: '#EF4444',
   pending: '#3B82F6',
-  approved: '#10B981',
+  approved: '#22C55E',
   rejected: '#EF4444',
 } as const;
 

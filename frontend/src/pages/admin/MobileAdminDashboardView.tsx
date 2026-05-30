@@ -12,10 +12,10 @@ import { useTheme, ThemeToggle } from '@/context/ThemeContext';
 
 // Shared Colors from AdminDashboard
 const STATUS_COLORS: Record<string, string> = {
-  'Active': '#10B981',      
-  'AWOL': '#ff4d00',        
-  'Blacklist': '#ff0000',   
-  'Resign': '#454545',      
+  'Active': '#22C55E',      
+  'AWOL': '#F97316',        
+  'Blacklist': '#EF4444',   
+  'Resign': '#9CA3AF',      
 };
 
 const EMPLOYMENT_TYPE_COLORS: Record<string, string> = {

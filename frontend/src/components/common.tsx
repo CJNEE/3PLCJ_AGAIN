@@ -90,16 +90,22 @@ export const Badge = ({ variant = 'info', className = '', children }: any) => {
       'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
     error:
       'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+    danger:
+      'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
     info:
       'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+    neutral:
+      'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+    orange:
+      'bg-orange-100 text-orange-700 dark:bg-orange-950/20 dark:text-orange-400',
   };
 
-  type BadgeVariant = 'success' | 'warning' | 'error' | 'info';
+  type BadgeVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral' | 'orange' | 'danger';
 
   const baseClasses = className || 'px-3 py-1 text-xs';
 
   return (
-    <span className={`rounded-full ${styles[variant as BadgeVariant]} ${baseClasses}`}>
+    <span className={`rounded-full ${styles[variant as BadgeVariant] || styles.info} ${baseClasses}`}>
       {children}
     </span>
   );

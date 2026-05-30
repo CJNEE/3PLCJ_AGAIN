@@ -653,7 +653,7 @@ export const LoginScreen = () => {
                               !showPassword
                             )
                           }
-                          className="mr-4 text-red-500"
+                          className="mr-2 text-red-500"
                         >
                           {showPassword ? (
                             <EyeOff size={20} />

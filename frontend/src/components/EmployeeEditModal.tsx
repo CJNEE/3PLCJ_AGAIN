@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Employee, FieldDefinition } from '@/types';
-import { useCreateEditRequest } from '@/hooks/useQueries';
+import { useCreateEditRequest, useUpdateEmployee, useGetHubs } from '@/hooks/useQueries';
+import { normalizeApiResponse } from '@/utils/apiResponseHandler';
 import { Modal } from './Modal';
 
 interface EmployeeEditModalProps {
@@ -30,29 +31,43 @@ const FIELD_DEFINITIONS: FieldDefinition[] = [
   { name: 'status', label: 'Employment Status', type: 'select', options: [{ value: 'Active', label: 'Active' }, { value: 'Resign', label: 'Resign' }, { value: 'AWOL', label: 'AWOL' }, { value: 'Blacklist', label: 'Blacklist' }] },
   { name: 'employment_type', label: 'Employment Type', type: 'select', options: [{ value: 'Full-time', label: 'Full-time' }, { value: 'OCW', label: 'OCW' }] },
   { name: 'position', label: 'Position', type: 'text', required: true },
+  { name: 'employee_id', label: 'Employee ID', type: 'text', required: true },
+  { name: 'hub', label: 'Hub Location', type: 'select', options: [] },
   { name: 'tin', label: 'TIN', type: 'text' },
   { name: 'sss', label: 'SSS', type: 'text' },
   { name: 'philhealth', label: 'PhilHealth', type: 'text' },
   { name: 'pagibig', label: 'Pag-IBIG', type: 'text' },
 ];
 
+const CRITICAL_FIELDS = ['position', 'employment_type', 'status', 'employee_id', 'hub'];
+
 export const EmployeeEditModal = ({ isOpen, onClose, employee, onSuccess }: EmployeeEditModalProps) => {
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [profileFile, setProfileFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  
   const createMutation = useCreateEditRequest();
+  const updateMutation = useUpdateEmployee(employee?.id || 0);
+  const { data: hubsData } = useGetHubs();
+  
+  const hubsList = normalizeApiResponse(hubsData) || [];
   
   useEffect(() => {
     if (employee) {
       const initialData: Record<string, any> = {};
       FIELD_DEFINITIONS.forEach((field) => {
-        initialData[field.name] = employee[field.name as keyof Employee] ?? '';
+        if (field.name === 'hub') {
+          const rawHub = employee.hub;
+          initialData['hub'] = rawHub && typeof rawHub === 'object' ? (rawHub as any).id : (rawHub ?? '');
+        } else {
+          initialData[field.name] = employee[field.name as keyof Employee] ?? '';
+        }
       });
       setFormData(initialData);
       setErrors({});
       setProfileFile(null);
-      setPreviewUrl(employee.profile_image_url || null);
+      setPreviewUrl(employee.profile_image_url || employee.profile_image || null);
     }
   }, [employee]);
   
@@ -77,43 +92,79 @@ export const EmployeeEditModal = ({ isOpen, onClose, employee, onSuccess }: Empl
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
+  const getChangedFields = () => {
+    const requested_data: Record<string, any> = {};
+    Object.keys(formData).forEach((key) => {
+      const newVal = formData[key];
+      const oldVal = employee ? employee[key as keyof Employee] : undefined;
+      const oldCompareVal = (key === 'hub' && oldVal && typeof oldVal === 'object') 
+        ? (oldVal as any).id 
+        : oldVal;
+
+      const newStr = newVal === undefined || newVal === null ? '' : String(newVal).trim();
+      const oldStr = oldCompareVal === undefined || oldCompareVal === null ? '' : String(oldCompareVal).trim();
+      
+      if (newStr !== oldStr) {
+        if (key === 'hub') {
+          requested_data[key] = newVal ? Number(newVal) : null;
+        } else {
+          requested_data[key] = newVal;
+        }
+      }
+    });
+    return requested_data;
+  };
+
+  const changedFields = getChangedFields();
+  
+  const isCriticalChanged = CRITICAL_FIELDS.some((field) => {
+    const newVal = formData[field];
+    const oldVal = employee ? employee[field as keyof Employee] : undefined;
+    const oldCompareVal = (field === 'hub' && oldVal && typeof oldVal === 'object') 
+      ? (oldVal as any).id 
+      : oldVal;
+
+    const newStr = newVal === undefined || newVal === null ? '' : String(newVal).trim();
+    const oldStr = oldCompareVal === undefined || oldCompareVal === null ? '' : String(oldCompareVal).trim();
+    return newStr !== oldStr;
+  });
   
   const handleSubmit = async () => {
     if (!employee || !validate()) return;
     try {
-      // Build requested_data only for fields that changed
-      const requested_data: Record<string, any> = {};
-      Object.keys(formData).forEach((key) => {
-        const newVal = formData[key];
-        const oldVal = employee ? employee[key as keyof Employee] : undefined;
-        // Normalize booleans/strings for comparison
-        const newStr = typeof newVal === 'boolean' ? (newVal ? 'true' : 'false') : String(newVal ?? '');
-        const oldStr = typeof oldVal === 'boolean' ? (oldVal ? 'true' : 'false') : String(oldVal ?? '');
-        if (newStr !== oldStr) {
-          requested_data[key] = newVal;
-        }
-      });
-
-      if (Object.keys(requested_data).length === 0 && !profileFile) {
+      if (Object.keys(changedFields).length === 0 && !profileFile) {
         toast('No changes to submit');
         return;
       }
 
-      const payload = new FormData();
-      payload.append('employee', String(employee.id));
-      payload.append('requested_data', JSON.stringify(requested_data));
-      if (profileFile) {
-        payload.append('uploaded_files', profileFile, profileFile.name);
-        // Also include a reference in requested_data for admin preview
-        // (frontend already appended requested_data above)
+      if (isCriticalChanged) {
+        const payload = new FormData();
+        payload.append('employee', String(employee.id));
+        payload.append('requested_data', JSON.stringify(changedFields));
+        if (profileFile) {
+          payload.append('uploaded_files', profileFile, profileFile.name);
+        }
+
+        await createMutation.mutateAsync(payload as any);
+        toast.success('Edit request submitted for approval');
+      } else {
+        const payload = new FormData();
+        Object.entries(changedFields).forEach(([k, v]) => {
+          payload.append(k, String(v));
+        });
+        if (profileFile) {
+          payload.append('profile_image', profileFile, profileFile.name);
+        }
+
+        await updateMutation.mutateAsync(payload as any);
+        toast.success('Profile changes saved successfully');
       }
 
-      await createMutation.mutateAsync(payload as any);
-      toast.success('Edit request submitted for approval');
       onSuccess?.();
       onClose();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to submit edit request');
+      toast.error(error.response?.data?.message || 'Failed to submit changes');
     }
   };
 
@@ -139,10 +190,14 @@ export const EmployeeEditModal = ({ isOpen, onClose, employee, onSuccess }: Empl
       case 'textarea':
         return <textarea value={value} onChange={(e) => handleChange(field.name, e.target.value)} className={`${baseInputClass} min-h-[80px] resize-y`} />;
       case 'select':
+        let options = field.options || [];
+        if (field.name === 'hub') {
+          options = hubsList.map((h: any) => ({ value: String(h.id), label: h.name }));
+        }
         return (
           <select value={value} onChange={(e) => handleChange(field.name, e.target.value)} className={baseInputClass}>
             <option value="">Select {field.label}</option>
-            {field.options?.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
           </select>
         );
       case 'boolean':
@@ -160,7 +215,7 @@ export const EmployeeEditModal = ({ isOpen, onClose, employee, onSuccess }: Empl
   const personalFields = ['firstname', 'lastname', 'middle_initial', 'date_of_birth', 'place_of_birth', 'gender', 'nationality', 'marital_status'];
   const contactFields = ['email_address', 'phone_number', 'current_address', 'permanent_address'];
   const emergencyFields = ['emergency_contact_name', 'emergency_contact_phone'];
-  const employmentFields = ['status', 'employment_type', 'position'];
+  const employmentFields = ['status', 'employment_type', 'position', 'employee_id', 'hub'];
   const governmentFields = ['tin', 'sss', 'philhealth', 'pagibig'];
   
   const renderFieldSection = (title: string, fields: string[]) => (
@@ -201,6 +256,8 @@ export const EmployeeEditModal = ({ isOpen, onClose, employee, onSuccess }: Empl
     </div>
   );
   
+  const isPending = createMutation.isPending || updateMutation.isPending;
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Edit Employee" size="3xl">
       <div className="pr-2 px-2 sm:px-4">
@@ -211,10 +268,10 @@ export const EmployeeEditModal = ({ isOpen, onClose, employee, onSuccess }: Empl
         {renderFieldSection('Government IDs', governmentFields)}
       </div>
       <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
-        <button onClick={onClose} className="w-full sm:w-auto px-4 py-3 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors text-sm font-medium" disabled={createMutation.isPending}>Cancel</button>
-        <button onClick={handleSubmit} disabled={createMutation.isPending} className="w-full sm:w-auto px-4 py-3 rounded-lg bg-[#8B0000] text-white hover:bg-[#6B0000] transition-colors text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2">
-          {createMutation.isPending && <Loader2 size={16} className="animate-spin" />}
-          {createMutation.isPending ? 'Submitting...' : 'Send Edit Request'}
+        <button onClick={onClose} className="w-full sm:w-auto px-4 py-3 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors text-sm font-medium" disabled={isPending}>Cancel</button>
+        <button onClick={handleSubmit} disabled={isPending} className="w-full sm:w-auto px-4 py-3 rounded-lg bg-[#8B0000] text-white hover:bg-[#6B0000] transition-colors text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2">
+          {isPending && <Loader2 size={16} className="animate-spin" />}
+          {isPending ? 'Submitting...' : isCriticalChanged ? 'Send Edit Request' : 'Save changes'}
         </button>
       </div>
     </Modal>

@@ -8,6 +8,20 @@ import { ConfirmDialog } from './ConfirmDialog';
 import { Trash2, Eye, Lock, Unlock } from 'lucide-react';
 import { normalizeApiResponse } from '@/utils/apiResponseHandler';
 
+const getStatusBadgeVariant = (status: string) => {
+  switch (status?.toLowerCase()) {
+    case 'active': return 'success';
+    case 'resign': return 'neutral';
+    case 'awol': return 'orange';
+    case 'blacklist': return 'error';
+    default: return 'info';
+  }
+};
+
+interface EmployeeManagePanelProps {
+  hubId?: number;
+}
+
 interface Employee {
   id: number;
   full_name: string;
@@ -157,7 +171,7 @@ export const EmployeeManagePanel = () => {
                         <td className="px-4 py-3 text-sm">{emp.employee_id}</td>
                         <td className="px-4 py-3 text-sm">{emp.position}</td>
                         <td className="px-4 py-3 text-sm">
-                          <Badge variant={emp.status === 'Active' ? 'success' : 'warning'}>
+                          <Badge variant={getStatusBadgeVariant(emp.status)}>
                             {emp.status}
                           </Badge>
                         </td>
@@ -225,7 +239,7 @@ export const EmployeeManagePanel = () => {
                         <p className="text-[10px] font-mono text-gray-400 mt-1 uppercase">ID: {emp.employee_id}</p>
                       </div>
                       <div className="flex flex-col gap-1 items-end">
-                        <Badge variant={emp.status === 'Active' ? 'success' : 'warning'}>
+                        <Badge variant={getStatusBadgeVariant(emp.status)}>
                           {emp.status}
                         </Badge>
                         <Badge variant={emp.can_login ? 'success' : 'error'}>

@@ -122,10 +122,10 @@ const getHubCoordinates = (
 
 
 const STATUS_COLORS: Record<string, string> = {
-  'Active': '#10B981',      
-  'AWOL': '#ff4d00',        
-  'Blacklist': '#ff0000',   
-  'Resign': '#454545',      
+  'Active': '#22C55E',      
+  'AWOL': '#F97316',        
+  'Blacklist': '#EF4444',   
+  'Resign': '#9CA3AF',      
 };
 
 const EMPLOYMENT_TYPE_COLORS: Record<string, string> = {
@@ -862,7 +862,7 @@ export const AdminDashboard = () => {
                 {/* Top Right Close Button */}
                 <button 
                   onClick={() => setShowEmployeeModal(false)}
-                  className="absolute top-[-10px] right-[-10px] sm:static sm:self-start bg-white/10 hover:bg-white/20 text-white hover:text-white p-2 rounded-xl transition-all"
+                  className="absolute top-[-10px] right-[-10px] sm:static sm:self-start bg-black/10 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20 text-gray-700 dark:text-white hover:text-gray-900 dark:hover:text-white p-2 rounded-xl transition-all"
                   aria-label="Close modal"
                 >
                   <X size={18} />
