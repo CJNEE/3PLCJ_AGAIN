@@ -37,6 +37,11 @@ import {
   MoreVertical,
   Globe,
   Hash,
+  User,
+  ChevronDown,
+  LogOut,
+  Moon,
+  Sun,
 } from 'lucide-react';
 
 import { normalizeApiResponse } from '@/utils/apiResponseHandler';
@@ -57,7 +62,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { User, ChevronDown, LogOut, Moon, Sun } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 
 // ======================================
@@ -847,7 +851,7 @@ export const AdminHubsPage = () => {
   const [editingHub, setEditingHub] = useState<Hub | null>(null);
   const [deletingHub, setDeletingHub] = useState<Hub | null>(null);
 
-  const mapRef = useRef(null);
+ const mapRef = useRef<L.Map | null>(null);
 
   const { data, isLoading } = useGetHubs();
   const { data: employeesData } = useGetEmployees();
