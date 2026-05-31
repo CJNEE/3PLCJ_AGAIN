@@ -20,63 +20,50 @@ import AdminMobileProfile from '@/components/AdminMobileProfile';
 import { employeeAPI } from '@/api/apiService';
 
 const OnlinePresence: React.FC = () => {
-  const [all, setAll] = useState<any[]>([]);
-  const [onlineIds, setOnlineIds] = useState<Set<number>>(new Set());
+  const [online, setOnline] = useState<any[]>([]);
   const [pulseIds, setPulseIds] = useState<Set<number>>(new Set());
   const [intervalMs, setIntervalMs] = useState<number>(15000);
-
-  const fetchAll = async () => {
-    try {
-      const res = await employeeAPI.getEmployees({ limit: 0 });
-      const list = res?.results || res?.employees || res || [];
-      setAll(Array.isArray(list) ? list : []);
-    } catch (err) {
-      // ignore
-    }
-  };
+  const prevIdsRef = React.useRef<Set<number>>(new Set());
 
   const fetchOnline = async () => {
     try {
       const res = await employeeAPI.getOnlineEmployees();
-      const ids: number[] = res.ids || (res.employees || []).map((e: any) => e.id) || [];
-      const newSet = new Set<number>(ids);
+      const list = res?.employees || [];
+      setOnline(Array.isArray(list) ? list : []);
 
-      // detect newly-online ids for pulse animation
+      const newIds = new Set<number>((list || []).map((e: any) => e.id));
+      const prev = prevIdsRef.current;
       const newlyOnline: number[] = [];
-      for (const id of newSet) {
-        if (!onlineIds.has(id)) newlyOnline.push(id);
-      }
+      for (const id of newIds) if (!prev.has(id)) newlyOnline.push(id);
 
       if (newlyOnline.length) {
-        setPulseIds((prev) => {
-          const next = new Set(prev);
+        setPulseIds((prevSet) => {
+          const next = new Set(prevSet);
           newlyOnline.forEach((id) => next.add(id));
           return next;
         });
-        // remove pulse after 2.5s
         setTimeout(() => {
-          setPulseIds((prev) => {
-            const next = new Set(prev);
+          setPulseIds((prevSet) => {
+            const next = new Set(prevSet);
             newlyOnline.forEach((id) => next.delete(id));
             return next;
           });
         }, 2500);
       }
 
-      setOnlineIds(newSet);
+      prevIdsRef.current = newIds;
     } catch (err) {
       // ignore
     }
   };
 
   useEffect(() => {
-    fetchAll();
     fetchOnline();
-    const id = setInterval(() => fetchOnline(), intervalMs);
+    const id = setInterval(fetchOnline, intervalMs);
     return () => clearInterval(id);
   }, [intervalMs]);
 
-  if (!all.length) return null;
+  if (!online.length) return null;
 
   return (
     <div>
@@ -100,26 +87,23 @@ const OnlinePresence: React.FC = () => {
 
       <div className="w-full overflow-x-auto hide-scrollbar">
         <div className="flex items-center gap-3 py-2">
-          {all.map((e: any) => {
-            const isOnline = onlineIds.has(e.id);
+          {online.map((e: any) => {
             const isPulsing = pulseIds.has(e.id);
             return (
               <div key={e.id} className="flex flex-col items-center text-center w-16">
                 <div className="relative w-12 h-12">
                   {e.profile_image ? (
-                    <img src={e.profile_image} alt={e.full_name} className={`w-12 h-12 rounded-full object-cover border-2 ${isOnline ? 'border-white' : 'border-gray-200 dark:border-white/6'}`} />
+                    <img src={e.profile_image} alt={e.full_name} className={`w-12 h-12 rounded-full object-cover border-2 border-white`} />
                   ) : (
                     <div className={`w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-teal-500 flex items-center justify-center text-white font-bold`}>{(e.firstname||'')[0]}{(e.lastname||'')[0]}</div>
                   )}
 
-                  {isOnline && (
-                    <>
-                      <span className={`absolute right-0 bottom-0 inline-block w-3 h-3 rounded-full bg-emerald-400 ring-2 ring-white ${isPulsing ? 'animate-none' : ''}`} />
-                      {isPulsing && (
-                        <span className="absolute right-0 bottom-0 inline-block w-3 h-3 rounded-full bg-emerald-400 opacity-40" style={{ animation: 'online-pulse 1.6s ease-out' }} />
-                      )}
-                    </>
-                  )}
+                  <>
+                    <span className={`absolute right-0 bottom-0 inline-block w-3 h-3 rounded-full bg-emerald-400 ring-2 ring-white`} />
+                    {isPulsing && (
+                      <span className="absolute right-0 bottom-0 inline-block w-3 h-3 rounded-full bg-emerald-400 opacity-40" style={{ animation: 'online-pulse 1.6s ease-out' }} />
+                    )}
+                  </>
                 </div>
 
                 <div className="text-xs text-gray-700 dark:text-gray-200 truncate mt-1 max-w-[64px]">{e.full_name}</div>
