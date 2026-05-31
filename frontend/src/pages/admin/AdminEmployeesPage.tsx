@@ -159,6 +159,16 @@ export const AdminEmployeesPage = () => {
         {/* MOBILE HEADER */}
         <AdminMobileProfile />
 
+        {/* MOBILE TITLE */}
+        <div className="block md:hidden mt-2 mb-2">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Employee Management
+          </h1>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            Manage employees and their information
+          </p>
+        </div>
+
         {/* ONLINE PRESENCE (Admins/HR only) */}
         {canViewEmployees && (
           <div className="mt-3 md:mt-0">

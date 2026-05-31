@@ -168,15 +168,15 @@ export const EditRequestsPanel = () => {
         <Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
       </div>
 
-      <div className="p-4 lg:p-6 lg:ml-64 space-y-6 pb-32 lg:pb-6 max-md:p-3 max-md:space-y-4 max-md:pb-32">
-        <div className="block md:hidden">
-          <AdminMobileProfile />
-        </div>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl max-md:text-2xl font-bold mb-2 max-md:mb-1">Edit Requests</h1>
-            <p className="text-gray-600 dark:text-gray-400 max-md:text-xs">Review and approve/reject employee edit requests</p>
-          </div>
+      <div className="lg:ml-64">
+        <AdminMobileProfile />
+        
+        <div className="p-4 lg:p-6 space-y-6 pb-32 lg:pb-6 max-md:p-3 max-md:space-y-4 max-md:pb-32">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl max-md:text-2xl font-bold mb-2 max-md:mb-1">Edit Requests</h1>
+              <p className="text-gray-600 dark:text-gray-400 max-md:text-xs">Review and approve/reject employee edit requests</p>
+            </div>
 
           {editRequests.length > 0 && (
             <button
@@ -349,8 +349,7 @@ export const EditRequestsPanel = () => {
           </div>
         )}
       </div>
-
-
+      </div>
     </div>
   );
 };

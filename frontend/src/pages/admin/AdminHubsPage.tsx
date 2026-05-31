@@ -1116,32 +1116,28 @@ export const AdminHubsPage = () => {
       <Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
 
       <div className="min-h-screen bg-gray-50 dark:bg-[#020817] lg:ml-64 transition-colors duration-300">
+        <AdminMobileProfile />
+        
         <div className="p-3 sm:p-5 lg:p-8 space-y-5 max-w-[1600px] mx-auto">
           <div className="flex items-start justify-between gap-4 mb-2">
-    <div>
-    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold leading-tight tracking-tight text-gray-900 dark:text-white">
-      Hub Management
-      </h1>
-
-    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-[220px] leading-relaxed">
-      Manage hubs, employees and routes across locations
-      </p>
-  </div>
-  {/* MOBILE HEADER */}
-  <div className="sm:hidden shrink-0">
-    <AdminMobileProfile />
-  </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold leading-tight tracking-tight text-gray-900 dark:text-white">
+                Hub Management
+              </h1>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-[220px] leading-relaxed">
+                Manage hubs, employees and routes across locations
+              </p>
+            </div>
       
-        {/* DESKTOP ADD HUB */}
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="hidden sm:flex h-10 px-5 rounded-xl bg-gradient-to-r from-red-500 to-rose-600 text-white text-sm font-semibold items-center gap-2"
-        >
-          <Plus size={16} />
-          Add Hub
-        </button>
-      
-      </div>
+            {/* DESKTOP ADD HUB */}
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="hidden sm:flex h-10 px-5 rounded-xl bg-gradient-to-r from-red-500 to-rose-600 text-white text-sm font-semibold items-center gap-2"
+            >
+              <Plus size={16} />
+              Add Hub
+            </button>
+          </div>
         
 
           {/* ========== SEARCH ========== */}

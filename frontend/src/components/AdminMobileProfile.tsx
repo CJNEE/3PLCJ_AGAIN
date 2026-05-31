@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   ChevronDown,
   LogOut,
@@ -8,6 +9,12 @@ import {
   Edit3,
   Sun,
   Moon,
+  Calendar,
+  CreditCard,
+  Clock,
+  FileText,
+  ShieldAlert,
+  Lock,
 } from 'lucide-react';
 
 import { useAuth } from '@/hooks/useAuth';
@@ -18,6 +25,12 @@ const iconMap: Record<string, any> = {
   '/admin/hubs': MapPin,
   '/admin/employees': Users,
   '/admin/edit-requests': Edit3,
+  '/admin/leave-requests': Calendar,
+  '/admin/payslip': CreditCard,
+  '/admin/attendance': Clock,
+  '/admin/activity-logs': FileText,
+  '/admin/security-alerts': ShieldAlert,
+  '/admin/access-control': Lock,
 };
 
 const titleMap: Record<string, string> = {
@@ -25,6 +38,12 @@ const titleMap: Record<string, string> = {
   '/admin/hubs': 'Hubs',
   '/admin/employees': 'Employees',
   '/admin/edit-requests': 'Edit Requests',
+  '/admin/leave-requests': 'Leave Requests',
+  '/admin/payslip': 'Payslips',
+  '/admin/attendance': 'Attendance',
+  '/admin/activity-logs': 'Activity Logs',
+  '/admin/security-alerts': 'Security Alerts',
+  '/admin/access-control': 'Access Control',
 };
 
 const subtitleMap: Record<string, string> = {
@@ -32,28 +51,59 @@ const subtitleMap: Record<string, string> = {
   '/admin/hubs': 'Manage hub locations',
   '/admin/employees': 'Workforce management',
   '/admin/edit-requests': 'Pending modifications',
+  '/admin/leave-requests': 'Manage employee leaves',
+  '/admin/payslip': 'Payroll history & generation',
+  '/admin/attendance': 'Track daily check-ins',
+  '/admin/activity-logs': 'System audit trail',
+  '/admin/security-alerts': 'Monitor system events',
+  '/admin/access-control': 'Roles & permissions',
 };
 
 function AdminMobileProfile() {
   const { user, logout } = useAuth();
-  const { isDarkMode } = useTheme();
+  const { isDarkMode, toggleDarkMode } = useTheme();
+  const location = useLocation();
 
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
-  const path =
-    typeof window !== 'undefined'
-      ? window.location.pathname
-      : '/admin';
+  const getPageMeta = (pathname: string) => {
+    let cleanPath = pathname.replace(/\/$/, '') || '/';
+    // Normalize HR paths to Admin paths for key lookup
+    const key = cleanPath.replace(/^\/hr/, '/admin');
 
-  const IconComp = iconMap[path] || Grid;
+    if (titleMap[key]) {
+      return {
+        title: titleMap[key],
+        subtitle: subtitleMap[key],
+        Icon: iconMap[key],
+      };
+    }
 
-  const pageTitle =
-    titleMap[path] || 'Dashboard';
+    if (key.startsWith('/admin/employees/')) {
+      return {
+        title: 'Employee Profile',
+        subtitle: 'Detailed employee view',
+        Icon: Users,
+      };
+    }
 
-  const pageSubtitle =
-    subtitleMap[path] ||
-    'Overview of your network';
+    if (key.startsWith('/admin/edit-requests/')) {
+      return {
+        title: 'Edit Request Details',
+        subtitle: 'Modify employee information',
+        Icon: Edit3,
+      };
+    }
+
+    return {
+      title: 'Dashboard',
+      subtitle: 'Overview of your network',
+      Icon: Grid,
+    };
+  };
+
+  const { title: pageTitle, subtitle: pageSubtitle, Icon: IconComp } = getPageMeta(location.pathname);
 
   useEffect(() => {
     function handleClickOutside(
@@ -230,31 +280,29 @@ function AdminMobileProfile() {
                       </div>
                     </div>
 
-                    <div className="px-5 py-4 flex items-center justify-between border-b border-white/5">
-
+                    {/* INTERACTIVE SWITCH TOGGLE FOR DARK/LIGHT MODE */}
+                    <button
+                      type="button"
+                      onClick={toggleDarkMode}
+                      className="w-full px-5 py-4 flex items-center justify-between border-b border-white/5 hover:bg-white/[0.04] transition-colors text-left"
+                    >
                       <div className="flex items-center gap-2">
-
                         {isDarkMode ? (
                           <Moon className="w-4 h-4 text-white/70" />
                         ) : (
                           <Sun className="w-4 h-4 text-yellow-400" />
                         )}
-
                         <span className="text-sm text-white/80">
-                          {isDarkMode
-                            ? 'Dark Mode'
-                            : 'Light Mode'}
+                          {isDarkMode ? 'Dark Mode' : 'Light Mode'}
                         </span>
                       </div>
-
-                      <div
-                        className={`w-2.5 h-2.5 rounded-full ${
-                          isDarkMode
-                            ? 'bg-red-500'
-                            : 'bg-yellow-400'
-                        }`}
-                      />
-                    </div>
+                      
+                      {/* Switch Track */}
+                      <div className={`relative w-10 h-6 rounded-full transition-colors duration-200 ${isDarkMode ? 'bg-red-500' : 'bg-gray-700'}`}>
+                        {/* Switch Thumb */}
+                        <div className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-200 ${isDarkMode ? 'translate-x-4' : 'translate-x-0'}`} />
+                      </div>
+                    </button>
 
                     <button
                       onClick={

@@ -121,10 +121,10 @@ export const ActivityLogsPage = () => {
         />
       </div>
 
-      <div className="p-4 lg:p-6 lg:ml-64 space-y-6 pb-32 lg:pb-6 max-md:p-3 max-md:space-y-4 max-md:pb-32">
-        <div className="block md:hidden">
-          <AdminMobileProfile />
-        </div>
+      <div className="lg:ml-64">
+        <AdminMobileProfile />
+
+        <div className="p-4 lg:p-6 space-y-6 pb-32 lg:pb-6 max-md:p-3 max-md:space-y-4 max-md:pb-32">
 
       {/* Header */}
       <div className="flex items-center gap-3">
@@ -420,6 +420,7 @@ export const ActivityLogsPage = () => {
           )}
         </button>
       )}
-  </div>
+      </div>
+    </div>
   );
 };

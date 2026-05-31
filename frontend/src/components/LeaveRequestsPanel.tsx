@@ -184,15 +184,14 @@ export const LeaveRequestsPanel = ({ initialFilter = 'pending' }: { initialFilte
         open={sidebarOpen}
         onToggle={() => setSidebarOpen(!sidebarOpen)}
       />
-      <div className="p-4 lg:p-6 lg:ml-64 space-y-6">
-        <div className="block md:hidden">
-          <AdminMobileProfile />
-        </div>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Leave Requests</h1>
-            <p className="text-gray-600 dark:text-gray-400">Review and approve/reject employee leave requests</p>
-          </div>
+      <div className="lg:ml-64">
+        <AdminMobileProfile />
+        <div className="p-4 lg:p-6 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">Leave Requests</h1>
+              <p className="text-gray-600 dark:text-gray-400">Review and approve/reject employee leave requests</p>
+            </div>
           
           {leaveRequests.length > 0 && (
             <button
@@ -365,6 +364,7 @@ export const LeaveRequestsPanel = ({ initialFilter = 'pending' }: { initialFilte
             ))}
           </div>
         )}
+      </div>
       </div>
 
       {previewFile && (

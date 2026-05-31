@@ -304,14 +304,14 @@ export const PayslipPage = () => {
         onToggle={() => setSidebarOpen(!sidebarOpen)}
       />
 
-      <div className="p-4 lg:p-6 lg:ml-64 space-y-6 max-md:p-3 max-md:space-y-4 max-md:pb-32 pb-32 lg:pb-6">
-        <div className="block md:hidden">
-          <AdminMobileProfile />
-        </div>
-        <div>
-          <h1 className="text-3xl max-md:text-2xl font-bold mb-2 max-md:mb-1">Payroll Management</h1>
-          <p className="text-gray-600 dark:text-gray-400 max-md:text-xs">View and manage employee payrolls by hub</p>
-        </div>
+      <div className="lg:ml-64">
+        <AdminMobileProfile />
+
+        <div className="p-4 lg:p-6 space-y-6 max-md:p-3 max-md:space-y-4 max-md:pb-32 pb-32 lg:pb-6">
+          <div>
+            <h1 className="text-3xl max-md:text-2xl font-bold mb-2 max-md:mb-1">Payroll Management</h1>
+            <p className="text-gray-600 dark:text-gray-400 max-md:text-xs">View and manage employee payrolls by hub</p>
+          </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-md:gap-3">
           <Card className="border-l-4 border-orange-500 max-md:p-3">
@@ -488,6 +488,7 @@ export const PayslipPage = () => {
             // Add logic to update the payslip in the backend or state
           }}
         />
+      </div>
       </div>
     </div>
   );
