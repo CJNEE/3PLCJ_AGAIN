@@ -23,6 +23,7 @@ from .serializers import (
 )
 
 from datetime import timedelta
+from django.contrib.sessions.models import Session
 
 def _client_ip(request):
     xff = request.META.get('HTTP_X_FORWARDED_FOR')
@@ -374,10 +375,28 @@ def online_employees(request):
     # Employees with recent live location
     recent_location_emp_ids = LiveLocation.objects.filter(timestamp__gte=threshold).values_list('employee_id', flat=True).distinct()
 
-    # Employees whose user last_login is recent
-    recent_user_emp_ids = Employee.objects.filter(user__last_login__gte=threshold).values_list('id', flat=True)
+    # Employees with active sessions (logged in via Django auth session)
+    session_user_ids = set()
+    try:
+        active_sessions = Session.objects.filter(expire_date__gte=timezone.now())
+        for sess in active_sessions:
+            try:
+                data = sess.get_decoded()
+                uid = data.get('_auth_user_id') or data.get('user_id')
+                if uid:
+                    try:
+                        session_user_ids.add(int(uid))
+                    except Exception:
+                        pass
+            except Exception:
+                continue
+    except Exception:
+        session_user_ids = set()
 
-    online_ids = set(list(recent_location_emp_ids) + list(recent_user_emp_ids))
+    # Map session user ids to Employee ids (if user has an Employee record)
+    recent_session_emp_ids = Employee.objects.filter(user_id__in=session_user_ids).values_list('id', flat=True)
+
+    online_ids = set(list(recent_location_emp_ids) + list(recent_session_emp_ids))
 
     employees = Employee.objects.filter(id__in=online_ids)
     serializer = EmployeeSerializer(employees, many=True, context={'request': request})

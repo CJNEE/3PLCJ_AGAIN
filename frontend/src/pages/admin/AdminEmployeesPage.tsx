@@ -22,7 +22,7 @@ import { employeeAPI } from '@/api/apiService';
 const OnlinePresence: React.FC = () => {
   const [online, setOnline] = useState<any[]>([]);
   const [pulseIds, setPulseIds] = useState<Set<number>>(new Set());
-  const [intervalMs, setIntervalMs] = useState<number>(15000);
+  const intervalMs = 5000; // fixed 5s refresh
   const prevIdsRef = React.useRef<Set<number>>(new Set());
 
   const fetchOnline = async () => {
@@ -71,22 +71,14 @@ const OnlinePresence: React.FC = () => {
         @keyframes online-pulse { 0% { box-shadow: 0 0 0 0 rgba(34,197,94,0.6); } 70% { box-shadow: 0 0 0 8px rgba(34,197,94,0); } 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); } }
       `}</style>
 
-      <div className="flex items-center justify-between mb-2">
-        <div className="text-xs font-semibold text-gray-600 dark:text-gray-300">Online Now</div>
-        <div className="flex items-center gap-2">
-          <label className="text-[11px] text-gray-500">Refresh</label>
-          <select value={String(intervalMs)} onChange={(e) => setIntervalMs(Number(e.target.value))} className="text-xs bg-transparent border border-gray-200 dark:border-white/10 rounded px-2 py-1">
-            <option value={5000}>5s</option>
-            <option value={10000}>10s</option>
-            <option value={15000}>15s</option>
-            <option value={30000}>30s</option>
-            <option value={60000}>60s</option>
-          </select>
-        </div>
-      </div>
-
-      <div className="w-full overflow-x-auto hide-scrollbar">
-        <div className="flex items-center gap-3 py-2">
+      <div className="mb-4">
+        <div className="rounded-xl bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/[0.06] p-3">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm font-semibold text-gray-700 dark:text-gray-200">Online Now</div>
+            <div className="text-xs text-gray-400">Auto-refresh: 5s</div>
+          </div>
+          <div className="w-full overflow-x-auto hide-scrollbar">
+            <div className="flex items-center gap-3 py-2">
           {online.map((e: any) => {
             const isPulsing = pulseIds.has(e.id);
             return (
