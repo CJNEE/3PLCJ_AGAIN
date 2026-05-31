@@ -23,10 +23,10 @@ const iconMap: Record<string, any> = {
 function AdminMobileProfile() {
   const { user, logout } = useAuth();
 
-  // FETCH DARK MODE + TOGGLE FROM CONTEXT
+  // FROM THEME CONTEXT
   const {
     isDarkMode,
-    toggleTheme, // make sure this exists in your ThemeContext
+    toggleTheme,
   } = useTheme();
 
   const [open, setOpen] = useState(false);
@@ -40,7 +40,7 @@ function AdminMobileProfile() {
 
   const IconComp = iconMap[path] || Grid;
 
-  // CLOSE WHEN CLICK OUTSIDE
+  // CLOSE DROPDOWN OUTSIDE CLICK
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -77,14 +77,14 @@ function AdminMobileProfile() {
     <div className="block md:hidden">
 
       {/* HEADER */}
-      <div className="relative overflow-hidden rounded-b-[28px] bg-[#050505] shadow-[0_10px_40px_rgba(0,0,0,0.7)]">
+      <div className="relative overflow-visible rounded-b-[28px] bg-[#050505] shadow-[0_12px_40px_rgba(0,0,0,0.65)]">
 
-        {/* RED AMBIENT LIGHT */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,0,0,0.25),transparent_40%)]" />
+        {/* RED LIGHT */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,0,0,0.22),transparent_38%)]" />
 
         {/* RED LINES */}
-        <div className="absolute top-0 right-0 w-[220px] h-full opacity-30">
-          <div className="absolute top-0 right-16 w-[1px] h-full bg-gradient-to-b from-red-500/60 to-transparent rotate-[35deg]" />
+        <div className="absolute top-0 right-0 w-[220px] h-full opacity-25">
+          <div className="absolute top-0 right-14 w-[1px] h-full bg-gradient-to-b from-red-500/60 to-transparent rotate-[35deg]" />
           <div className="absolute top-0 right-24 w-[1px] h-full bg-gradient-to-b from-red-500/40 to-transparent rotate-[35deg]" />
         </div>
 
@@ -93,7 +93,7 @@ function AdminMobileProfile() {
 
           <div className="flex items-start justify-between gap-3">
 
-            {/* LEFT */}
+            {/* LEFT SIDE */}
             <div className="flex items-center gap-4">
 
               {/* LOGO */}
@@ -112,20 +112,20 @@ function AdminMobileProfile() {
                 <div className="w-[1px] h-16 bg-white/10" />
               </div>
 
-              {/* PAGE ICON */}
+              {/* PAGE ICON ONLY */}
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-red-700 to-red-500 flex items-center justify-center shadow-[0_0_25px_rgba(255,0,0,0.35)]">
 
                 <IconComp className="w-5 h-5 text-white" />
               </div>
             </div>
 
-            {/* RIGHT */}
+            {/* RIGHT SIDE */}
             <div
               ref={dropdownRef}
               className="relative"
             >
 
-              {/* PROFILE BUTTON */}
+              {/* PROFILE */}
               <button
                 onClick={() => setOpen(!open)}
                 className="flex items-center gap-2 rounded-full bg-black/30 backdrop-blur-sm px-3 py-2.5"
@@ -156,13 +156,21 @@ function AdminMobileProfile() {
                   </p>
                 </div>
 
-                {/* DROPDOWN ICON */}
+                {/* CHEVRON */}
                 <ChevronDown className="w-4 h-4 text-white/50" />
               </button>
 
               {/* DROPDOWN */}
               {open && (
                 <div className="absolute right-0 top-[65px] w-48 rounded-2xl bg-[#0b0b0b] shadow-[0_20px_60px_rgba(0,0,0,0.8)] overflow-hidden z-50">
+
+                  {/* ACCOUNT TITLE */}
+                  <div className="px-4 py-2.5 border-b border-white/5">
+
+                    <p className="text-red-400 text-[10px] uppercase tracking-[0.25em] font-bold">
+                      Account
+                    </p>
+                  </div>
 
                   {/* USER */}
                   <div className="px-4 py-3 flex items-center gap-3 border-b border-white/5">
@@ -172,6 +180,7 @@ function AdminMobileProfile() {
                     </div>
 
                     <div>
+
                       <p className="text-white text-sm font-semibold">
                         {user?.username || 'admin'}
                       </p>
@@ -185,7 +194,7 @@ function AdminMobileProfile() {
                   {/* THEME SWITCH */}
                   <button
                     onClick={toggleTheme}
-                    className="w-full px-4 py-3 flex items-center justify-between border-b border-white/5 hover:bg-white/[0.03] transition-all"
+                    className="w-full px-4 py-3 flex items-center justify-between border-b border-white/5 hover:bg-white/[0.03] transition-all duration-300"
                   >
 
                     <div className="flex items-center gap-2">
@@ -198,8 +207,8 @@ function AdminMobileProfile() {
 
                       <span className="text-sm text-white/80">
                         {isDarkMode
-                          ? 'Dark Mode'
-                          : 'Light Mode'}
+                          ? 'Dark'
+                          : 'Light'}
                       </span>
                     </div>
 
