@@ -23,11 +23,8 @@ const iconMap: Record<string, any> = {
 function AdminMobileProfile() {
   const { user, logout } = useAuth();
 
-  // FROM THEME CONTEXT
-  const {
-    isDarkMode,
-    toggleTheme,
-  } = useTheme();
+  // ONLY FETCH EXISTING VALUES
+  const { isDarkMode } = useTheme();
 
   const [open, setOpen] = useState(false);
 
@@ -40,7 +37,7 @@ function AdminMobileProfile() {
 
   const IconComp = iconMap[path] || Grid;
 
-  // CLOSE DROPDOWN OUTSIDE CLICK
+  // CLOSE DROPDOWN ON OUTSIDE CLICK
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -91,7 +88,7 @@ function AdminMobileProfile() {
         {/* CONTENT */}
         <div className="relative z-10 px-5 pt-5 pb-6">
 
-          <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center justify-between gap-3">
 
             {/* LEFT SIDE */}
             <div className="flex items-center gap-4">
@@ -112,7 +109,7 @@ function AdminMobileProfile() {
                 <div className="w-[1px] h-16 bg-white/10" />
               </div>
 
-              {/* PAGE ICON ONLY */}
+              {/* PAGE ICON */}
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-red-700 to-red-500 flex items-center justify-center shadow-[0_0_25px_rgba(255,0,0,0.35)]">
 
                 <IconComp className="w-5 h-5 text-white" />
@@ -125,7 +122,7 @@ function AdminMobileProfile() {
               className="relative"
             >
 
-              {/* PROFILE */}
+              {/* PROFILE BUTTON */}
               <button
                 onClick={() => setOpen(!open)}
                 className="flex items-center gap-2 rounded-full bg-black/30 backdrop-blur-sm px-3 py-2.5"
@@ -164,7 +161,7 @@ function AdminMobileProfile() {
               {open && (
                 <div className="absolute right-0 top-[65px] w-48 rounded-2xl bg-[#0b0b0b] shadow-[0_20px_60px_rgba(0,0,0,0.8)] overflow-hidden z-50">
 
-                  {/* ACCOUNT TITLE */}
+                  {/* ACCOUNT */}
                   <div className="px-4 py-2.5 border-b border-white/5">
 
                     <p className="text-red-400 text-[10px] uppercase tracking-[0.25em] font-bold">
@@ -180,7 +177,6 @@ function AdminMobileProfile() {
                     </div>
 
                     <div>
-
                       <p className="text-white text-sm font-semibold">
                         {user?.username || 'admin'}
                       </p>
@@ -191,11 +187,8 @@ function AdminMobileProfile() {
                     </div>
                   </div>
 
-                  {/* THEME SWITCH */}
-                  <button
-                    onClick={toggleTheme}
-                    className="w-full px-4 py-3 flex items-center justify-between border-b border-white/5 hover:bg-white/[0.03] transition-all duration-300"
-                  >
+                  {/* THEME STATUS */}
+                  <div className="w-full px-4 py-3 flex items-center justify-between border-b border-white/5">
 
                     <div className="flex items-center gap-2">
 
@@ -207,22 +200,20 @@ function AdminMobileProfile() {
 
                       <span className="text-sm text-white/80">
                         {isDarkMode
-                          ? 'Dark'
-                          : 'Light'}
+                          ? 'Dark Mode'
+                          : 'Light Mode'}
                       </span>
                     </div>
 
-                    {/* SWITCH */}
+                    {/* STATUS DOT */}
                     <div
-                      className={`w-10 h-5 rounded-full transition-all duration-300 flex items-center px-1 ${
+                      className={`w-2.5 h-2.5 rounded-full ${
                         isDarkMode
-                          ? 'bg-red-500 justify-end'
-                          : 'bg-white/20 justify-start'
+                          ? 'bg-red-500'
+                          : 'bg-yellow-400'
                       }`}
-                    >
-                      <div className="w-3.5 h-3.5 rounded-full bg-white" />
-                    </div>
-                  </button>
+                    />
+                  </div>
 
                   {/* LOGOUT */}
                   <button
