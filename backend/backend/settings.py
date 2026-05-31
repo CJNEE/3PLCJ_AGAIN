@@ -21,8 +21,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# SECRET_KEY = 'django-insecure-_4-^c(%mqhby%80&o1)s=#lw97439c$d25rjp6wk0m--j7^svl'
-SECRET_KEY = os.environ.get('SECRET_KEY')
+# SECRET_KEY fallback for local development when env var isn't set
+SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-for-local-testing'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -101,6 +101,9 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 # Use PostgreSQL exclusively. Set DATABASE_URL in environment or fallback to local DB.
 _DATABASE_URL = os.environ.get('DATABASE_URL', '').strip()
+# For local development, fallback to a sqlite DB if no DATABASE_URL provided
+if not _DATABASE_URL:
+    _DATABASE_URL = f'sqlite:///{BASE_DIR / "db.sqlite3"}'
 
 import dj_database_url
 
@@ -111,13 +114,21 @@ _CONN_MAX_AGE = int(os.environ.get('CONN_MAX_AGE', '600'))
 _default_ssl = 'False' if 'localhost' in _DATABASE_URL or '127.0.0.1' in _DATABASE_URL else 'True'
 _DB_SSL_REQUIRE = os.environ.get('DB_SSL_REQUIRE', _default_ssl).lower() in ('1', 'true', 'yes')
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default=_DATABASE_URL,
-        conn_max_age=_CONN_MAX_AGE,
-        ssl_require=_DB_SSL_REQUIRE,
-    )
-}
+if _DATABASE_URL.startswith('sqlite'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': str(BASE_DIR / 'db.sqlite3'),
+        }
+    }
+else:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=_DATABASE_URL,
+            conn_max_age=_CONN_MAX_AGE,
+            ssl_require=_DB_SSL_REQUIRE,
+        )
+    }
 
 CSRF_TRUSTED_ORIGINS = [
     "https://*.vercel.app",

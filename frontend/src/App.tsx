@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { employeeAPI } from '@/api/apiService';
 
 
 
@@ -198,10 +199,34 @@ function AppRoutes() {
 }
 
 function App() {
+  // Heartbeat pinger: mark authenticated users as active every 30s
+  const Heartbeat = () => {
+    const { isAuthenticated } = useAuth();
+
+    useEffect(() => {
+      if (!isAuthenticated) return;
+
+      const send = async () => {
+        try {
+          await employeeAPI.heartbeat();
+        } catch (e) {
+          // ignore
+        }
+      };
+
+      send();
+      const id = setInterval(send, 30000);
+      return () => clearInterval(id);
+    }, [isAuthenticated]);
+
+    return null;
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <BrowserRouter>
+          <Heartbeat />
           <AppRoutes />
           {/* Toast Notifications */}
           <Toaster position="bottom-right" />

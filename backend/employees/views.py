@@ -396,12 +396,31 @@ def online_employees(request):
     # Map session user ids to Employee ids (if user has an Employee record)
     recent_session_emp_ids = Employee.objects.filter(user_id__in=session_user_ids).values_list('id', flat=True)
 
-    online_ids = set(list(recent_location_emp_ids) + list(recent_session_emp_ids))
+    # Employees with recent heartbeat/last_activity
+    try:
+        recent_activity_emp_ids = Employee.objects.filter(last_activity__gte=threshold).values_list('id', flat=True).distinct()
+    except Exception:
+        recent_activity_emp_ids = []
+
+    online_ids = set(list(recent_location_emp_ids) + list(recent_session_emp_ids) + list(recent_activity_emp_ids))
 
     employees = Employee.objects.filter(id__in=online_ids)
     serializer = EmployeeSerializer(employees, many=True, context={'request': request})
 
     return Response({'count': employees.count(), 'employees': serializer.data, 'ids': list(online_ids)})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def heartbeat(request):
+    """Simple heartbeat endpoint: updates Employee.last_activity for the authenticated user."""
+    try:
+        emp = Employee.objects.get(user=request.user)
+        emp.last_activity = timezone.now()
+        emp.save(update_fields=['last_activity'])
+        return Response({'status': 'ok', 'updated': True})
+    except Employee.DoesNotExist:
+        return Response({'status': 'no_employee'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 # Helper: compute government deductions based on hub-specific rates or defaults

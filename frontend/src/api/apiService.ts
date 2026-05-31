@@ -118,6 +118,11 @@ export const employeeAPI = {
     return response.data;
   },
 
+  heartbeat: async () => {
+    const response = await apiClient.post(API_ENDPOINTS.EMPLOYEES_HEARTBEAT);
+    return response.data;
+  },
+
   bulkToggleLogin: async (employeeIds: number[], canLogin: boolean) => {
     const response = await apiClient.post(
       `${API_ENDPOINTS.EMPLOYEES}bulk_toggle_login/`,

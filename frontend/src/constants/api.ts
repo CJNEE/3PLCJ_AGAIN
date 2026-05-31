@@ -56,6 +56,7 @@ export const API_ENDPOINTS = {
   // Employees
   EMPLOYEES: '/employees/',
   EMPLOYEES_ONLINE: '/employees/online/',
+  EMPLOYEES_HEARTBEAT: '/employees/heartbeat/',
   EMPLOYEE_DETAIL: (id: number) => `/employees/${id}/`,
   EMPLOYEE_DOCUMENTS: (id: number) => `/employees/${id}/documents/`,
   

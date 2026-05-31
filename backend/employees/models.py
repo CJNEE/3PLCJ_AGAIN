@@ -130,6 +130,8 @@ class Employee(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    # Last activity timestamp (used for presence/heartbeat)
+    last_activity = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.full_name} - {self.position}"
