@@ -13,6 +13,8 @@ import {
   Activity,
   Shield,
   Lock,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme, ThemeToggle } from '@/context/ThemeContext';
@@ -125,7 +127,10 @@ export const AdminMobileProfile: React.FC<{ title?: string; subtitle?: string }>
                   Account
                 </div>
                 <div className="px-3 py-3 flex items-center justify-between">
-                  <div className="text-xs text-white/80 font-medium">Theme</div>
+                  <div className="flex items-center gap-2">
+                    {isDarkMode ? <Moon className="w-4 h-4 text-white/80" /> : <Sun className="w-4 h-4 text-yellow-400" />}
+                    <span className="text-xs text-white/80 font-medium">{isDarkMode ? 'Dark Mode' : 'Light Mode'}</span>
+                  </div>
                   <div onClick={(e) => e.stopPropagation()}>
                     <ThemeToggle />
                   </div>

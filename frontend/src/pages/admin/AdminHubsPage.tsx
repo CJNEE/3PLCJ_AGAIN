@@ -840,17 +840,33 @@ export const AdminHubsPage = () => {
   const [employeeSearch, setEmployeeSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const itemsPerPage = 8;
   
   useEffect(() => {
-  const closeMenu = () => setShowProfileDropdown(false);
+    const closeMenu = () => setShowProfileDropdown(false);
+    window.addEventListener('click', closeMenu);
+    return () => window.removeEventListener('click', closeMenu);
+  }, []);
 
-  window.addEventListener('click', closeMenu);
-
-  return () => {
-    window.removeEventListener('click', closeMenu);
-  };
-}, []);
+  // Keep Leaflet map in sync when container is resized (fixes blank spaces)
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const ro = new ResizeObserver(() => {
+      try {
+        mapRef.current?.invalidateSize();
+      } catch (e) {
+        // ignore
+      }
+    });
+    ro.observe(containerRef.current);
+    const onWin = () => mapRef.current?.invalidateSize();
+    window.addEventListener('resize', onWin);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', onWin);
+    };
+  }, [containerRef]);
   const [hubState, setHubState] = useState<HubState>({ selectedHub: null });
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -1102,8 +1118,8 @@ export const AdminHubsPage = () => {
       <div className="min-h-screen bg-gray-50 dark:bg-[#020817] lg:ml-64 transition-colors duration-300">
         <div className="p-3 sm:p-5 lg:p-8 space-y-5 max-w-[1600px] mx-auto">
           <div className="flex items-start justify-between gap-4 mb-2">
-  <div>
-  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight tracking-tight text-gray-900 dark:text-white">
+    <div>
+    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold leading-tight tracking-tight text-gray-900 dark:text-white">
       Hub Management
       </h1>
 
@@ -1111,63 +1127,10 @@ export const AdminHubsPage = () => {
       Manage hubs, employees and routes across locations
       </p>
   </div>
-  {/* MOBILE ADMIN DROPDOWN */}
+  {/* MOBILE HEADER */}
   <div className="sm:hidden shrink-0">
-    <div
-      onClick={(e) => {
-        e.stopPropagation();
-        setShowProfileDropdown((prev) => !prev);
-      }}
-      className="relative flex items-center gap-2 bg-[#111827] px-2.5 py-1.5 rounded-full border border-gray-800 cursor-pointer"
-    >
-      <div className="w-5 h-5 rounded-full bg-gray-700 flex items-center justify-center">
-        <User className="w-3 h-3 text-gray-300" />
-      </div>
-
-     <span className="text-[11px] font-medium text-gray-300">
-        {user?.username || 'Admin'}
-      </span>
-
-     <ChevronDown className="w-3 h-3 text-gray-500" />
-
-      {/* dropdown menu */}
-      {showProfileDropdown && (
-        <div
-          onClick={(e) => e.stopPropagation()}
-          className="absolute right-0 top-full mt-2 w-40 rounded-2xl bg-[#0F172A] border border-white/10 shadow-2xl p-1.5 z-[9999]"
-        >
-          <div className="px-3 py-2 border-b border-white/10">
-            <p className="text-xs font-semibold text-white">
-              {user?.username}
-            </p>
-          
-            <p className="text-[10px] uppercase tracking-wider text-gray-500">
-              {user?.role}
-            </p>
-          </div>
-      
-          <div className="flex items-center justify-between px-2.5 py-2">
-            <div className="flex items-center gap-2">
-              <Sun size={14} className="text-yellow-400" />
-             <span className="text-xs text-white">
-              Light Mode
-            </span>
-            </div>
-      
-            <ThemeToggle />
-          </div>
-      
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-2 px-2.5 py-2 text-red-400 hover:bg-red-500/10 rounded-xl transition"
-          >
-            <LogOut size={15} />
-            Logout
-          </button>
-        </div>
-      )}
-          </div>
-        </div>
+    <AdminMobileProfile />
+  </div>
       
         {/* DESKTOP ADD HUB */}
         <button
@@ -1199,7 +1162,7 @@ export const AdminHubsPage = () => {
           {/* ========== MAP + SIDE PANEL ========== */}
           <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-stretch">
             {/* MAP */}
-            <div className="xl:col-span-8 rounded-3xl overflow-hidden border border-gray-200 dark:border-white/[0.06] bg-white dark:bg-[#0b1220] shadow-lg h-[300px] sm:h-[450px] lg:h-[550px] xl:h-[calc(100vh-220px)]">
+            <div ref={containerRef} className="xl:col-span-8 rounded-3xl overflow-hidden border border-gray-200 dark:border-white/[0.06] bg-white dark:bg-[#0b1220] shadow-lg h-[300px] sm:h-[450px] lg:h-[550px] xl:h-[calc(100vh-220px)]">
                 <MapContainer
                   center={[14.5995, 120.9842]}
                   zoom={6}

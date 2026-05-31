@@ -20,51 +20,120 @@ import AdminMobileProfile from '@/components/AdminMobileProfile';
 import { employeeAPI } from '@/api/apiService';
 
 const OnlinePresence: React.FC = () => {
-  const [online, setOnline] = useState<any[]>([]);
+  const [all, setAll] = useState<any[]>([]);
+  const [onlineIds, setOnlineIds] = useState<Set<number>>(new Set());
+  const [pulseIds, setPulseIds] = useState<Set<number>>(new Set());
+  const [intervalMs, setIntervalMs] = useState<number>(15000);
+
+  const fetchAll = async () => {
+    try {
+      const res = await employeeAPI.getEmployees({ limit: 0 });
+      const list = res?.results || res?.employees || res || [];
+      setAll(Array.isArray(list) ? list : []);
+    } catch (err) {
+      // ignore
+    }
+  };
 
   const fetchOnline = async () => {
     try {
       const res = await employeeAPI.getOnlineEmployees();
-      setOnline(res.employees || []);
+      const ids: number[] = res.ids || (res.employees || []).map((e: any) => e.id) || [];
+      const newSet = new Set<number>(ids);
+
+      // detect newly-online ids for pulse animation
+      const newlyOnline: number[] = [];
+      for (const id of newSet) {
+        if (!onlineIds.has(id)) newlyOnline.push(id);
+      }
+
+      if (newlyOnline.length) {
+        setPulseIds((prev) => {
+          const next = new Set(prev);
+          newlyOnline.forEach((id) => next.add(id));
+          return next;
+        });
+        // remove pulse after 2.5s
+        setTimeout(() => {
+          setPulseIds((prev) => {
+            const next = new Set(prev);
+            newlyOnline.forEach((id) => next.delete(id));
+            return next;
+          });
+        }, 2500);
+      }
+
+      setOnlineIds(newSet);
     } catch (err) {
-      // ignore silently
+      // ignore
     }
   };
 
   useEffect(() => {
+    fetchAll();
     fetchOnline();
-    const id = setInterval(fetchOnline, 15000);
+    const id = setInterval(() => fetchOnline(), intervalMs);
     return () => clearInterval(id);
-  }, []);
+  }, [intervalMs]);
 
-  if (!online.length) return null;
+  if (!all.length) return null;
 
   return (
-    <div className="w-full overflow-x-auto hide-scrollbar">
-      <div className="flex items-center gap-3 py-2">
-        {online.map((e: any) => (
-          <div key={e.id} className="flex flex-col items-center text-center w-16">
-            <div className="relative w-10 h-10">
-              {e.profile_image ? (
-                <img src={e.profile_image} alt={e.full_name} className="w-10 h-10 rounded-full object-cover border-2 border-white" />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-teal-500 flex items-center justify-center text-white font-bold">{(e.firstname||'')[0]}{(e.lastname||'')[0]}</div>
-              )}
+    <div>
+      <style>{`
+        @keyframes online-pulse { 0% { box-shadow: 0 0 0 0 rgba(34,197,94,0.6); } 70% { box-shadow: 0 0 0 8px rgba(34,197,94,0); } 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); } }
+      `}</style>
 
-              {/* Online indicator - small green ring at bottom-right */}
-              <span className="absolute right-0 bottom-0 inline-block w-3 h-3 rounded-full bg-green-400 ring-2 ring-white" />
-            </div>
+      <div className="flex items-center justify-between mb-2">
+        <div className="text-xs font-semibold text-gray-600 dark:text-gray-300">Online Now</div>
+        <div className="flex items-center gap-2">
+          <label className="text-[11px] text-gray-500">Refresh</label>
+          <select value={String(intervalMs)} onChange={(e) => setIntervalMs(Number(e.target.value))} className="text-xs bg-transparent border border-gray-200 dark:border-white/10 rounded px-2 py-1">
+            <option value={5000}>5s</option>
+            <option value={10000}>10s</option>
+            <option value={15000}>15s</option>
+            <option value={30000}>30s</option>
+            <option value={60000}>60s</option>
+          </select>
+        </div>
+      </div>
 
-            <div className="text-xs text-gray-700 dark:text-gray-200 truncate mt-1">{e.full_name}</div>
-          </div>
-        ))}
+      <div className="w-full overflow-x-auto hide-scrollbar">
+        <div className="flex items-center gap-3 py-2">
+          {all.map((e: any) => {
+            const isOnline = onlineIds.has(e.id);
+            const isPulsing = pulseIds.has(e.id);
+            return (
+              <div key={e.id} className="flex flex-col items-center text-center w-16">
+                <div className="relative w-12 h-12">
+                  {e.profile_image ? (
+                    <img src={e.profile_image} alt={e.full_name} className={`w-12 h-12 rounded-full object-cover border-2 ${isOnline ? 'border-white' : 'border-gray-200 dark:border-white/6'}`} />
+                  ) : (
+                    <div className={`w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-teal-500 flex items-center justify-center text-white font-bold`}>{(e.firstname||'')[0]}{(e.lastname||'')[0]}</div>
+                  )}
+
+                  {isOnline && (
+                    <>
+                      <span className={`absolute right-0 bottom-0 inline-block w-3 h-3 rounded-full bg-emerald-400 ring-2 ring-white ${isPulsing ? 'animate-none' : ''}`} />
+                      {isPulsing && (
+                        <span className="absolute right-0 bottom-0 inline-block w-3 h-3 rounded-full bg-emerald-400 opacity-40" style={{ animation: 'online-pulse 1.6s ease-out' }} />
+                      )}
+                    </>
+                  )}
+                </div>
+
+                <div className="text-xs text-gray-700 dark:text-gray-200 truncate mt-1 max-w-[64px]">{e.full_name}</div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
 };
 
 export const AdminEmployeesPage = () => {
-  const { user, canEditEmployeeInfo, logout } = useAuth();
+  const { user, canEditEmployeeInfo, logout, canViewEmployees } = useAuth();
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
 
