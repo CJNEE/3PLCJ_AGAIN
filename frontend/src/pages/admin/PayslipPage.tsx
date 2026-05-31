@@ -389,7 +389,12 @@ export const PayslipPage = () => {
             <Card key={hubName} className="max-md:p-3 max-md:bg-transparent max-md:border-none max-md:shadow-none">
               <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
                 <h2 className="text-lg max-md:text-base font-bold text-red-700">Payroll List</h2>
-                <div className="text-sm max-md:text-xs text-gray-600 dark:text-gray-400">{hubName}</div>
+                <div className="flex items-center gap-3">
+                  <div className="text-sm max-md:text-xs text-gray-600 dark:text-gray-400">{hubName}</div>
+                  <button onClick={() => handleDownload(hubName)} className="btn btn-secondary !py-1.5 !px-3 text-xs flex items-center gap-2">
+                    <Download size={14} /> Download
+                  </button>
+                </div>
               </div>
               {records.length > 0 ? (
                 <>
@@ -418,8 +423,6 @@ export const PayslipPage = () => {
                             <td className="px-4 py-3">
                               <div className="flex flex-row flex-wrap gap-2 justify-center items-center">
                                 <button onClick={() => { setSelectedPayslip(record); setIsModalOpen(true); }} className="btn btn-primary !py-1.5 !px-3 text-xs">View</button>
-
-                                <button onClick={() => handleDownload(hubName)} className="btn btn-secondary !py-1.5 !px-3 text-xs">Download</button>
                               </div>
                             </td>
                           </tr>
@@ -445,12 +448,9 @@ export const PayslipPage = () => {
                           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Net Pay</span>
                           <span className="text-sm font-semibold text-gray-900 dark:text-white">₱{parseFloat(record.net_pay || '0').toFixed(2)}</span>
                         </div>
-                        <div className="grid grid-cols-2 gap-2 mt-1">
+                        <div className="grid grid-cols-1 gap-2 mt-1">
                           <button onClick={() => { setSelectedPayslip(record); setIsModalOpen(true); }} className="w-full bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-bold py-2 px-4 rounded-lg text-xs transition-colors">
                             View Payslip
-                          </button>
-                          <button onClick={() => handleDownload(hubName)} className="w-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-bold py-2 px-4 rounded-lg text-xs transition-colors flex items-center justify-center gap-1">
-                            <Download size={14} /> Download
                           </button>
                         </div>
                       </div>
