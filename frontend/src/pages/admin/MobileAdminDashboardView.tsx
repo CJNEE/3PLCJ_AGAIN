@@ -101,7 +101,7 @@ export const MobileAdminDashboardView = ({
   });
 
   return (
-    <div className="min-h-screen bg-[#0B1120] text-gray-200 pb-24 font-sans selection:bg-blue-500/30">
+    <div className={`min-h-screen pb-24 font-sans selection:bg-blue-500/30 ${isDarkMode ? 'bg-[#0B1120] text-gray-200' : 'bg-gray-50 text-gray-900'}`}>
       <style>{`
         .hide-scrollbar::-webkit-scrollbar {
           display: none;
@@ -127,7 +127,7 @@ export const MobileAdminDashboardView = ({
         
         {/* Top Cards Row */}
         <div className="grid grid-cols-2 gap-4">
-          <Card className="bg-[#111827] border-gray-800 p-4 flex flex-col justify-between">
+          <Card className={`${isDarkMode ? 'bg-[#111827] border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-900'} p-4 flex flex-col justify-between`}>
             <div className="flex items-start justify-between mb-4">
               <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
                 <Users className="w-5 h-5 text-blue-400" />
@@ -139,7 +139,7 @@ export const MobileAdminDashboardView = ({
             </div>
           </Card>
 
-          <Card className="bg-[#111827] border-gray-800 p-4 flex flex-col justify-between">
+          <Card className={`${isDarkMode ? 'bg-[#111827] border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-900'} p-4 flex flex-col justify-between`}>
             <div className="flex items-start justify-between mb-4">
               <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
                 <MapPin className="w-5 h-5 text-blue-400" />
@@ -157,7 +157,7 @@ export const MobileAdminDashboardView = ({
         <div className="flex overflow-x-auto pb-2 -mx-4 px-4 gap-4 snap-x hide-scrollbar">
           
           {/* Employee Status */}
-          <Card className="bg-[#111827] border-gray-800 p-4 min-w-[280px] snap-center flex flex-col">
+          <Card className={`${isDarkMode ? 'bg-[#111827] border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-900'} p-4 min-w-[280px] snap-center flex flex-col`}>
             <h3 className="text-sm font-semibold text-white mb-4">Employee Status</h3>
             <div className="flex items-center gap-4 flex-1">
               <div className="w-24 h-24">
@@ -192,7 +192,7 @@ export const MobileAdminDashboardView = ({
           </Card>
 
           {/* Employment Type */}
-          <Card className="bg-[#111827] border-gray-800 p-4 min-w-[280px] snap-center flex flex-col">
+          <Card className={`${isDarkMode ? 'bg-[#111827] border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-900'} p-4 min-w-[280px] snap-center flex flex-col`}>
             <h3 className="text-sm font-semibold text-white mb-4">Employment Type</h3>
             <div className="space-y-4 flex-1 mt-2">
               {employmentTypeData.map((entry: any, idx: number) => {
@@ -216,7 +216,7 @@ export const MobileAdminDashboardView = ({
           </Card>
 
           {/* Workforce Status */}
-          <Card className="bg-[#111827] border-gray-800 p-4 min-w-[280px] snap-center flex flex-col">
+          <Card className={`${isDarkMode ? 'bg-[#111827] border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-900'} p-4 min-w-[280px] snap-center flex flex-col`}>
             <h3 className="text-sm font-semibold text-white mb-4">Workforce Status</h3>
             <div className="space-y-3 flex-1 mt-1">
               {statusData.map((entry: any, idx: number) => (
@@ -232,7 +232,7 @@ export const MobileAdminDashboardView = ({
         </div>
 
         {/* Map */}
-        <Card className="bg-[#111827] border-gray-800 overflow-hidden relative">
+        <Card className={`${isDarkMode ? 'bg-[#111827] border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-900'} overflow-hidden relative`}>
           <div className="absolute top-0 left-0 right-0 z-[1000] flex justify-between items-center p-4 bg-gradient-to-b from-[#111827] to-transparent pointer-events-none">
             {showMapSearch ? (
               <div className="flex items-center gap-2 w-full pointer-events-auto">
@@ -241,7 +241,7 @@ export const MobileAdminDashboardView = ({
                   <input
                     type="text"
                     placeholder="Search locations..."
-                    className="w-full bg-[#111827]/95 border border-gray-800 rounded-full py-1.5 pl-8 pr-3 text-[10px] text-gray-300 placeholder-gray-500 focus:outline-none focus:border-gray-700"
+                    className={`${isDarkMode ? 'w-full bg-[#111827]/95 border border-gray-800 text-gray-300 placeholder-gray-500 focus:border-gray-700' : 'w-full bg-white border border-gray-200 text-gray-900 placeholder-gray-500 focus:border-gray-300'} rounded-full py-1.5 pl-8 pr-3 text-[10px] focus:outline-none`}
                     value={searchLocationTerm}
                     onChange={e => setSearchLocationTerm(e.target.value)}
                     autoFocus
@@ -297,7 +297,7 @@ export const MobileAdminDashboardView = ({
         </Card>
 
         {/* Hub Employee Distribution Chart */}
-        <Card className="bg-[#111827] border-gray-800 p-4">
+        <Card className={`${isDarkMode ? 'bg-[#111827] border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-900'} p-4`}>
           <div className="flex items-center gap-2 mb-3">
             <div className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center border border-gray-700">
               <Users className="w-4 h-4 text-gray-300" />
@@ -336,7 +336,7 @@ export const MobileAdminDashboardView = ({
         </Card>
 
         {/* Employees Table */}
-        <Card className="bg-[#111827] border-gray-800 overflow-hidden flex flex-col">
+        <Card className={`${isDarkMode ? 'bg-[#111827] border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-900'} overflow-hidden flex flex-col`}>
           <div className="p-4 flex justify-between items-center border-b border-gray-800">
             <h3 className="text-sm font-semibold text-white">Employees</h3>
             <div className="relative w-36">
@@ -378,7 +378,7 @@ export const MobileAdminDashboardView = ({
         </Card>
 
         {/* Hubs Table */}
-        <Card className="bg-[#111827] border-gray-800 overflow-hidden flex flex-col mb-6">
+        <Card className={`${isDarkMode ? 'bg-[#111827] border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-900'} overflow-hidden flex flex-col mb-6`}>
           <div className="p-4 flex justify-between items-center border-b border-gray-800">
             <h3 className="text-sm font-semibold text-white">Hubs</h3>
             <div className="relative w-36">

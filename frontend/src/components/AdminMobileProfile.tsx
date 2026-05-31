@@ -149,11 +149,11 @@ function AdminMobileProfile() {
 
         {/* BACKGROUND GLOW */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 right-0 w-52 h-52 bg-red-600/20 blur-[120px]" />
+          <div className={`absolute top-0 right-0 w-52 h-52 blur-[120px] ${isDarkMode ? 'bg-red-600/20' : 'bg-gray-300/30'}`} />
         </div>
 
         {/* HEADER CARD */}
-        <div className="relative overflow-visible rounded-[30px] border border-white/10 bg-gradient-to-r from-[#040B18] via-[#050505] to-[#180707] shadow-[0_20px_60px_rgba(0,0,0,0.75)] backdrop-blur-xl">
+        <div className={`relative overflow-visible rounded-[30px] border ${isDarkMode ? 'border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.75)] bg-gradient-to-r from-[#040B18] via-[#050505] to-[#180707] backdrop-blur-xl' : 'border-gray-200 bg-white/90 shadow-sm'}`}>
 
           {/* DECORATIVE RED LINES */}
           <div className="absolute inset-0 overflow-hidden rounded-[30px]">
@@ -184,16 +184,12 @@ function AdminMobileProfile() {
 
                 {/* PAGE INFO */}
                 <div className="flex items-center gap-3">
-
-                  {/* removed page icon for cleaner mobile header */}
-                  <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_18px_rgba(239,68,68,0.35)]" />
-
                   <div>
-                    <h1 className="text-white text-lg font-bold leading-none">
+                    <h1 className={`${isDarkMode ? 'text-white' : 'text-gray-900'} text-lg font-bold leading-none`}>
                       {pageTitle}
                     </h1>
 
-                    <p className="text-white/50 text-xs mt-1">
+                    <p className={`${isDarkMode ? 'text-white/50' : 'text-gray-600'} text-xs mt-1`}>
                       {pageSubtitle}
                     </p>
                   </div>
@@ -207,35 +203,20 @@ function AdminMobileProfile() {
                 className="relative"
               >
                 <button
-                  onClick={() =>
-                    setOpen(!open)
-                  }
-                  className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] backdrop-blur-xl px-2.5 py-2"
-                >
+                  onClick={() => setOpen(!open)}
+                  className={`flex items-center gap-2 rounded-full border px-2 py-1 ${isDarkMode ? 'border-white/10 bg-white/[0.04] backdrop-blur-xl' : 'border-gray-200 bg-white'}`}>
 
                   {/* AVATAR */}
                   <div className="relative">
-
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-600 to-red-500 flex items-center justify-center text-white font-bold text-lg shadow-[0_0_30px_rgba(255,0,0,0.45)]">
-                      {user?.username
-                        ?.charAt(0)
-                        ?.toUpperCase() || 'A'}
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center font-semibold ${isDarkMode ? 'bg-gradient-to-br from-red-600 to-red-500 text-white shadow-[0_0_18px_rgba(255,0,0,0.35)]' : 'bg-gray-200 text-gray-800' } text-sm` }>
+                      {user?.username?.charAt(0)?.toUpperCase() || 'A'}
                     </div>
-
-                    <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-[#050505]" />
+                    <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-white" />
                   </div>
 
                   <div className="text-left max-w-[70px]">
-
-                    <p className="text-white text-sm font-semibold truncate">
-                      {user?.username ||
-                        'admin'}
-                    </p>
-
-                    <p className="text-white/50 text-[11px]">
-                      {user?.role ||
-                        'Admin'}
-                    </p>
+                    <p className={`${isDarkMode ? 'text-white' : 'text-gray-900'} text-sm font-semibold truncate`}>{user?.username || 'admin'}</p>
+                    <p className={`${isDarkMode ? 'text-white/50' : 'text-gray-600'} text-[11px]`}>{user?.role || 'Admin'}</p>
                   </div>
 
                   <ChevronDown
@@ -249,41 +230,27 @@ function AdminMobileProfile() {
 
                 {/* DROPDOWN */}
                 {open && (
-                  <div className="absolute right-0 top-[70px] w-56 rounded-3xl border border-white/10 bg-[#0B1220] backdrop-blur-2xl shadow-[0_25px_80px_rgba(0,0,0,0.8)] overflow-hidden z-50">
+                  <div className={`absolute right-0 top-[62px] ${isDarkMode ? 'w-48 rounded-2xl border border-white/10 bg-[#0B1220] backdrop-blur-2xl shadow-[0_25px_60px_rgba(0,0,0,0.8)]' : 'w-44 rounded-xl border border-gray-200 bg-white shadow-lg'} overflow-hidden z-50`}>
 
-                    <div className="px-5 py-3 border-b border-white/5">
-                      <p className="text-red-400 text-[10px] uppercase tracking-[0.25em] font-bold">
-                        Account
-                      </p>
+                    <div className={`px-4 py-2 ${isDarkMode ? 'border-b border-white/5' : 'border-b border-gray-100'}`}>
+                      <p className={`${isDarkMode ? 'text-red-400' : 'text-gray-500'} text-[10px] uppercase tracking-[0.25em] font-bold`}>Account</p>
                     </div>
 
-                    <div className="px-5 py-4 flex items-center gap-3 border-b border-white/5">
-
-                      <div className="w-11 h-11 rounded-full bg-gradient-to-br from-red-600 to-red-500 flex items-center justify-center text-white font-bold">
-                        {user?.username
-                          ?.charAt(0)
-                          ?.toUpperCase() ||
-                          'A'}
+                    <div className={`px-4 py-3 flex items-center gap-3 ${isDarkMode ? 'border-b border-white/5' : 'border-b border-gray-100'}`}>
+                      <div className={`${isDarkMode ? 'w-9 h-9 rounded-full bg-gradient-to-br from-red-600 to-red-500 text-white flex items-center justify-center font-bold' : 'w-8 h-8 rounded-full bg-gray-200 text-gray-800 flex items-center justify-center font-semibold'}`}>
+                        {user?.username?.charAt(0)?.toUpperCase() || 'A'}
                       </div>
 
                       <div>
-                        <p className="text-white font-semibold text-sm">
-                          {user?.username ||
-                            'admin'}
-                        </p>
-
-                        <p className="text-white/50 text-xs">
-                          {user?.role ||
-                            'Admin'}
-                        </p>
+                        <p className={`${isDarkMode ? 'text-white' : 'text-gray-900'} font-semibold text-sm`}>{user?.username || 'admin'}</p>
+                        <p className={`${isDarkMode ? 'text-white/50' : 'text-gray-600'} text-xs`}>{user?.role || 'Admin'}</p>
                       </div>
                     </div>
 
-                    {/* INTERACTIVE SWITCH TOGGLE FOR DARK/LIGHT MODE */}
                     <button
                       type="button"
                       onClick={toggleDarkMode}
-                      className="w-full px-5 py-4 flex items-center justify-between border-b border-white/5 hover:bg-white/[0.04] transition-colors text-left"
+                      className={`w-full px-4 py-3 flex items-center justify-between ${isDarkMode ? 'border-b border-white/5 hover:bg-white/[0.04]' : 'hover:bg-gray-50'} text-left`}
                     >
                       <div className="flex items-center gap-2">
                         {isDarkMode ? (
@@ -291,29 +258,19 @@ function AdminMobileProfile() {
                         ) : (
                           <Sun className="w-4 h-4 text-yellow-400" />
                         )}
-                        <span className="text-sm text-white/80">
-                          {isDarkMode ? 'Dark Mode' : 'Light Mode'}
-                        </span>
+                        <span className={`${isDarkMode ? 'text-white/80' : 'text-gray-700'} text-sm`}>{isDarkMode ? 'Dark Mode' : 'Light Mode'}</span>
                       </div>
-                      
-                      {/* Switch Track */}
-                      <div className={`relative w-10 h-6 rounded-full transition-colors duration-200 ${isDarkMode ? 'bg-red-500' : 'bg-gray-700'}`}>
-                        {/* Switch Thumb */}
+                      <div className={`relative w-10 h-6 rounded-full transition-colors duration-200 ${isDarkMode ? 'bg-red-500' : 'bg-gray-300'}`}>
                         <div className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-200 ${isDarkMode ? 'translate-x-4' : 'translate-x-0'}`} />
                       </div>
                     </button>
 
                     <button
-                      onClick={
-                        handleLogout
-                      }
-                      className="w-full px-5 py-4 flex items-center gap-3 text-white/80 hover:bg-red-500/10 transition-all duration-300"
+                      onClick={handleLogout}
+                      className={`w-full px-4 py-3 flex items-center gap-3 ${isDarkMode ? 'text-white/80 hover:bg-red-500/10' : 'text-gray-700 hover:bg-gray-50' } transition-all duration-200`}
                     >
-                      <LogOut className="w-4 h-4 text-red-400" />
-
-                      <span className="text-sm font-medium">
-                        Logout
-                      </span>
+                      <LogOut className={`w-4 h-4 ${isDarkMode ? 'text-red-400' : 'text-gray-600'}`} />
+                      <span className="text-sm font-medium">Logout</span>
                     </button>
 
                   </div>
