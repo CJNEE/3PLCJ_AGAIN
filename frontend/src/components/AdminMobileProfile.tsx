@@ -185,9 +185,8 @@ function AdminMobileProfile() {
                 {/* PAGE INFO */}
                 <div className="flex items-center gap-3">
 
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-600 to-red-500 flex items-center justify-center shadow-[0_0_35px_rgba(255,0,0,0.45)]">
-                    <IconComp className="w-6 h-6 text-white" />
-                  </div>
+                  {/* removed page icon for cleaner mobile header */}
+                  <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_18px_rgba(239,68,68,0.35)]" />
 
                   <div>
                     <h1 className="text-white text-lg font-bold leading-none">

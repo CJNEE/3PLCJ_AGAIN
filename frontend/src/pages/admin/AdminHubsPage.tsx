@@ -1119,7 +1119,7 @@ export const AdminHubsPage = () => {
         <AdminMobileProfile />
         
         <div className="p-3 sm:p-5 lg:p-8 space-y-5 max-w-[1600px] mx-auto">
-          <div className="flex items-start justify-between gap-4 mb-2">
+          <div className="hidden md:flex items-start justify-between gap-4 mb-2">
             <div>
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold leading-tight tracking-tight text-gray-900 dark:text-white">
                 Hub Management
@@ -1204,7 +1204,7 @@ export const AdminHubsPage = () => {
 
             {/* RIGHT PANEL */}
             <div className="xl:col-span-4 h-[300px] sm:h-[450px] lg:h-[550px] xl:h-[calc(100vh-220px)]">
-              <div className="rounded-2xl bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/[0.06] overflow-hidden h-full flex flex-col">
+              <div className="rounded-2xl bg-white dark:bg-[#071022] border border-gray-200 dark:border-white/[0.06] overflow-hidden h-full flex flex-col">
                 {hubState.selectedHub ? (
                   <div className="flex flex-col h-full">
                     {/* Panel Header */}
