@@ -198,9 +198,9 @@ export const AdminEmployeesPage = () => {
           <button
             onClick={() => setShowAdd(true)}
             className="
-              md:hidden
-              fixed
-              bottom-20
+                md:hidden
+                  fixed
+                  bottom-24
               right-4
               z-50
               w-14

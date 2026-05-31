@@ -1118,7 +1118,7 @@ export const AdminHubsPage = () => {
       <div className="min-h-screen bg-gray-50 dark:bg-[#020817] lg:ml-64 transition-colors duration-300">
         <AdminMobileProfile />
         
-        <div className="p-3 sm:p-5 lg:p-8 space-y-5 max-w-[1600px] mx-auto">
+        <div className="p-3 sm:p-5 lg:p-8 space-y-5 max-w-[1400px] mx-auto lg:px-10">
           <div className="hidden md:flex items-start justify-between gap-4 mb-2">
             <div>
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold leading-tight tracking-tight text-gray-900 dark:text-white">
@@ -1200,7 +1200,6 @@ export const AdminHubsPage = () => {
                   )}
                 </MapContainer>
               </div>
-            </div>
 
             {/* RIGHT PANEL */}
             <div className="xl:col-span-4 h-[300px] sm:h-[450px] lg:h-[550px] xl:h-[calc(100vh-220px)]">
