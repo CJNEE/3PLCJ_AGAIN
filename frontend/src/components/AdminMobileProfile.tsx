@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ChevronDown,
   LogOut,
@@ -27,6 +27,8 @@ function AdminMobileProfile() {
 
   const [open, setOpen] = useState(false);
 
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
   const handleLogout = () => {
     try {
       logout?.();
@@ -42,33 +44,53 @@ function AdminMobileProfile() {
 
   const IconComp = iconMap[path] || Grid;
 
+  // CLOSE DROPDOWN WHEN CLICK OUTSIDE
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener(
+        'mousedown',
+        handleClickOutside
+      );
+    };
+  }, []);
+
   return (
     <div className="block md:hidden px-4 pt-3">
 
-      {/* MAIN HEADER */}
+      {/* HEADER */}
       <div className="relative overflow-hidden rounded-[28px] bg-[#050505] shadow-[0_10px_40px_rgba(0,0,0,0.65)]">
 
-        {/* RED AMBIENT LIGHT */}
+        {/* RED LIGHT */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,0,0,0.28),transparent_40%)]" />
 
-        {/* RED LINE DESIGN */}
+        {/* RED LINES */}
         <div className="absolute top-0 right-0 w-[220px] h-full opacity-30">
           <div className="absolute top-0 right-16 w-[1px] h-full bg-gradient-to-b from-red-500/60 to-transparent rotate-[35deg]" />
           <div className="absolute top-0 right-24 w-[1px] h-full bg-gradient-to-b from-red-500/40 to-transparent rotate-[35deg]" />
         </div>
 
         {/* CONTENT */}
-        <div className="relative z-10 px-5 py-4">
+        <div className="relative z-10 px-5 py-5">
 
           <div className="flex items-start justify-between gap-3">
 
-            {/* LEFT SIDE */}
+            {/* LEFT */}
             <div className="flex items-start gap-4 flex-1 min-w-0">
 
-              {/* LOGO AREA */}
+              {/* LOGO */}
               <div className="flex items-center gap-4 shrink-0">
 
-                {/* LOGO */}
                 <div className="w-[58px] h-[58px] rounded-2xl bg-black/30 flex items-center justify-center">
 
                   <img
@@ -82,56 +104,38 @@ function AdminMobileProfile() {
                 <div className="w-[1px] h-16 bg-white/10" />
               </div>
 
-              {/* TEXT AREA */}
+              {/* TEXT */}
               <div className="min-w-0 flex-1">
 
-                {/* COMPANY */}
-                <h1 className="text-white text-[16px] font-bold tracking-wide leading-none">
+                {/* TITLE */}
+                <h1 className="text-white text-[16px] font-bold leading-[1.05] tracking-wide max-w-[130px]">
                   3PL BUSINESS SOLUTIONS
                 </h1>
 
-                <p className="text-white/50 text-[11px] mt-2">
+                {/* SUBTITLE */}
+                <p className="text-white/45 text-[11px] mt-3 leading-relaxed max-w-[130px]">
                   Manage company operations efficiently
                 </p>
-
-                {/* ACCESS SECTION */}
-                <div className="flex items-center gap-3 mt-5">
-
-                  {/* ICON BOX */}
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-red-700 to-red-500 flex items-center justify-center shadow-[0_0_25px_rgba(255,0,0,0.35)]">
-
-                    <IconComp className="w-5 h-5 text-white" />
-                  </div>
-
-                  {/* TITLE */}
-                  <div>
-
-                    <h2 className="text-white text-[15px] font-bold leading-none">
-                      Access Control
-                    </h2>
-
-                    <p className="text-white/45 text-[11px] mt-1">
-                      Manage user access and security
-                    </p>
-                  </div>
-                </div>
               </div>
             </div>
 
-            {/* RIGHT SIDE */}
-            <div className="relative shrink-0">
+            {/* RIGHT */}
+            <div
+              ref={dropdownRef}
+              className="relative shrink-0"
+            >
 
-              {/* PROFILE BUTTON */}
+              {/* PROFILE */}
               <button
                 onClick={() => setOpen(!open)}
-                className="flex items-center gap-3 rounded-full bg-black/30 backdrop-blur-sm px-4 py-3"
+                className="flex items-center gap-2 rounded-full bg-black/30 backdrop-blur-sm px-3 py-2.5"
               >
 
                 {/* AVATAR */}
                 <div className="relative">
 
                   <div className="w-11 h-11 rounded-full bg-gradient-to-br from-red-600 to-red-500 flex items-center justify-center text-white text-lg font-bold shadow-[0_0_20px_rgba(255,0,0,0.35)]">
-                    {user?.username?.charAt(0)?.toUpperCase() || 'A'}
+                    {user?.username?.charAt(0)?.toUpperCase() || 'H'}
                   </div>
 
                   {/* ONLINE */}
@@ -141,11 +145,11 @@ function AdminMobileProfile() {
                 {/* USER INFO */}
                 <div className="text-left leading-tight">
 
-                  <p className="text-white text-[15px] font-semibold max-w-[70px] truncate">
+                  <p className="text-white text-[15px] font-semibold">
                     {user?.username || 'hr'}
                   </p>
 
-                  <p className="text-white/50 text-[12px]">
+                  <p className="text-white/50 text-[11px]">
                     {user?.role === 'HR' ? 'HR' : 'Admin'}
                   </p>
                 </div>
@@ -166,9 +170,9 @@ function AdminMobileProfile() {
 
               {/* DROPDOWN */}
               {open && (
-                <div className="absolute right-0 top-[72px] w-60 rounded-2xl bg-[#0a0a0a] shadow-[0_20px_60px_rgba(0,0,0,0.75)] overflow-hidden z-50">
+                <div className="absolute right-0 top-[68px] w-48 rounded-2xl bg-[#0a0a0a] shadow-[0_20px_60px_rgba(0,0,0,0.75)] overflow-hidden z-50">
 
-                  {/* HEADER */}
+                  {/* ACCOUNT */}
                   <div className="px-4 py-3 border-b border-white/5">
 
                     <p className="text-red-400 text-[10px] uppercase tracking-[0.2em] font-bold">
@@ -177,9 +181,9 @@ function AdminMobileProfile() {
                   </div>
 
                   {/* USER */}
-                  <div className="px-4 py-4 flex items-center gap-3">
+                  <div className="px-4 py-3 flex items-center gap-3">
 
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-600 to-red-500 flex items-center justify-center text-white font-bold">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-red-600 to-red-500 flex items-center justify-center text-white text-sm font-bold">
                       {user?.username?.charAt(0)?.toUpperCase() || 'A'}
                     </div>
 
@@ -189,7 +193,7 @@ function AdminMobileProfile() {
                         {user?.username || 'admin'}
                       </p>
 
-                      <p className="text-white/50 text-xs">
+                      <p className="text-white/50 text-[11px]">
                         {user?.role === 'HR' ? 'HR' : 'Admin'}
                       </p>
                     </div>
