@@ -1584,6 +1584,7 @@ className="h-16 w-16 rounded-2xl bg-red-50 dark:bg-red-500/10 flex items-center 
           />
         )}
       </AnimatePresence>
+    </div>
     </>
   );
 };
