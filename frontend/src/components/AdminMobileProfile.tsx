@@ -10,6 +10,7 @@ import {
   Moon,
   Bell,
 } from 'lucide-react';
+
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -23,6 +24,7 @@ const iconMap: Record<string, any> = {
 function AdminMobileProfile() {
   const { user, logout } = useAuth();
   const { isDarkMode } = useTheme();
+
   const [open, setOpen] = useState(false);
 
   const handleLogout = () => {
@@ -33,73 +35,178 @@ function AdminMobileProfile() {
     }
   };
 
-  const path = typeof window !== 'undefined' ? window.location.pathname : '/admin';
+  const path =
+    typeof window !== 'undefined'
+      ? window.location.pathname
+      : '/admin';
+
   const IconComp = iconMap[path] || Grid;
-  const Subtitle = path.replace('/admin', '').replace('/', '') || 'Dashboard';
+
+  const Subtitle =
+    path.replace('/admin', '').replace('/', '') || 'Dashboard';
 
   return (
-    <div className="block md:hidden px-4">
-      <div className="w-full mt-3">
-        <div className="w-full rounded-2xl overflow-hidden bg-gradient-to-r from-[#0b1820] via-[#0b2430] to-[#1a2a33] shadow-lg border border-white/6 p-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-red-600 to-red-400 rounded-lg flex items-center justify-center shadow-inner">
-              <img src="/MOBILELOGOLOGIN.png" alt="logo" className="h-10 w-auto" />
-            </div>
+    <div className="block md:hidden px-4 pt-3">
+      <div className="relative overflow-visible rounded-[28px] border border-red-500/20 bg-[#050505] shadow-[0_0_45px_rgba(255,0,0,0.12)]">
 
-            <div className="flex flex-col">
-              <div className="text-white text-sm font-bold">3PL BUSINESS SOLUTIONS</div>
-              <div className="text-white/70 text-xs">Manage company operations efficiently</div>
-              <div className="mt-1 flex items-center gap-2 text-xs text-white/60">
-                <IconComp className="w-4 h-4 opacity-90" />
-                <span className="truncate max-w-[140px]">{Subtitle}</span>
-              </div>
-            </div>
-          </div>
+        {/* RED GLOW */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,0,0,0.25),transparent_40%)]" />
 
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <Bell className="w-6 h-6 text-white/90" />
-              <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold leading-none text-white bg-red-500 rounded-full">3</span>
-            </div>
+        {/* SOFT LIGHT */}
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.04),transparent)]" />
 
-            <div
-              onClick={() => setOpen(!open)}
-              className="flex items-center gap-3 px-3 py-2 rounded-full bg-white/5 border border-white/6 backdrop-blur-md cursor-pointer select-none"
-              style={{ minWidth: 160 }}
-            >
-              <div style={{ position: 'relative' }}>
-                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-teal-400 flex items-center justify-center text-white font-bold">
-                  {user?.username?.charAt(0)?.toUpperCase() || 'A'}
+        <div className="relative z-10 p-4">
+
+          {/* TOP */}
+          <div className="flex items-start justify-between gap-3">
+
+            {/* LEFT SIDE */}
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+
+              {/* LOGO */}
+              <div className="relative shrink-0">
+
+                <div className="absolute inset-0 rounded-2xl bg-red-500 blur-xl opacity-30" />
+
+                <div className="relative w-14 h-14 rounded-2xl border border-red-500/20 bg-gradient-to-br from-[#181818] to-[#050505] flex items-center justify-center overflow-hidden">
+                  <img
+                    src="/MOBILELOGOLOGIN.png"
+                    alt="logo"
+                    className="h-10 w-auto object-contain"
+                  />
                 </div>
-                <span className="absolute right-0 bottom-0 w-3 h-3 rounded-full border-2 border-white" style={{ background: '#16A34A' }} />
               </div>
 
-              <div className="flex flex-col text-left truncate">
-                <span className="text-sm font-semibold text-white truncate">{user?.username || 'admin'}</span>
-                <span className="text-xs text-white/70">{user?.role === 'HR' ? 'HR' : 'Admin'}</span>
-              </div>
+              {/* TEXT */}
+              <div className="min-w-0">
 
-              <ChevronDown className="w-4 h-4 text-white/80" />
+                <h1 className="text-white text-[15px] font-black leading-tight tracking-wide">
+                  3PL BUSINESS
+                </h1>
+
+                <p className="text-[11px] text-red-400 font-semibold uppercase tracking-[0.15em] mt-0.5">
+                  Access Control
+                </p>
+
+                <div className="flex items-center gap-1 mt-2 text-white/45 text-[10px]">
+                  <IconComp className="w-3 h-3" />
+
+                  <span className="truncate capitalize">
+                    {Subtitle}
+                  </span>
+                </div>
+              </div>
             </div>
 
-            {open && (
-              <div className="absolute right-4 mt-24 w-56 bg-white/6 border border-white/12 rounded-xl shadow-xl p-2 z-50 backdrop-blur-sm">
-                <div className="px-3 py-1.5 border-b border-white/8 text-xs text-white/80 font-bold uppercase tracking-wider">Account</div>
-                <div className="px-3 py-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {isDarkMode ? <Moon className="w-4 h-4 text-white/80" /> : <Sun className="w-4 h-4 text-yellow-400" />}
-                    <span className="text-xs text-white/80 font-medium">{isDarkMode ? 'Dark Mode' : 'Light Mode'}</span>
-                  </div>
-                </div>
+            {/* RIGHT */}
+            <div className="flex items-center gap-2 shrink-0">
+
+              {/* BELL */}
+              <button className="relative w-11 h-11 rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl flex items-center justify-center">
+
+                <Bell className="w-5 h-5 text-white/90" />
+
+                <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-red-500 text-[9px] font-bold text-white flex items-center justify-center shadow-[0_0_10px_rgba(255,0,0,0.8)]">
+                  3
+                </span>
+              </button>
+
+              {/* PROFILE */}
+              <div className="relative">
+
                 <button
-                  onClick={handleLogout}
-                  className="w-full mt-2 flex items-center gap-2 px-3 py-2 text-left text-sm text-white/90 hover:bg-white/10 rounded-md transition-colors"
+                  onClick={() => setOpen(!open)}
+                  className="flex items-center gap-2 rounded-2xl border border-red-500/20 bg-white/[0.04] backdrop-blur-xl px-2.5 py-2"
                 >
-                  <LogOut className="w-4 h-4" />
-                  <span>Logout</span>
+
+                  {/* AVATAR */}
+                  <div className="relative shrink-0">
+
+                    <div className="absolute inset-0 rounded-full bg-red-500 blur-md opacity-40" />
+
+                    <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-red-600 to-red-800 border border-red-400/30 flex items-center justify-center text-white font-bold">
+                      {user?.username?.charAt(0)?.toUpperCase() || 'A'}
+                    </div>
+
+                    {/* ONLINE */}
+                    <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-[#050505]" />
+                  </div>
+
+                  {/* USER INFO */}
+                  <div className="text-left leading-tight hidden xs:block">
+
+                    <div className="text-white text-sm font-semibold max-w-[70px] truncate">
+                      {user?.username || 'admin'}
+                    </div>
+
+                    <div className="text-red-400 text-[10px] uppercase tracking-wide">
+                      {user?.role === 'HR' ? 'HR' : 'Admin'}
+                    </div>
+                  </div>
+
+                  <ChevronDown className="w-4 h-4 text-white/50" />
                 </button>
+
+                {/* DROPDOWN */}
+                {open && (
+                  <div className="absolute right-0 top-16 w-60 rounded-2xl border border-red-500/20 bg-[#0a0a0a]/95 backdrop-blur-2xl shadow-[0_0_40px_rgba(255,0,0,0.15)] overflow-hidden z-50">
+
+                    {/* HEADER */}
+                    <div className="px-4 py-3 border-b border-white/5">
+                      <p className="text-[10px] uppercase tracking-[0.2em] text-red-400 font-bold">
+                        Account
+                      </p>
+                    </div>
+
+                    {/* USER */}
+                    <div className="px-4 py-3 flex items-center gap-3 border-b border-white/5">
+
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center text-white font-bold">
+                        {user?.username?.charAt(0)?.toUpperCase() || 'A'}
+                      </div>
+
+                      <div>
+                        <p className="text-white text-sm font-semibold">
+                          {user?.username || 'admin'}
+                        </p>
+
+                        <p className="text-red-400 text-xs">
+                          {user?.role === 'HR' ? 'HR' : 'Admin'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* THEME */}
+                    <div className="px-4 py-3 flex items-center justify-between border-b border-white/5">
+
+                      <div className="flex items-center gap-2">
+                        {isDarkMode ? (
+                          <Moon className="w-4 h-4 text-white/80" />
+                        ) : (
+                          <Sun className="w-4 h-4 text-yellow-400" />
+                        )}
+
+                        <span className="text-sm text-white/80">
+                          {isDarkMode ? 'Dark Mode' : 'Light Mode'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* LOGOUT */}
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-white/90 hover:bg-red-500/10 transition-all duration-300"
+                    >
+                      <LogOut className="w-4 h-4 text-red-400" />
+
+                      <span className="text-sm font-medium">
+                        Logout
+                      </span>
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
