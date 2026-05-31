@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { EmployeeManagePanel } from '@/components/EmployeeManagePanel';
 import { AddEmployee } from '@/pages/admin/AddEmployee';
@@ -105,6 +105,7 @@ const OnlinePresence: React.FC = () => {
         </div>
       </div>
     </div>
+  </div>
   );
 };
 
