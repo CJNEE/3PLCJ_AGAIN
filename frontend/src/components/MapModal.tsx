@@ -61,7 +61,7 @@ export const MapModal = ({ isOpen, onClose, hubLat, hubLng }: MapModalProps) => 
           <div>
             <div className="mb-2 flex gap-2 items-center">
               <label className="text-sm">Mode:</label>
-              <select value={mode} onChange={(e) => setMode(e.target.value as any)} className="input-field text-sm">
+              <select title="Travel mode" value={mode} onChange={(e) => setMode(e.target.value as any)} className="input-field text-sm">
                 <option value="walk">Walk</option>
                 <option value="bike">Bike</option>
                 <option value="car">Car</option>

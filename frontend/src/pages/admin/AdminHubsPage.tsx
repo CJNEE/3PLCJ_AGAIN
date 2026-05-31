@@ -38,7 +38,6 @@ import {
   Globe,
   Hash,
 } from 'lucide-react';
-import { User, ChevronDown, Sun, Moon, LogOut } from 'lucide-react';
 import { normalizeApiResponse } from '@/utils/apiResponseHandler';
 
 import {
@@ -55,10 +54,9 @@ import Sidebar from '@/components/Sidebar';
 import AdminMobileProfile from '@/components/AdminMobileProfile';
 import { fetchWeather } from '@/utils/weather';
 import { useAuth } from '@/hooks/useAuth';
-import { useTheme, ThemeToggle } from '@/context/ThemeContext';
+import { useTheme } from '@/context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
 // ======================================
 // CONSTANTS
 // ======================================
@@ -393,6 +391,7 @@ const AddHubModal = ({
           <button
             type="button"
             onClick={onClose}
+            title="Close"
             className="h-8 w-8 rounded-lg hover:bg-gray-100 dark:hover:bg-white/[0.06] flex items-center justify-center text-gray-400 dark:text-gray-500 transition-colors"
           >
             <X size={18} />
@@ -545,6 +544,7 @@ const EditHubModal = ({
           <button
             type="button"
             onClick={onClose}
+            title="Close"
             className="h-8 w-8 rounded-lg hover:bg-gray-100 dark:hover:bg-white/[0.06] flex items-center justify-center text-gray-400 dark:text-gray-500 transition-colors"
           >
             <X size={18} />
@@ -746,6 +746,7 @@ const HubCard = ({
 >
   <button
     onClick={() => setMenuOpen(!menuOpen)}
+    title="Open menu"
     className="h-8 w-8 rounded-lg hover:bg-gray-100 dark:hover:bg-white/[0.06] flex items-center justify-center text-gray-500"
   >
     <MoreVertical size={16} />
@@ -827,27 +828,16 @@ const HubCard = ({
 // ======================================
 
 export const AdminHubsPage = () => {
-  const { user, canViewEmployees, logout } = useAuth();
+  const { canViewEmployees } = useAuth();
   const { isDarkMode } = useTheme();
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  // `navigate` declared earlier but unused; remove to avoid lint "assigned but never used"
 
   const [searchTerm, setSearchTerm] = useState('');
   const [employeeSearch, setEmployeeSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const itemsPerPage = 8;
   
-  useEffect(() => {
-    const closeMenu = () => setShowProfileDropdown(false);
-    window.addEventListener('click', closeMenu);
-    return () => window.removeEventListener('click', closeMenu);
-  }, []);
 
   // Keep Leaflet map in sync when container is resized (fixes blank spaces)
   useEffect(() => {
@@ -1218,6 +1208,7 @@ export const AdminHubsPage = () => {
                       </div>
                       <button
                         onClick={handleCloseHub}
+                        title="Close"
                         className="h-8 w-8 shrink-0 rounded-lg hover:bg-gray-100 dark:hover:bg-white/[0.06] flex items-center justify-center text-gray-400 dark:text-gray-500 transition-colors"
                       >
                         <X size={18} />
@@ -1395,6 +1386,7 @@ export const AdminHubsPage = () => {
                           <button
                             onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                             disabled={currentPage === 1}
+                            title="Previous page"
                             className="h-8 w-8 rounded-lg hover:bg-gray-100 dark:hover:bg-white/[0.06] flex items-center justify-center text-gray-400 dark:text-gray-500 disabled:opacity-30 transition-colors"
                           >
                             <ChevronLeft size={16} />
@@ -1407,6 +1399,7 @@ export const AdminHubsPage = () => {
                               setCurrentPage(Math.min(totalPages, currentPage + 1))
                             }
                             disabled={currentPage === totalPages || totalPages === 0}
+                            title="Next page"
                             className="h-8 w-8 rounded-lg hover:bg-gray-100 dark:hover:bg-white/[0.06] flex items-center justify-center text-gray-400 dark:text-gray-500 disabled:opacity-30 transition-colors"
                           >
                             <ChevronRight size={16} />

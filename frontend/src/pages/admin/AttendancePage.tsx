@@ -317,6 +317,7 @@ export const AttendancePage = () => {
               type="date"
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
+              title="Filter by date"
               className="input-field w-full max-md:text-xs max-md:py-2 max-md:px-3"
             />
           </div>

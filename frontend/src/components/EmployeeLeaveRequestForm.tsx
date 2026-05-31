@@ -42,6 +42,11 @@ export const EmployeeLeaveRequestForm = ({ showHeader = true }: Props) => {
 
   const progress = (step / steps.length) * 100;
 
+  const pctToWidthClass = (p: number) => {
+    const n = Math.max(1, Math.round((p / 100) * 12));
+    return `w-${n}/12`;
+  };
+
   const onChange = (key: keyof LeaveRequestPayload, value: string) => {
     setPayload((p) => ({ ...p, [key]: value }));
     setFormError(null);
@@ -196,10 +201,7 @@ export const EmployeeLeaveRequestForm = ({ showHeader = true }: Props) => {
 
           {/* PROGRESS BAR */}
           <div className="w-full h-2 bg-gray-200 dark:bg-gray-800 rounded-full mb-6">
-            <div
-              className="h-2 bg-blue-600 rounded-full transition-all"
-              style={{ width: `${progress}%` }}
-            />
+            <div className={`h-2 bg-blue-600 rounded-full transition-all ${pctToWidthClass(progress)}`} />
           </div>
 
           {/* STEPS */}
@@ -246,6 +248,7 @@ export const EmployeeLeaveRequestForm = ({ showHeader = true }: Props) => {
                     onChange('leave_type', e.target.value)
                   }
                   className="input-field w-full rounded-xl"
+                  title="Leave type"
                 >
                   <option>Sick Leave</option>
                   <option>Vacation Leave</option>
@@ -261,6 +264,8 @@ export const EmployeeLeaveRequestForm = ({ showHeader = true }: Props) => {
                       onChange('start_date', e.target.value)
                     }
                     className="input-field w-full rounded-xl"
+                    title="Start date"
+                    placeholder="Start date"
                   />
 
                   <input
@@ -270,6 +275,8 @@ export const EmployeeLeaveRequestForm = ({ showHeader = true }: Props) => {
                       onChange('end_date', e.target.value)
                     }
                     className="input-field w-full rounded-xl"
+                    title="End date"
+                    placeholder="End date"
                   />
                 </div>
               </div>
@@ -286,7 +293,7 @@ export const EmployeeLeaveRequestForm = ({ showHeader = true }: Props) => {
                   placeholder="Explain your reason..."
                 />
 
-                <input type="file" multiple onChange={handleFile} className="text-sm" />
+                <input type="file" multiple onChange={handleFile} className="text-sm" title="Attachments" />
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {files.map((file, index) => {
@@ -312,6 +319,7 @@ export const EmployeeLeaveRequestForm = ({ showHeader = true }: Props) => {
                           <img
                             src={previewUrl}
                             className="w-full h-20 object-cover rounded"
+                            alt="attachment preview"
                           />
                         )}
 

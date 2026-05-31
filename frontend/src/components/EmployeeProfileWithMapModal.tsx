@@ -117,6 +117,7 @@ export const EmployeeProfileWithMapModal = ({
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 flex-shrink-0"
+              title="Close"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -127,11 +128,7 @@ export const EmployeeProfileWithMapModal = ({
 
         {/* Scrollable Content Below */}
         <div
-          className="space-y-4"
-          style={{
-            maxHeight: 'calc(100vh - 400px)',
-            overflowY: 'auto',
-          }}
+          className="space-y-4 max-h-[calc(100vh-400px)] overflow-y-auto"
         >
           {/* Basic Information */}
           <button

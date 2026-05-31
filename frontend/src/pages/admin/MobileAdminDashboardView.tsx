@@ -1,14 +1,14 @@
 import React from 'react';
-import { Card, Badge, EmptyState } from '@/components/common';
+import { Card, EmptyState } from '@/components/common';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-import { Search, MapPin, Users, ChevronDown, User, LogOut, Home, FileText, Plus, Sun, Moon } from 'lucide-react';
+import { Search, MapPin, Users, Home, FileText, Plus } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import HubsEmployeeChart from '@/components/HubsEmployeeChart';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { useTheme, ThemeToggle } from '@/context/ThemeContext';
+import { useTheme } from '@/context/ThemeContext';
 import AdminMobileProfile from '@/components/AdminMobileProfile';
 
 // Shared Colors from AdminDashboard
@@ -19,11 +19,7 @@ const STATUS_COLORS: Record<string, string> = {
   'Resign': '#9CA3AF',      
 };
 
-const EMPLOYMENT_TYPE_COLORS: Record<string, string> = {
-  'Full-time': '#1E40AF',
-  'Full time': '#1E40AF',
-  OCW: '#3B82F6',
-};
+// employment colors are handled via class-mapping helper
 
 const getHubCoordinates = (hub: any): [number, number] => {
   if (hub.latitude && hub.longitude && !isNaN(hub.latitude) && !isNaN(hub.longitude)) {
@@ -65,19 +61,60 @@ export const MobileAdminDashboardView = ({
   searchLocationTerm, setSearchLocationTerm,
   setSelectedEmployee, setShowEmployeeModal
 }: any) => {
-
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
-  const { isDarkMode, toggleDarkMode } = useTheme();
-  const [showProfileDropdown, setShowProfileDropdown] = React.useState(false);
+  const { user } = useAuth();
+  const { isDarkMode } = useTheme();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+  const getStatusBgClass = (name: string) => {
+    switch ((name || '').toLowerCase()) {
+      case 'active':
+        return 'bg-[#22C55E]';
+      case 'awol':
+        return 'bg-[#F97316]';
+      case 'blacklist':
+        return 'bg-[#EF4444]';
+      case 'resign':
+        return 'bg-[#9CA3AF]';
+      default:
+        return 'bg-gray-400';
+    }
+  };
+
+  const getStatusTextClass = (name: string) => {
+    switch ((name || '').toLowerCase()) {
+      case 'active':
+        return 'text-[#22C55E]';
+      case 'awol':
+        return 'text-[#F97316]';
+      case 'blacklist':
+        return 'text-[#EF4444]';
+      case 'resign':
+        return 'text-[#9CA3AF]';
+      default:
+        return 'text-gray-400';
+    }
+  };
+
+  const getEmploymentBgClass = (name: string) => {
+    switch ((name || '').toLowerCase()) {
+      case 'full-time':
+      case 'full time':
+        return 'bg-[#1E40AF]';
+      case 'ocw':
+        return 'bg-[#3B82F6]';
+      default:
+        return 'bg-[#3B82F6]';
+    }
+  };
+
+  const pctToWidthClass = (pct: number) => {
+    const n = Math.max(1, Math.round((pct / 100) * 12));
+    return `w-${n}/12`;
   };
 
   const [showMapSearch, setShowMapSearch] = React.useState(false);
 
+  
   const filteredHubs = React.useMemo(() => {
     return hubs.filter(
       (hub: any) =>
@@ -87,7 +124,6 @@ export const MobileAdminDashboardView = ({
         hub.city?.toLowerCase().includes(searchLocationTerm.toLowerCase())
     );
   }, [hubs, searchLocationTerm]);
-
   const modernMarker = L.divIcon({
     className: 'custom-modern-marker',
     html: `
@@ -177,7 +213,8 @@ export const MobileAdminDashboardView = ({
                   return (
                     <div key={idx} className="flex justify-between items-center text-[10px]">
                       <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: STATUS_COLORS[entry.name] }} />
+                        {/* status color */}
+                        <div className={`w-2 h-2 rounded-full ${getStatusBgClass(entry.name)}`} />
                         <span className="text-gray-400">{entry.name}</span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -207,7 +244,7 @@ export const MobileAdminDashboardView = ({
                       </div>
                     </div>
                     <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: EMPLOYMENT_TYPE_COLORS[entry.name] || '#3B82F6' }} />
+                      <div className={`h-full rounded-full ${getEmploymentBgClass(entry.name)} ${pctToWidthClass(pct)}`} />
                     </div>
                   </div>
                 );
@@ -221,9 +258,9 @@ export const MobileAdminDashboardView = ({
             <div className="space-y-3 flex-1 mt-1">
               {statusData.map((entry: any, idx: number) => (
                 <div key={idx} className="flex justify-between items-center relative pl-3">
-                  <div className="absolute left-0 top-0 bottom-0 w-0.5 rounded-full" style={{ backgroundColor: STATUS_COLORS[entry.name] }} />
+                  <div className={`absolute left-0 top-0 bottom-0 w-0.5 rounded-full ${getStatusBgClass(entry.name)}`} />
                   <span className="text-[11px] text-gray-400">{entry.name}</span>
-                  <span className="text-[11px] font-semibold" style={{ color: STATUS_COLORS[entry.name] }}>{entry.value}</span>
+                  <span className={`text-[11px] font-semibold ${getStatusTextClass(entry.name)}`}>{entry.value}</span>
                 </div>
               ))}
             </div>
@@ -270,6 +307,7 @@ export const MobileAdminDashboardView = ({
                 </div>
                 <button
                   onClick={() => setShowMapSearch(true)}
+                  title="Open search"
                   className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center pointer-events-auto border border-gray-700 hover:bg-gray-700 active:bg-gray-600 transition-colors"
                 >
                   <Search className="w-3.5 h-3.5 text-gray-400" />
@@ -361,7 +399,7 @@ export const MobileAdminDashboardView = ({
                     <td className="px-4 py-3 text-gray-200">{emp.full_name}</td>
                     <td className="px-4 py-3 text-gray-400">{emp.position}</td>
                     <td className="px-4 py-3 text-gray-400">{emp.hub_name || 'N/A'}</td>
-                    <td className="px-4 py-3 font-semibold" style={{ color: STATUS_COLORS[emp.status] }}>{emp.status}</td>
+                    <td className={`px-4 py-3 font-semibold ${getStatusTextClass(emp.status)}`}>{emp.status}</td>
                     <td className="px-4 py-3 text-center">
                       <button onClick={() => { setSelectedEmployee(emp); setShowEmployeeModal(true); }} className="px-3.5 py-1 bg-blue-500/10 text-blue-400 rounded-full text-[10px] font-semibold border border-blue-500/20 hover:bg-blue-500/20 hover:text-blue-300 transition-all duration-200">
                         View

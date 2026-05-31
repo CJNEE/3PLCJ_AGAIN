@@ -93,7 +93,7 @@ const OnlinePresence: React.FC = () => {
 
                       <span className="absolute right-0 bottom-0 inline-block w-3 h-3 rounded-full bg-emerald-400 ring-2 ring-white" />
                       {isPulsing && (
-                        <span className="absolute right-0 bottom-0 inline-block w-3 h-3 rounded-full bg-emerald-400 opacity-40" style={{ animation: 'online-pulse 1.6s ease-out' }} />
+                        <span className="absolute right-0 bottom-0 inline-block w-3 h-3 rounded-full bg-emerald-400 opacity-40 animate-pulse" />
                       )}
                     </div>
 
@@ -196,6 +196,7 @@ export const AdminEmployeesPage = () => {
         {/* MOBILE FLOATING ADD BUTTON */}
         {canEditEmployeeInfo && (
           <button
+            title="Add employee"
             onClick={() => setShowAdd(true)}
             className="
                 md:hidden

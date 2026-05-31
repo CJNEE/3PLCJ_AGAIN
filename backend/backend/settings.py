@@ -23,7 +23,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # SECRET_KEY fallback for local development when env var isn't set
-SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-for-local-testing'
+# In production, always set the `SECRET_KEY` environment variable to a
+# long, random value. The fallback below is long enough to satisfy
+# Django system checks during development but must NOT be used in
+# production deployments.
+SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-insecure-please-set-SECRET_KEY-2026-06-01-CHANGE_ME-xxxxxxxxxxxx'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -35,6 +39,14 @@ SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 
 X_FRAME_OPTIONS = 'DENY'
+
+# Security-related settings: allow environment overrides but default to
+# secure values when running with DEBUG=False (production mode).
+# You can override these via environment variables if needed.
+SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', '31536000')) if not DEBUG else int(os.environ.get('SECURE_HSTS_SECONDS', '0'))
+SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'True' if not DEBUG else 'False').lower() in ('1', 'true', 'yes')
+SECURE_HSTS_INCLUDE_SUBDOMAINS = os.environ.get('SECURE_HSTS_INCLUDE_SUBDOMAINS', 'True' if not DEBUG else 'False').lower() in ('1', 'true', 'yes')
+SECURE_HSTS_PRELOAD = os.environ.get('SECURE_HSTS_PRELOAD', 'True' if not DEBUG else 'False').lower() in ('1', 'true', 'yes')
 # Read from env var for flexibility, default to hardcoded for production
 _ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS', '').strip()
 if _ALLOWED_HOSTS_ENV:

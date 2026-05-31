@@ -219,6 +219,7 @@ export const ActivityLogsPage = () => {
               setActionFilter(e.target.value);
               setCurrentPage(1);
             }}
+            title="Filter by action"
             className="input-field"
           >
             <option value="">All Actions</option>
@@ -236,6 +237,7 @@ export const ActivityLogsPage = () => {
               setRoleFilter(e.target.value);
               setCurrentPage(1);
             }}
+            title="Filter by role"
             className="input-field"
           >
             <option value="">All Roles</option>

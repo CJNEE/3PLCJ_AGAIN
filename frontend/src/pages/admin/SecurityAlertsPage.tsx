@@ -241,6 +241,7 @@ export const SecurityAlertsPage = () => {
               setTypeFilter(e.target.value);
               setCurrentPage(1);
             }}
+            title="Filter by type"
             className="input-field"
           >
             <option value="">All Types</option>
@@ -258,6 +259,7 @@ export const SecurityAlertsPage = () => {
               setSeverityFilter(e.target.value);
               setCurrentPage(1);
             }}
+            title="Filter by severity"
             className="input-field"
           >
             <option value="">All Severities</option>
@@ -275,6 +277,7 @@ export const SecurityAlertsPage = () => {
               setResolvedFilter(e.target.value);
               setCurrentPage(1);
             }}
+            title="Filter by status"
             className="input-field"
           >
             <option value="all">All Alerts</option>

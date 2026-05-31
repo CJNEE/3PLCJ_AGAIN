@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { Hub, Employee } from '@/types';
 import { useTheme } from '@/context/ThemeContext';
+ 
 
 interface Props {
   hubsData?: Hub[];
@@ -38,7 +39,7 @@ export default function HubsEmployeeChart({ hubsData = [], employees = [] }: Pro
   );
 
   if (!filteredDataset.length) {
-    return <div style={{ padding: 20 }}>No employee data available</div>;
+    return <div className="p-5">No employee data available</div>;
   }
 
   const textColor = isDarkMode ? '#F3F4F6' : '#374151';
@@ -55,7 +56,7 @@ export default function HubsEmployeeChart({ hubsData = [], employees = [] }: Pro
     : { top: 5, left: 60 };
 
   return (
-    <div style={{ width: '100%', overflowX: 'auto', overflowY: 'hidden' }} className="thin-scrollbar pb-2">
+    <div className="w-full overflow-x-auto overflow-y-hidden thin-scrollbar pb-2">
       <BarChart
         dataset={filteredDataset}
 

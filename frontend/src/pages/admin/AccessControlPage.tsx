@@ -171,6 +171,7 @@ export const AccessControlPage = () => {
             onChange={(e: any) =>
               setRoleFilter(e.target.value)
             }
+            title="Filter by role"
             className="input-field w-full md:w-56"
           >
             {roles.map((role, index) => (
@@ -187,6 +188,7 @@ export const AccessControlPage = () => {
             onChange={(e: any) =>
               setStatusFilter(e.target.value)
             }
+            title="Filter by status"
             className="input-field w-full md:w-56"
           >
             <option value="All">Status: All</option>
@@ -198,6 +200,7 @@ export const AccessControlPage = () => {
             onChange={(e: any) =>
               setHubFilter(e.target.value)
             }
+            title="Filter by hub"
             className="input-field w-full md:w-56"
           >
             {hubs.map((hub, index) => (
