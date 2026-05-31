@@ -77,35 +77,35 @@ const OnlinePresence: React.FC = () => {
             <div className="text-sm font-semibold text-gray-700 dark:text-gray-200">Online Now</div>
             <div className="text-xs text-gray-400">Auto-refresh: 5s</div>
           </div>
+
           <div className="w-full overflow-x-auto hide-scrollbar">
             <div className="flex items-center gap-3 py-2">
-          {online.map((e: any) => {
-            const isPulsing = pulseIds.has(e.id);
-            return (
-              <div key={e.id} className="flex flex-col items-center text-center w-16">
-                <div className="relative w-12 h-12">
-                  {e.profile_image ? (
-                    <img src={e.profile_image} alt={e.full_name} className={`w-12 h-12 rounded-full object-cover border-2 border-white`} />
-                  ) : (
-                    <div className={`w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-teal-500 flex items-center justify-center text-white font-bold`}>{(e.firstname||'')[0]}{(e.lastname||'')[0]}</div>
-                  )}
+              {online.map((e: any) => {
+                const isPulsing = pulseIds.has(e.id);
+                return (
+                  <div key={e.id} className="flex flex-col items-center text-center w-16">
+                    <div className="relative w-12 h-12">
+                      {e.profile_image ? (
+                        <img src={e.profile_image} alt={e.full_name} className="w-12 h-12 rounded-full object-cover border-2 border-white" />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-teal-500 flex items-center justify-center text-white font-bold">{(e.firstname || '')[0]}{(e.lastname || '')[0]}</div>
+                      )}
 
-                  <>
-                    <span className={`absolute right-0 bottom-0 inline-block w-3 h-3 rounded-full bg-emerald-400 ring-2 ring-white`} />
-                    {isPulsing && (
-                      <span className="absolute right-0 bottom-0 inline-block w-3 h-3 rounded-full bg-emerald-400 opacity-40" style={{ animation: 'online-pulse 1.6s ease-out' }} />
-                    )}
-                  </>
-                </div>
+                      <span className="absolute right-0 bottom-0 inline-block w-3 h-3 rounded-full bg-emerald-400 ring-2 ring-white" />
+                      {isPulsing && (
+                        <span className="absolute right-0 bottom-0 inline-block w-3 h-3 rounded-full bg-emerald-400 opacity-40" style={{ animation: 'online-pulse 1.6s ease-out' }} />
+                      )}
+                    </div>
 
-                <div className="text-xs text-gray-700 dark:text-gray-200 truncate mt-1 max-w-[64px]">{e.full_name}</div>
-              </div>
-            );
-          })}
+                    <div className="text-xs text-gray-700 dark:text-gray-200 truncate mt-1 max-w-[64px]">{e.full_name}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
   );
 };
 
